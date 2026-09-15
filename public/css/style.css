@@ -1,0 +1,443 @@
+:root {
+    --play-green: #01875f;
+    --text-primary: #202124;
+    --text-secondary: #5f6368;
+    --border-color: #dadce0;
+    --bg-light: #f8f9fa;
+}
+
+body {
+    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-primary);
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* Navbar */
+.navbar-play {
+    background-color: #fff;
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.play-logo {
+    height: 40px;
+    display: block;
+}
+
+.nav-icon {
+    color: var(--text-secondary);
+    font-size: 20px;
+    margin-left: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.profile-circle {
+    width: 32px;
+    height: 32px;
+    background-color: #1a73e8;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-left: 20px;
+    flex-shrink: 0;
+    font-size: 14px;
+}
+
+/* Main Container */
+.main-content {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
+/* App Header */
+.app-header {
+    display: flex;
+    margin-bottom: 24px;
+}
+
+.app-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,.30), 0 1px 3px 1px rgba(60,64,67,.15);
+    margin-right: 16px;
+    object-fit: cover;
+}
+
+.app-title-container h1 {
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.dev-name {
+    color: var(--play-green);
+    font-weight: 500;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.app-meta {
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+/* Stats */
+.stats-row {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    margin-bottom: 24px;
+    padding: 8px 0;
+}
+
+.stat-item {
+    flex: 1;
+}
+
+.stat-value {
+    font-weight: 500;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 24px;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.content-rating-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #3c4043;
+    border-radius: 1px;
+    padding: 0 2px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    min-width: 14px;
+    height: 14px;
+    color: #3c4043;
+}
+
+.info-icon-small {
+    font-size: 9px;
+    color: var(--text-secondary);
+    vertical-align: middle;
+    margin-left: 2px;
+}
+
+/* Install Button */
+.btn-install {
+    background-color: var(--play-green);
+    color: white;
+    width: 100%;
+    border-radius: 8px;
+    padding: 10px;
+    font-weight: 500;
+    border: none;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.btn-install:hover {
+    background-color: #006e4e;
+    color: white;
+}
+
+/* Buttons appearing together (e.g. Yes/No buttons in reviews) */
+/* This targets buttons that are siblings */
+.btn + .btn,
+.btn:first-child:nth-last-child(2),
+.btn:first-child:nth-last-child(2) ~ .btn {
+    background-color: #e6f4ea !important; /* Light green background */
+    color: #01875f !important;
+    border-color: #ceead6 !important;
+}
+
+.btn + .btn:hover,
+.btn:first-child:nth-last-child(2):hover {
+    background-color: #ceead6 !important;
+}
+
+/* Screenshots - Scrollable */
+.screenshots-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    margin-bottom: 32px;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+}
+
+.screenshots-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.screenshot {
+    height: 350px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+/* Sections */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.section-header h2 {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.section-arrow {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.section-content {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+/* App Info Grid */
+.app-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.info-value {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* Data Safety Box */
+.data-safety-box {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 32px;
+}
+
+.safety-item {
+    display: flex;
+    margin-bottom: 16px;
+}
+
+.safety-item:last-child {
+    margin-bottom: 0;
+}
+
+.safety-item i {
+    margin-right: 16px;
+    color: var(--text-secondary);
+    width: 20px;
+    text-align: center;
+    margin-top: 4px;
+}
+
+.safety-item-title {
+    font-weight: 500;
+    display: block;
+    font-size: 13px;
+}
+
+.safety-item-desc {
+    font-size: 12px;
+    display: block;
+}
+
+/* Ratings */
+.ratings-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.rating-big {
+    font-size: 40px;
+    font-weight: 500;
+    margin-right: 24px;
+}
+
+.rating-bars {
+    flex-grow: 1;
+}
+
+.rating-bar-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.bar-num {
+    font-size: 11px;
+    width: 10px;
+    margin-right: 8px;
+}
+
+.bar-bg {
+    height: 6px;
+    background-color: #e8eaed;
+    border-radius: 3px;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background-color: var(--play-green);
+    border-radius: 3px;
+}
+
+/* Review */
+.review-item {
+    margin-bottom: 20px;
+}
+
+.reviewer-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.reviewer-avatar {
+    width: 28px;
+    height: 28px;
+    background-color: #e8eaed;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.reviewer-name {
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.review-stars {
+    color: var(--play-green);
+    font-size: 8px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.review-date {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-left: 8px;
+}
+
+/* Footer */
+.footer-play {
+    border-top: 1px solid var(--border-color);
+    padding: 24px 0;
+    margin-top: 40px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.footer-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+}
+
+@media (max-width: 576px) {
+    .navbar-play {
+        padding: 4px 0;
+    }
+    .navbar-play .container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        flex-wrap: nowrap !important;
+        display: flex !important;
+        justify-content: space-between !important;
+    }
+    .play-logo {
+        height: 22px;
+        width: auto;
+    }
+    .nav-icon {
+        font-size: 18px;
+        margin-left: 14px;
+    }
+    .profile-circle {
+        width: 28px;
+        height: 28px;
+        margin-left: 14px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .screenshot {
+        height: 300px;
+    }
+    .app-icon {
+        width: 64px;
+        height: 64px;
+    }
+    .app-title-container h1 {
+        font-size: 18px;
+    }
+    .app-info-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
