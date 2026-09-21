@@ -66,10 +66,9 @@ Route::get('/dashboard', function () {
     return view('frontend.travel_dashboard', compact('settings'));
 })->name('travel.dashboard');
 
-Route::get('/verify', function () {
-    $settings = getAppSettings();
-    return view('frontend.travel_verify', compact('settings'));
-})->name('travel.verify');
+Route::match(['get', 'post'], '/verify', [AdminController::class, 'checkVisaStatus'])->name('travel.verify');
+
+Route::get('/apply/success/{id}', [AdminController::class, 'applicationSuccess'])->name('travel.apply.success');
 
 Route::get('/apply', function () {
     $settings = getAppSettings();
@@ -81,6 +80,8 @@ Route::get('/apply', function () {
     } catch (\Exception $e) {}
     return view('frontend.travel_apply', compact('settings', 'countries', 'categories'));
 })->name('travel.apply');
+
+Route::post('/apply', [AdminController::class, 'submitVisaRequest'])->name('travel.apply.post');
 
 Route::get('/about', function () {
     $settings = getAppSettings();
@@ -123,6 +124,12 @@ Route::middleware(['admin.auth'])->group(function () {
     // Visa Type Management API
     Route::post('/admin/visa-types/add', [AdminController::class, 'addVisaType'])->name('admin.visa_types.add');
     Route::post('/admin/visa-types/delete', [AdminController::class, 'deleteVisaType'])->name('admin.visa_types.delete');
+
+    // Requests Management
+    Route::post('/admin/requests/delete', [AdminController::class, 'deleteRequest'])->name('admin.requests.delete');
+    Route::get('/admin/requests/{id}/edit', [AdminController::class, 'editRequest'])->name('admin.requests.edit');
+    Route::post('/admin/requests/{id}', [AdminController::class, 'updateRequest'])->name('admin.requests.update');
+    Route::post('/admin/requests/update-status', [AdminController::class, 'updateRequestStatus'])->name('admin.requests.update_status');
 
     // Security API
     Route::post('/admin/password/update', [AdminController::class, 'updatePassword'])->name('admin.password.update');

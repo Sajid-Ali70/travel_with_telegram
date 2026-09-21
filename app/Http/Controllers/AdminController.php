@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Schema\Blueprint;
 
 class AdminController extends Controller
@@ -37,10 +39,6 @@ class AdminController extends Controller
                     $table->string('flag')->nullable();
                     $table->timestamps();
                 });
-            } else {
-                if (!Schema::hasColumn('app_countries', 'flag')) {
-                    DB::statement("ALTER TABLE `app_countries` ADD `flag` VARCHAR(255) NULL DEFAULT NULL AFTER `name` ");
-                }
             }
 
             if (!Schema::hasTable('app_categories')) {
@@ -66,12 +64,40 @@ class AdminController extends Controller
             if (!Schema::hasTable('app_visa_requests')) {
                 Schema::create('app_visa_requests', function (Blueprint $table) {
                     $table->id();
+                    $table->date('apply_date')->nullable();
                     $table->string('first_name')->nullable();
                     $table->string('last_name')->nullable();
                     $table->string('email')->nullable();
-                    $table->string('status')->default('pending'); // pending, approved, rejected
+                    $table->string('mobile_number')->nullable();
+                    $table->string('dob')->nullable();
+                    $table->string('gender')->nullable();
+                    $table->string('passport_number')->nullable();
+                    $table->string('passport_expiry')->nullable();
+                    $table->string('passport_photo')->nullable();
+                    $table->string('destination_country')->nullable();
+                    $table->string('visa_category')->nullable();
+                    $table->string('visa_type')->nullable();
+                    $table->string('status')->default('pending');
                     $table->timestamps();
                 });
+            } else {
+                $visaColumns = [
+                    'apply_date' => "ALTER TABLE `app_visa_requests` ADD `apply_date` DATE NULL DEFAULT NULL AFTER `id` ",
+                    'mobile_number' => "ALTER TABLE `app_visa_requests` ADD `mobile_number` VARCHAR(50) NULL DEFAULT NULL ",
+                    'dob' => "ALTER TABLE `app_visa_requests` ADD `dob` VARCHAR(50) NULL DEFAULT NULL ",
+                    'gender' => "ALTER TABLE `app_visa_requests` ADD `gender` VARCHAR(50) NULL DEFAULT NULL ",
+                    'passport_number' => "ALTER TABLE `app_visa_requests` ADD `passport_number` VARCHAR(100) NULL DEFAULT NULL ",
+                    'passport_expiry' => "ALTER TABLE `app_visa_requests` ADD `passport_expiry` VARCHAR(50) NULL DEFAULT NULL ",
+                    'passport_photo' => "ALTER TABLE `app_visa_requests` ADD `passport_photo` VARCHAR(255) NULL DEFAULT NULL ",
+                    'destination_country' => "ALTER TABLE `app_visa_requests` ADD `destination_country` VARCHAR(255) NULL DEFAULT NULL ",
+                    'visa_category' => "ALTER TABLE `app_visa_requests` ADD `visa_category` VARCHAR(255) NULL DEFAULT NULL ",
+                    'visa_type' => "ALTER TABLE `app_visa_requests` ADD `visa_type` VARCHAR(255) NULL DEFAULT NULL "
+                ];
+                foreach ($visaColumns as $column => $sql) {
+                    if (!Schema::hasColumn('app_visa_requests', $column)) {
+                        DB::statement($sql);
+                    }
+                }
             }
         } catch (\Exception $e) {}
     }
@@ -107,11 +133,12 @@ class AdminController extends Controller
         $settings = null;
         $countries = [];
         $categories = [];
-        $visa_types = [];
+        $visa_requests = [];
         $stats = [
             'total_countries' => 0,
             'total_categories' => 0,
             'total_visa_types' => 0,
+            'total_requests' => 0,
             'pending_requests' => 0,
             'approved_requests' => 0
         ];
@@ -121,15 +148,16 @@ class AdminController extends Controller
             $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
             $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
 
-            $visa_types = DB::table('app_visa_types')
-                ->join('app_categories', 'app_visa_types.category_id', '=', 'app_categories.id')
-                ->select('app_visa_types.*', 'app_categories.name as category_name')
-                ->orderBy('category_id', 'asc')
-                ->get();
+            foreach($categories as $cat) {
+                $cat->types = DB::table('app_visa_types')->where('category_id', $cat->id)->get();
+            }
+
+            $visa_requests = DB::table('app_visa_requests')->orderBy('id', 'desc')->get();
 
             $stats['total_countries'] = DB::table('app_countries')->count();
             $stats['total_categories'] = DB::table('app_categories')->count();
             $stats['total_visa_types'] = DB::table('app_visa_types')->count();
+            $stats['total_requests'] = DB::table('app_visa_requests')->count();
             $stats['pending_requests'] = DB::table('app_visa_requests')->where('status', 'pending')->count();
             $stats['approved_requests'] = DB::table('app_visa_requests')->where('status', 'approved')->count();
         } catch (\Exception $e) {}
@@ -150,7 +178,7 @@ class AdminController extends Controller
             ];
         }
 
-        return view('admin.dashboard', compact('settings', 'countries', 'categories', 'visa_types', 'stats'));
+        return view('admin.dashboard', compact('settings', 'countries', 'categories', 'visa_requests', 'stats'));
     }
 
     public function updateSettings(Request $request)
@@ -192,10 +220,226 @@ class AdminController extends Controller
         }
     }
 
+    public function editRequest($id)
+    {
+        $this->autoManageSettingsColumns();
+
+        $visaRequest = DB::table('app_visa_requests')->where('id', $id)->first();
+        if (!$visaRequest) {
+            abort(404);
+        }
+
+        $settings = DB::table('app_settings')->where('id', 1)->first();
+        $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+        $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
+        foreach ($categories as $category) {
+            $category->types = DB::table('app_visa_types')->where('category_id', $category->id)->get();
+        }
+
+        return view('admin.edit_request', compact('visaRequest', 'settings', 'countries', 'categories'));
+    }
+
+    public function updateRequest(Request $request, $id)
+    {
+        $data = $request->validate([
+            'apply_date' => 'nullable|date',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'mobile_number' => 'required|string|max:50',
+            'dob' => 'nullable|string|max:50',
+            'gender' => 'required|in:male,female,other',
+            'passport_number' => 'required|string|max:100',
+            'passport_expiry' => 'nullable|string|max:50',
+            'destination_country' => 'required|string|max:255',
+            'visa_category' => 'required|string|max:255',
+            'visa_type' => 'nullable|string|max:255',
+            'status' => 'required|in:pending,processing,approved,rejected',
+            'passport_photo_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        unset($data['passport_photo_file']);
+        if ($request->hasFile('passport_photo_file')) {
+            $file = $request->file('passport_photo_file');
+            $fileName = 'passport_' . time() . '_' . $id . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/passports'), $fileName);
+            $data['passport_photo'] = '/uploads/passports/' . $fileName;
+        }
+
+        $existingRequest = DB::table('app_visa_requests')->where('id', $id)->first();
+        if (!$existingRequest) {
+            abort(404);
+        }
+
+        $data['updated_at'] = now();
+        DB::table('app_visa_requests')->where('id', $id)->update($data);
+
+        $updatedRequest = DB::table('app_visa_requests')->where('id', $id)->first();
+        if ($existingRequest->status !== $updatedRequest->status) {
+            $this->sendVisaStatusEmail($updatedRequest);
+        }
+
+        return redirect()->route('admin.dashboard')->with('success', 'Visa request updated successfully.');
+    }
+
+    // Visa Request Submission
+    public function submitVisaRequest(Request $request)
+    {
+        $this->autoManageSettingsColumns();
+
+        $data = $request->except(['_token', 'passport_photo_file']);
+
+        if ($request->hasFile('passport_photo_file')) {
+            $file = $request->file('passport_photo_file');
+            $fileName = 'passport_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/passports'), $fileName);
+            $data['passport_photo'] = '/uploads/passports/' . $fileName;
+        }
+
+        try {
+            $data['created_at'] = now();
+            $data['updated_at'] = now();
+            $requestId = DB::table('app_visa_requests')->insertGetId($data);
+            $visaRequest = DB::table('app_visa_requests')->where('id', $requestId)->first();
+            $this->sendApplicationReceivedEmail($visaRequest);
+
+            return redirect()->route('travel.apply.success', $requestId);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Something went wrong: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function applicationSuccess($id)
+    {
+        $settings = getAppSettings();
+        $visaRequest = DB::table('app_visa_requests')->where('id', $id)->first();
+
+        if (!$visaRequest) {
+            abort(404);
+        }
+
+        return view('frontend.travel_success', compact('settings', 'visaRequest'));
+    }
+
+    public function checkVisaStatus(Request $request)
+    {
+        $settings = getAppSettings();
+        $visaRequest = null;
+        $statusError = null;
+
+        if ($request->filled('reference') || $request->filled('email')) {
+            $validated = $request->validate([
+                'reference' => 'required|string|max:50',
+                'email' => 'required|email|max:255',
+            ]);
+
+            $reference = preg_replace('/^V/i', '', trim($validated['reference']));
+            $reference = ltrim($reference, '0');
+            $reference = $reference === '' ? '0' : $reference;
+            $visaRequest = DB::table('app_visa_requests')
+                ->where('id', $reference)
+                ->where('email', $validated['email'])
+                ->first();
+
+            if (!$visaRequest) {
+                $statusError = 'No application was found with those details.';
+            }
+        }
+
+        return view('frontend.travel_verify', compact('settings', 'visaRequest', 'statusError'));
+    }
+
+    private function sendApplicationReceivedEmail($visaRequest)
+    {
+        if (!$visaRequest || empty($visaRequest->email)) {
+            return;
+        }
+
+        try {
+            $reference = $this->formatVisaReference($visaRequest->id);
+            Mail::raw(
+                "Hello {$visaRequest->first_name},\n\n" .
+                "APPLICATION SENT\n\n" .
+                "Your visa application has been sent successfully.\n\n" .
+                "Reference number: {$reference}\n" .
+                "Destination: {$visaRequest->destination_country}\n" .
+                "Status: Pending\n\n" .
+                "You can use this reference number and your email address to check your application status.\n\n" .
+                "Regards,\nVisa Support Team",
+                function ($message) use ($visaRequest, $reference) {
+                    $message->to($visaRequest->email)
+                    ->subject('APPLICATION SENT - ' . $reference);
+                }
+            );
+        } catch (\Exception $e) {
+            Log::error('Visa application email failed: ' . $e->getMessage());
+        }
+    }
+
+    private function sendVisaStatusEmail($visaRequest)
+    {
+        if (!$visaRequest || empty($visaRequest->email)) {
+            return;
+        }
+
+        try {
+            $reference = $this->formatVisaReference($visaRequest->id);
+            Mail::raw(
+                "Hello {$visaRequest->first_name},\n\n" .
+                "The status of your visa application has been updated.\n\n" .
+                "Reference number: {$reference}\n" .
+                "Destination: {$visaRequest->destination_country}\n" .
+                "New status: " . ucfirst($visaRequest->status) . "\n\n" .
+                "Use your reference number and email address on the Check Visa Status page for the latest details.\n\n" .
+                "Regards,\nVisa Support Team",
+                function ($message) use ($visaRequest, $reference) {
+                    $message->to($visaRequest->email)
+                    ->subject('Visa application status updated - ' . $reference);
+                }
+            );
+        } catch (\Exception $e) {
+            Log::error('Visa status email failed: ' . $e->getMessage());
+        }
+    }
+
+    private function formatVisaReference($id)
+    {
+        return 'V' . str_pad((string) $id, 6, '0', STR_PAD_LEFT);
+    }
+
+    public function deleteRequest(Request $request)
+    {
+        $request->validate(['id' => 'required|integer|exists:app_visa_requests,id']);
+
+        try {
+            DB::table('app_visa_requests')->where('id', $request->id)->delete();
+            return response()->json(['message' => 'Request deleted']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Database error'], 500);
+        }
+    }
+
+    public function updateRequestStatus(Request $request)
+    {
+        try {
+            $existingRequest = DB::table('app_visa_requests')->where('id', $request->id)->first();
+            DB::table('app_visa_requests')->where('id', $request->id)->update([
+                'status' => $request->status,
+                'updated_at' => now()
+            ]);
+            $updatedRequest = DB::table('app_visa_requests')->where('id', $request->id)->first();
+            if ($existingRequest && $updatedRequest && $existingRequest->status !== $updatedRequest->status) {
+                $this->sendVisaStatusEmail($updatedRequest);
+            }
+            return response()->json(['message' => 'Status updated']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Database error'], 500);
+        }
+    }
+
     public function addCountry(Request $request)
     {
         $request->validate(['name' => 'required']);
-
         $flagUrl = null;
         if ($request->hasFile('flag_file')) {
             $file = $request->file('flag_file');
@@ -213,7 +457,7 @@ class AdminController extends Controller
             ]);
             return response()->json(['message' => 'Country added']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Database error: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Database error'], 500);
         }
     }
 
@@ -230,7 +474,6 @@ class AdminController extends Controller
     public function addCategory(Request $request)
     {
         $request->validate(['name' => 'required']);
-
         $imageUrl = null;
         if ($request->hasFile('image_file')) {
             $file = $request->file('image_file');
@@ -250,7 +493,7 @@ class AdminController extends Controller
             ]);
             return response()->json(['message' => 'Category added']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Database error: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Database error'], 500);
         }
     }
 
@@ -267,11 +510,12 @@ class AdminController extends Controller
 
     public function addVisaType(Request $request)
     {
-        $request->validate(['names' => 'required', 'category_id' => 'required']);
-
-        $names = explode(',', $request->names);
+        $visaInput = $request->names ?? $request->name;
+        if (!$visaInput || !$request->category_id) {
+            return response()->json(['message' => 'Required fields missing'], 422);
+        }
+        $names = explode(',', $visaInput);
         $inserted = 0;
-
         try {
             foreach ($names as $name) {
                 $trimmedName = trim($name);
@@ -287,7 +531,7 @@ class AdminController extends Controller
             }
             return response()->json(['message' => $inserted . ' Visa types added']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Database error: ' . $e->getMessage()], 500);
+            return response()->json(['message' => 'Database error'], 500);
         }
     }
 

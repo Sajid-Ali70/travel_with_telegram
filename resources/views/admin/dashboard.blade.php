@@ -53,11 +53,12 @@
         }
 
         .brand-logo-img {
-            width: 35px;
-            height: 35px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 1px solid var(--border-color);
+            width: 80px;
+            height: 80px;
+            border-radius: 0;
+            object-fit: contain;
+            background: transparent;
+            border: 0;
         }
 
         .brand-name {
@@ -210,14 +211,14 @@
 
         /* Forms & Inputs */
         .form-label { color: var(--text-secondary); margin-bottom: 8px; font-size: 0.9rem; }
-        .form-control {
+        .form-control, .form-select {
             background: #0d1117;
             border: 1px solid var(--border-color);
             color: white;
             padding: 12px;
             font-size: 0.95rem;
         }
-        .form-control:focus {
+        .form-control:focus, .form-select:focus {
             background: #0d1117;
             border-color: var(--accent-blue);
             color: white;
@@ -281,7 +282,7 @@
             margin-top: 10px;
         }
 
-        /* Reviews Table */
+        /* Table */
         .reviews-table {
             width: 100%;
             border-collapse: collapse;
@@ -298,10 +299,7 @@
             border-bottom: 1px solid var(--border-color);
             vertical-align: middle;
         }
-        .review-text-cell {
-            max-width: 300px;
-            white-space: normal;
-        }
+
         .country-flag-sm {
             width: 30px;
             height: 20px;
@@ -364,6 +362,9 @@
             <a class="nav-link" id="nav-dashboard" onclick="showSection('dashboard')">
                 <i class="fas fa-chart-line"></i> Dashboard
             </a>
+            <a class="nav-link" id="nav-requests" onclick="showSection('requests')">
+                <i class="fas fa-file-signature"></i> Visa Requests
+            </a>
             <a class="nav-link" id="nav-countries" onclick="showSection('countries')">
                 <i class="fas fa-globe"></i> Countries
             </a>
@@ -394,6 +395,10 @@
                 <p class="mb-0">Update your portal identity, contact information, and banners.</p>
             </div>
         </div>
+
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
         <!-- Section: Dashboard -->
         <section id="dashboardSection" class="dashboard-section d-none">
@@ -439,9 +444,69 @@
             <div class="admin-card">
                 <h5 class="section-title">Quick Actions</h5>
                 <div class="d-flex gap-3 mt-3">
-                    <button class="btn btn-outline-primary" onclick="showSection('countries')">Manage Countries</button>
+                    <button class="btn btn-outline-primary" onclick="showSection('requests')">Manage Requests</button>
                     <button class="btn btn-outline-purple" style="color:#a371f7; border-color:#a371f7;" onclick="showSection('categories')">Manage Categories</button>
                     <button class="btn btn-outline-info" onclick="showSection('playstore')">Edit Settings</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Visa Requests -->
+        <section id="requestsSection" class="dashboard-section d-none">
+            <div class="admin-card">
+                <h5 class="section-title">Visa Application Requests</h5>
+                <div class="table-responsive mt-3">
+                    <table class="reviews-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Applicant</th>
+                                <th>Contact</th>
+                                <th>Destination / Visa</th>
+                                <th>Passport</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($visa_requests as $req)
+                            <tr>
+                                <td>{{ $req->id }}</td>
+                                <td>
+                                    <strong>{{ $req->first_name }} {{ $req->last_name }}</strong><br>
+                                    <small class="text-muted">DOB: {{ $req->dob }}</small>
+                                </td>
+                                <td>
+                                    {{ $req->email }}<br>
+                                    {{ $req->mobile_number }}
+                                </td>
+                                <td>
+                                    {{ $req->destination_country }}<br>
+                                    <small class="">{{ $req->visa_category }} - {{ $req->visa_type }}</small>
+                                </td>
+                                <td>
+                                    {{ $req->passport_number }}<br>
+                                    @if($req->passport_photo)
+                                        <a href="{{ $req->passport_photo }}" target="_blank" class="btn btn-sm btn-outline-info py-0">View Photo</a>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ $req->status == 'approved' ? 'success' : ($req->status == 'rejected' ? 'danger' : ($req->status == 'processing' ? 'warning text-dark' : 'secondary')) }}">
+                                        {{ ucfirst($req->status) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ route('admin.requests.edit', $req->id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit request">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteRequest({{ $req->id }})" title="Delete request">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -522,9 +587,35 @@
                     </div>
                 </form>
             </div>
+
+            <!-- Dedicated Visa Type Addition Form -->
+            <div class="admin-card">
+                <h5 class="section-title">Add Visa Type (Occupation)</h5>
+                <form id="addVisaTypeForm">
+                    @csrf
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label">Select Category</label>
+                            <select name="category_id" class="form-select" required>
+                                <option value="" selected disabled>Choose Category...</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Visa Type Name(s)</label>
+                            <input type="text" name="names" class="form-control" placeholder="e.g. Driver, Electrician (comma separated)" required>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn-primary-custom w-100">Add Type</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
             <div class="admin-card">
                 <h5 class="section-title">Manage Categories & Visa Types</h5>
-                <p class="text-muted small">Add specific visa types (e.g., Driver, Electrician) to each category.</p>
                 <div class="table-responsive mt-3">
                     <table class="reviews-table">
                         <thead><tr><th>ID</th><th>Icon/Image</th><th>Category Name & Types</th><th>Action</th></tr></thead>
@@ -551,8 +642,8 @@
                                         @endforeach
                                     </div>
                                     <div class="input-group input-group-sm mt-2" style="max-width: 300px;">
-                                        <input type="text" id="type-input-{{ $cat->id }}" class="form-control bg-dark text-white border-secondary" placeholder="New Type (e.g. Driver)">
-                                        <button class="btn btn-outline-purple" type="button" onclick="addVisaType({{ $cat->id }})"><i class="fas fa-plus"></i></button>
+                                        <input type="text" id="type-input-{{ $cat->id }}" class="form-control bg-dark text-white border-secondary" placeholder="Quick Add Type">
+                                        <button class="btn btn-outline-purple" type="button" onclick="addVisaTypeQuick({{ $cat->id }})"><i class="fas fa-plus"></i></button>
                                     </div>
                                 </td>
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteCategory({{ $cat->id }})"><i class="fas fa-trash"></i></button></td>
@@ -688,6 +779,31 @@
             showSection(activeTab);
         };
 
+        async function updateRequestStatus(id, status) {
+            const res = await fetch("{{ route('admin.requests.update_status') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
+                body: JSON.stringify({ id, status })
+            });
+            if (res.ok) alert("Status updated!");
+        }
+
+        async function deleteRequest(id) {
+            if (!confirm('Delete this visa request? This action cannot be undone.')) return;
+
+            const res = await fetch("{{ route('admin.requests.delete') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
+                body: JSON.stringify({ id })
+            });
+
+            if (res.ok) {
+                location.reload();
+            } else {
+                alert('Unable to delete the visa request.');
+            }
+        }
+
         function previewIcon(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -746,13 +862,23 @@
             if (res.ok) location.reload();
         }
 
-        async function addVisaType(catId) {
+        document.getElementById('addVisaTypeForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const res = await fetch("{{ route('admin.visa_types.add') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'},
+                body: new FormData(this)
+            });
+            if (res.ok) location.reload();
+        };
+
+        async function addVisaTypeQuick(catId) {
             const name = document.getElementById('type-input-' + catId).value;
             if (!name) return;
             const res = await fetch("{{ route('admin.visa_types.add') }}", {
                 method: 'POST',
                 headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
-                body: JSON.stringify({ category_id: catId, name: name })
+                body: JSON.stringify({ category_id: catId, names: name })
             });
             if (res.ok) location.reload();
         }

@@ -18,24 +18,55 @@
                               url('{{ $bannerUrl }}') !important;
         }
 
-        /* Override button colors when they are together in the hero section */
+        /* Hero actions */
         .hero-btn-group .btn-apply {
-            background-color: #6200ee !important;
-            color: #ffffff !important;
-            border: none !important;
+            background: linear-gradient(135deg, #1683ff, #0c61d8) !important;
+            box-shadow: 0 12px 28px rgba(22, 131, 255, .28);
         }
 
         .hero-btn-group .btn-verify {
-            background-color: #03dac6 !important;
-            color: #000000 !important;
-            border: none !important;
+            background: rgba(255, 255, 255, .08) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, .28) !important;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, .16);
         }
 
-        .btn + .btn, a[class*="btn"] + a[class*="btn"] {
-            margin-left: 10px;
+        .hero-btn-group a {
+            align-items: center;
+            display: inline-flex;
+            font-size: .95rem;
+            font-weight: 700;
+            justify-content: center;
+            letter-spacing: .01em;
+            min-height: 52px;
+            min-width: 220px;
+            padding: 13px 25px !important;
+            text-decoration: none;
+            transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
         }
 
-        /* Country Ticker Styling - Right to Left Slider */
+        .hero-btn-group a:hover {
+            transform: translateY(-3px);
+        }
+
+        .hero-btn-group .btn-verify:hover {
+            background: rgba(255, 255, 255, .16) !important;
+            border-color: rgba(255, 255, 255, .5) !important;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, .22);
+        }
+
+        @media (max-width: 480px) {
+            .hero-btn-group {
+                flex-direction: column;
+                width: min(100%, 320px);
+            }
+
+            .hero-btn-group a {
+                width: 100%;
+            }
+        }
+
+        /* Country Ticker Styling - Scrolling Animation Restored */
         .country-ticker-container {
             background: rgba(11, 19, 41, 0.8);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -88,18 +119,18 @@
         @include('partials.nav')
 
         <div class="visa-hero-section">
-            <div class="hero-overlay-content reveal reveal-left">
-                <div class="tag-reliable reveal reveal-down delay-1">FAST • SECURE • RELIABLE</div>
-                <h2 class="reveal reveal-up delay-2">Get Your Visa<br><span>For a Better Tomorrow</span></h2>
-                <p class="reveal reveal-up delay-3">{{ $settings->description ?? 'Apply for your visa online with ease. Track your application status in real-time and step closer to your next adventure.' }}</p>
-                <div class="hero-btn-group reveal reveal-up delay-4">
-                    <a href="{{ route('travel.apply') }}" class="btn-apply" style="margin:0; padding: 12px 28px; border-radius: 50px;">Apply for Visa <i class="fas fa-arrow-right ms-2"></i></a>
-                    <a href="{{ route('travel.verify') }}" class="btn-verify" style="margin:0; padding: 12px 28px; border-radius: 50px;">Check Visa Status <i class="fas fa-search ms-2"></i></a>
+            <div class="hero-overlay-content">
+                <div class="tag-reliable">FAST • SECURE • RELIABLE</div>
+                <h2>Get Your Visa<br><span>For a Better Tomorrow</span></h2>
+                <p>{{ $settings->description ?? 'Apply for your visa online with ease. Track your application status in real-time and step closer to your next adventure.' }}</p>
+                <div class="hero-btn-group">
+                    <a href="{{ route('travel.apply') }}" class="btn-apply" style="margin:0; border-radius: 50px;">Apply for Visa <i class="fas fa-arrow-right ms-2"></i></a>
+                    <a href="{{ route('travel.verify') }}" class="btn-verify" style="margin:0; border-radius: 50px;">Check Visa Status <i class="fas fa-search ms-2"></i></a>
                 </div>
             </div>
         </div>
 
-        <!-- Sliding Countries Ticker -->
+        <!-- Scrolling Countries Ticker Restored -->
         <div class="country-ticker-container">
             <div class="country-ticker-wrapper">
                 @php
@@ -121,6 +152,7 @@
                         <span class="country-ticker-name">{{ $c->name }}</span>
                     </div>
                 @endforeach
+                {{-- Duplicate for seamless loop --}}
                 @foreach($tickerCountries as $c)
                     <div class="country-ticker-item">
                         <img src="{{ !empty($c->flag) ? (str_starts_with($c->flag, 'http') ? $c->flag : asset($c->flag)) : 'https://flagcdn.com/w160/'.strtolower($c->code ?? 'pk').'.png' }}" class="country-ticker-flag" alt="{{ $c->name }}">
@@ -131,7 +163,7 @@
         </div>
 
         <div class="section-wrapper-global">
-            <div class="section-header-flex reveal reveal-fade">
+            <div class="section-header-flex">
                 <div>
                     <h3>Visa Categories</h3>
                     <p>Choose the type of visa you need. We make the process simple and hassle-free.</p>
@@ -141,7 +173,7 @@
             <div class="categories-grid-cards">
                 @if(isset($categories) && count($categories) > 0)
                     @foreach($categories as $index => $cat)
-                        <div class="category-premium-card reveal reveal-up delay-{{ ($index % 4) + 1 }}">
+                        <div class="category-premium-card">
                             <div class="category-card-img" style="background-image: url('{{ $cat->image ?? 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }}');"></div>
                             <div class="category-card-body">
                                 <div class="category-card-icon-title"><i class="{{ $cat->icon ?? 'fas fa-suitcase-rolling' }}"></i><h4>{{ $cat->name }}</h4></div>
@@ -151,28 +183,28 @@
                     @endforeach
                 @else
                     {{-- Fallback default categories --}}
-                    <div class="category-premium-card reveal reveal-up delay-1">
+                    <div class="category-premium-card">
                         <div class="category-card-img" style="background-image: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');"></div>
                         <div class="category-card-body">
                             <div class="category-card-icon-title"><i class="fas fa-suitcase-rolling"></i><h4>Tourist Visa</h4></div>
                             <p>Explore new destinations and create unforgettable lifelong memories with fast processing.</p>
                         </div>
                     </div>
-                    <div class="category-premium-card reveal reveal-up delay-2">
+                    <div class="category-premium-card">
                         <div class="category-card-img" style="background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');"></div>
                         <div class="category-card-body">
                             <div class="category-card-icon-title"><i class="fas fa-briefcase"></i><h4>Business Visa</h4></div>
                             <p>Attend essential international meetings, conferences, and grow your global business network.</p>
                         </div>
                     </div>
-                    <div class="category-premium-card reveal reveal-up delay-3">
+                    <div class="category-premium-card">
                         <div class="category-card-img" style="background-image: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');"></div>
                         <div class="category-card-body">
                             <div class="category-card-icon-title"><i class="fas fa-graduation-cap"></i><h4>Student Visa</h4></div>
                             <p>Study at top-tier universal colleges and successfully establish your bright future path.</p>
                         </div>
                     </div>
-                    <div class="category-premium-card reveal reveal-up delay-4">
+                    <div class="category-premium-card">
                         <div class="category-card-img" style="background-image: url('https://images.unsplash.com/photo-1511895426328-dc8714191300?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');"></div>
                         <div class="category-card-body">
                             <div class="category-card-icon-title"><i class="fas fa-users"></i><h4>Family Visa</h4></div>
@@ -182,42 +214,42 @@
                 @endif
             </div>
 
-            <div class="trusted-partner-banner reveal reveal-fade delay-3">
+            <div class="trusted-partner-banner">
                 <div class="row align-items-center">
-                    <div class="col-md-8 reveal reveal-left">
+                    <div class="col-md-8">
                         <h4 class="fw-bold mb-2 text-white" style="font-size: 1.5rem;">Your Trusted Visa Partner</h4>
                         <p class="text-muted mb-0" style="font-size: 0.95rem;">{{ $settings->description ?? 'We help thousands of people every year to get their visas quickly and easily.' }}</p>
                     </div>
-                    <div class="col-md-4 text-md-end mt-3 mt-md-0 reveal reveal-up">
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
                         <a href="{{ route('travel.about') }}" class="btn-login" style="padding: 12px 30px;">Learn More <i class="fas fa-chevron-right ms-1" style="font-size: 11px;"></i></a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="features-grid-bar reveal reveal-fade active">
-            <div class="feature-bar-item reveal reveal-up delay-1">
+        <div class="features-grid-bar">
+            <div class="feature-bar-item">
                 <div class="feature-bar-icon"><i class="fas fa-bolt"></i></div>
                 <div class="feature-bar-text">
                     <h4>Easy Online Application</h4>
                     <p>Fill the form and upload your documents in minutes.</p>
                 </div>
             </div>
-            <div class="feature-bar-item reveal reveal-up delay-2">
+            <div class="feature-bar-item">
                 <div class="feature-bar-icon"><i class="far fa-clock"></i></div>
                 <div class="feature-bar-text">
                     <h4>Track Your Status</h4>
                     <p>Get real-time updates on your visa application.</p>
                 </div>
             </div>
-            <div class="feature-bar-item reveal reveal-up delay-3">
+            <div class="feature-bar-item">
                 <div class="feature-bar-icon"><i class="fas fa-globe"></i></div>
                 <div class="feature-bar-text">
                     <h4>Multiple Countries</h4>
                     <p>Apply for tourist, business, student and more.</p>
                 </div>
             </div>
-            <div class="feature-bar-item reveal reveal-up delay-4">
+            <div class="feature-bar-item">
                 <div class="feature-bar-icon"><i class="fas fa-shield-alt"></i></div>
                 <div class="feature-bar-text">
                     <h4>Secure & Trusted</h4>

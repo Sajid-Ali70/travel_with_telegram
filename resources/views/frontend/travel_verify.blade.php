@@ -45,12 +45,17 @@
                         <p class="text-muted" style="font-size: 0.85rem;">Please enter your application reference number and email address to check your visa status.</p>
                     </div>
 
-                    <form action="#" method="POST">
+                    @if($statusError)
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>{{ $statusError }}</div>
+                    @endif
+
+                    <form action="{{ route('travel.verify') }}" method="POST">
+                        @csrf
                         <div class="form-group">
                             <label>Application Reference Number *</label>
                             <div class="input-with-icon">
                                 <i class="far fa-id-card"></i>
-                                <input type="text" placeholder="e.g. V123456789" required>
+                                <input type="text" name="reference" value="{{ old('reference') }}" placeholder="e.g. V123456789" required>
                             </div>
                         </div>
 
@@ -58,7 +63,7 @@
                             <label>Email Address *</label>
                             <div class="input-with-icon">
                                 <i class="far fa-envelope"></i>
-                                <input type="email" placeholder="Enter your email address" required>
+                                <input type="email" name="email" value="{{ old('email') }}" placeholder="Enter your email address" required>
                             </div>
                         </div>
 
@@ -66,6 +71,21 @@
                             Check Status <i class="fas fa-arrow-right ms-2"></i>
                         </button>
                     </form>
+
+                    @if($visaRequest)
+                        <div class="mt-4 pt-4 border-top" style="border-color: var(--border-color) !important;">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h5 class="text-white mb-0">Application V{{ str_pad($visaRequest->id, 6, '0', STR_PAD_LEFT) }}</h5>
+                                <span class="badge bg-{{ $visaRequest->status == 'approved' ? 'success' : ($visaRequest->status == 'rejected' ? 'danger' : ($visaRequest->status == 'processing' ? 'warning text-dark' : 'secondary')) }}">{{ ucfirst($visaRequest->status) }}</span>
+                            </div>
+                            <div class="row g-3 text-start" style="font-size: .9rem;">
+                                <div class="col-sm-6"><span class="text-muted d-block">Applicant</span><span class="text-white">{{ $visaRequest->first_name }} {{ $visaRequest->last_name }}</span></div>
+                                <div class="col-sm-6"><span class="text-muted d-block">Destination</span><span class="text-white">{{ $visaRequest->destination_country }}</span></div>
+                                <div class="col-sm-6"><span class="text-muted d-block">Visa category</span><span class="text-white">{{ $visaRequest->visa_category }}</span></div>
+                                <div class="col-sm-6"><span class="text-muted d-block">Last updated</span><span class="text-white">{{ $visaRequest->updated_at ? \Carbon\Carbon::parse($visaRequest->updated_at)->format('d M Y, h:i A') : 'Not available' }}</span></div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Right Side: Sidebar Info Widget Panels -->

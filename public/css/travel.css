@@ -18,29 +18,17 @@
     --font-main: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Scroll-Triggered Reveal Animations */
+/* Removed Scroll-Triggered Reveal Animations */
 .reveal {
-    opacity: 0;
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    transition-property: opacity, transform;
+    opacity: 1;
 }
 
-.reveal-up { transform: translateY(40px); }
-.reveal-down { transform: translateY(-40px); }
-.reveal-left { transform: translateX(-40px); }
-.reveal-right { transform: translateX(40px); }
+.reveal-up, .reveal-down, .reveal-left, .reveal-right { transform: none; }
 
-/* Triggered State via JS */
 .reveal.active {
     opacity: 1;
-    transform: translate(0, 0);
+    transform: none;
 }
-
-/* Staggered Delays */
-.delay-1 { transition-delay: 0.1s; }
-.delay-2 { transition-delay: 0.2s; }
-.delay-3 { transition-delay: 0.3s; }
-.delay-4 { transition-delay: 0.4s; }
 
 * {
     box-sizing: border-box;
@@ -55,11 +43,10 @@ body, html {
     min-height: 100vh;
     width: 100%;
     overflow-x: hidden;
-    scroll-behavior: smooth;
 }
 
 /* Global Text Visibility Enforcement */
-h1, h2, h3, h4, h5, h6, p, span, label, li, a {
+h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     color: var(--text-main);
 }
 
@@ -78,10 +65,10 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
 
 /* Beautiful Top Header Navbar */
 .main-navbar {
-    background-color: rgba(11, 19, 41, 0.85);
+    background-color: rgba(11, 19, 41, 0.95);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-color);
-    padding: 18px 5%;
+    padding: 15px 5%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -98,11 +85,11 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
 }
 
 .nav-logo-icon {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, var(--btn-primary), var(--accent-color));
+    width: 80px;
+    height: 80px;
+    background: transparent;
     color: #fff;
-    border-radius: var(--radius-sm);
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -125,13 +112,50 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
     font-weight: 600;
 }
 
+.nav-toggle {
+    display: block;
+    font-size: 1.8rem;
+    color: #ffffff !important;
+    cursor: pointer;
+    z-index: 1001;
+    padding: 5px;
+}
+
 .nav-links {
     display: none;
     align-items: center;
     gap: 32px;
 }
 
+/* Mobile Menu Overlay Styles */
+@media (max-width: 991px) {
+    .nav-links {
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: var(--bg-surface);
+        padding: 30px 20px;
+        gap: 25px;
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        text-align: center;
+    }
+    .nav-links.show {
+        display: flex;
+    }
+    .nav-link-item {
+        font-size: 1.1rem !important;
+        width: 100%;
+        padding: 10px 0;
+    }
+}
+
 @media (min-width: 992px) {
+    .nav-toggle {
+        display: none;
+    }
     .nav-links {
         display: flex;
     }
@@ -142,7 +166,6 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
     text-decoration: none !important;
     font-size: 0.95rem;
     font-weight: 500;
-    transition: color 0.2s;
 }
 
 .nav-link-item:hover, .nav-link-item.active {
@@ -163,13 +186,11 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
     font-size: 0.9rem;
     font-weight: 600;
     text-decoration: none !important;
-    transition: background 0.2s, transform 0.2s;
     border: none;
 }
 
 .btn-login:hover {
     background: var(--btn-primary-hover);
-    transform: translateY(-1px);
 }
 
 /* Hero Section */
@@ -224,11 +245,6 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
     gap: 16px;
 }
 
-/* Button color change when together */
-.hero-btn-group .btn-apply, .hero-btn-group .btn-verify {
-    transition: all 0.3s ease;
-}
-
 .hero-btn-group .btn-apply {
     background: var(--btn-primary) !important;
 }
@@ -240,7 +256,6 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
 
 .hero-btn-group .btn-apply:hover, .hero-btn-group .btn-verify:hover {
     filter: brightness(1.2);
-    transform: translateY(-2px);
 }
 
 /* Quick Features Grid */
@@ -354,11 +369,9 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     overflow: hidden;
-    transition: transform 0.3s, border-color 0.3s;
 }
 
 .category-premium-card:hover {
-    transform: translateY(-4px);
     border-color: var(--btn-primary);
 }
 
@@ -435,7 +448,6 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
 .step-tracker-item.active .step-tracker-number {
     background-color: var(--btn-primary);
     color: #fff !important;
-    box-shadow: 0 0 10px rgba(0, 102, 255, 0.5);
 }
 
 .step-tracker-title {
@@ -553,13 +565,11 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
     color: #fff !important;
     font-size: 0.95rem;
     font-family: inherit;
-    transition: all 0.2s;
 }
 
 .input-with-icon input:focus, .input-with-icon select:focus {
     outline: none;
     border-color: var(--btn-primary);
-    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.2);
 }
 
 .form-row {
@@ -635,7 +645,6 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: background 0.2s;
 }
 
 .btn-submit:hover {
@@ -695,7 +704,6 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a {
     color: var(--text-muted) !important;
     text-decoration: none !important;
     font-size: 0.9rem;
-    transition: color 0.2s;
 }
 
 .footer-links-col ul li a:hover {

@@ -33,10 +33,11 @@
         <div class="footer-links-col">
             <h5>Visa Categories</h5>
             <ul>
-                <li><a href="#">Tourist Visa</a></li>
-                <li><a href="#">Business Visa</a></li>
-                <li><a href="#">Student Visa</a></li>
-                <li><a href="#">Family Visa</a></li>
+                @forelse($footerCategories as $category)
+                    <li><a href="{{ route('travel.apply') }}">{{ $category->name }}</a></li>
+                @empty
+                    <li><span class="text-muted">No categories available</span></li>
+                @endforelse
             </ul>
         </div>
         <div class="footer-links-col">
