@@ -20,6 +20,7 @@
             --border-color: #30363d;
             --accent-success: #238636;
             --accent-warning: #d29922;
+            --accent-purple: #a371f7;
         }
 
         body {
@@ -153,7 +154,7 @@
         /* Stat Cards */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 40px;
         }
@@ -295,12 +296,57 @@
         .reviews-table td {
             padding: 15px;
             border-bottom: 1px solid var(--border-color);
-            vertical-align: top;
+            vertical-align: middle;
         }
         .review-text-cell {
             max-width: 300px;
             white-space: normal;
         }
+        .country-flag-sm {
+            width: 30px;
+            height: 20px;
+            object-fit: cover;
+            border-radius: 2px;
+            border: 1px solid var(--border-color);
+        }
+        .cat-icon-preview {
+            width: 40px;
+            height: 40px;
+            background: #0d1117;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--accent-purple);
+            border: 1px solid var(--border-color);
+        }
+        .cat-image-sm {
+            width: 50px;
+            height: 35px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .visa-type-tag {
+            background: rgba(163, 113, 247, 0.1);
+            color: var(--accent-purple);
+            border: 1px solid rgba(163, 113, 247, 0.2);
+            padding: 2px 10px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .visa-type-tag i {
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+        .visa-type-tag i:hover { color: #ff4d4d; }
     </style>
 </head>
 <body>
@@ -320,6 +366,9 @@
             </a>
             <a class="nav-link" id="nav-countries" onclick="showSection('countries')">
                 <i class="fas fa-globe"></i> Countries
+            </a>
+            <a class="nav-link" id="nav-categories" onclick="showSection('categories')">
+                <i class="fas fa-th-large"></i> Categories
             </a>
             <a class="nav-link" id="nav-security" onclick="showSection('security')">
                 <i class="fas fa-shield-alt"></i> Security
@@ -359,6 +408,15 @@
                     </div>
                 </div>
                 <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(163, 113, 247, 0.1); color: var(--accent-purple);">
+                        <i class="fas fa-th-large"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p>Total Categories</p>
+                        <h3>{{ $stats['total_categories'] ?? 0 }}</h3>
+                    </div>
+                </div>
+                <div class="stat-card">
                     <div class="stat-icon" style="background: rgba(210, 153, 34, 0.1); color: var(--accent-warning);">
                         <i class="fas fa-clock"></i>
                     </div>
@@ -382,6 +440,7 @@
                 <h5 class="section-title">Quick Actions</h5>
                 <div class="d-flex gap-3 mt-3">
                     <button class="btn btn-outline-primary" onclick="showSection('countries')">Manage Countries</button>
+                    <button class="btn btn-outline-purple" style="color:#a371f7; border-color:#a371f7;" onclick="showSection('categories')">Manage Categories</button>
                     <button class="btn btn-outline-info" onclick="showSection('playstore')">Edit Settings</button>
                 </div>
             </div>
@@ -391,14 +450,18 @@
         <section id="countriesSection" class="dashboard-section d-none">
             <div class="admin-card">
                 <h5 class="section-title">Add New Country</h5>
-                <form id="addCountryForm">
+                <form id="addCountryForm" enctype="multipart/form-data">
                     @csrf
                     <div class="row g-3">
-                        <div class="col-md-8">
+                        <div class="col-md-5">
                             <label class="form-label">Country Name</label>
                             <input type="text" name="name" class="form-control" placeholder="e.g. United Arab Emirates" required>
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Country Flag</label>
+                            <input type="file" name="flag_file" class="form-control" accept="image/*" required>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn-primary-custom w-100">Add Country</button>
                         </div>
                     </div>
@@ -408,13 +471,91 @@
                 <h5 class="section-title">Manage Countries</h5>
                 <div class="table-responsive mt-3">
                     <table class="reviews-table">
-                        <thead><tr><th>ID</th><th>Country Name</th><th>Action</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Flag</th><th>Country Name</th><th>Action</th></tr></thead>
                         <tbody>
                             @foreach($countries as $country)
                             <tr>
                                 <td>{{ $country->id }}</td>
+                                <td>
+                                    @if($country->flag)
+                                        <img src="{{ $country->flag }}" class="country-flag-sm">
+                                    @else
+                                        <span class="text-muted">No Flag</span>
+                                    @endif
+                                </td>
                                 <td>{{ $country->name }}</td>
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteCountry({{ $country->id }})"><i class="fas fa-trash"></i></button></td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Categories -->
+        <section id="categoriesSection" class="dashboard-section d-none">
+            <div class="admin-card">
+                <h5 class="section-title">Add New Category</h5>
+                <form id="addCategoryForm" enctype="multipart/form-data">
+                    @csrf
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Category Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Tourist Visa" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Icon Class (FontAwesome)</label>
+                            <input type="text" name="icon" class="form-control" placeholder="fas fa-suitcase-rolling" value="fas fa-suitcase-rolling">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Display Image</label>
+                            <input type="file" name="image_file" class="form-control" accept="image/*">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Short Description</label>
+                            <textarea name="description" class="form-control" rows="2" placeholder="Brief info about this visa type..."></textarea>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn-primary-custom w-100">Add Category</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="admin-card">
+                <h5 class="section-title">Manage Categories & Visa Types</h5>
+                <p class="text-muted small">Add specific visa types (e.g., Driver, Electrician) to each category.</p>
+                <div class="table-responsive mt-3">
+                    <table class="reviews-table">
+                        <thead><tr><th>ID</th><th>Icon/Image</th><th>Category Name & Types</th><th>Action</th></tr></thead>
+                        <tbody>
+                            @foreach($categories as $cat)
+                            <tr>
+                                <td>{{ $cat->id }}</td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <div class="cat-icon-preview"><i class="{{ $cat->icon }}"></i></div>
+                                        @if($cat->image)
+                                            <img src="{{ $cat->image }}" class="cat-image-sm">
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>{{ $cat->name }}</strong><br>
+                                    <div class="mt-2 mb-2" id="types-list-{{ $cat->id }}">
+                                        @foreach($cat->types ?? [] as $type)
+                                            <span class="visa-type-tag">
+                                                {{ $type->name }}
+                                                <i class="fas fa-times" onclick="deleteVisaType({{ $type->id }})"></i>
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                    <div class="input-group input-group-sm mt-2" style="max-width: 300px;">
+                                        <input type="text" id="type-input-{{ $cat->id }}" class="form-control bg-dark text-white border-secondary" placeholder="New Type (e.g. Driver)">
+                                        <button class="btn btn-outline-purple" type="button" onclick="addVisaType({{ $cat->id }})"><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </td>
+                                <td><button class="btn btn-sm btn-danger" onclick="deleteCategory({{ $cat->id }})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -533,19 +674,15 @@
 
     <script>
         function showSection(sectionId) {
-            // Persist the active section
             localStorage.setItem('activeAdminTab', sectionId);
-
             document.querySelectorAll('.dashboard-section').forEach(s => s.classList.add('d-none'));
             const targetSection = document.getElementById(sectionId + 'Section');
             if (targetSection) targetSection.classList.remove('d-none');
-
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             const targetNav = document.getElementById('nav-' + sectionId);
             if (targetNav) targetNav.classList.add('active');
         }
 
-        // Initialize from localStorage
         window.onload = function() {
             const activeTab = localStorage.getItem('activeAdminTab') || 'dashboard';
             showSection(activeTab);
@@ -582,6 +719,47 @@
         async function deleteCountry(id) {
             if (!confirm("Delete this country?")) return;
             const res = await fetch("{{ route('admin.countries.delete') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) location.reload();
+        }
+
+        document.getElementById('addCategoryForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const res = await fetch("{{ route('admin.categories.add') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                body: new FormData(this)
+            });
+            if (res.ok) location.reload();
+        };
+
+        async function deleteCategory(id) {
+            if (!confirm("Delete this category?")) return;
+            const res = await fetch("{{ route('admin.categories.delete') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) location.reload();
+        }
+
+        async function addVisaType(catId) {
+            const name = document.getElementById('type-input-' + catId).value;
+            if (!name) return;
+            const res = await fetch("{{ route('admin.visa_types.add') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
+                body: JSON.stringify({ category_id: catId, name: name })
+            });
+            if (res.ok) location.reload();
+        }
+
+        async function deleteVisaType(id) {
+            if (!confirm("Delete this visa type?")) return;
+            const res = await fetch("{{ route('admin.visa_types.delete') }}", {
                 method: 'POST',
                 headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
                 body: JSON.stringify({ id })

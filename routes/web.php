@@ -42,15 +42,22 @@ Route::get('/', function () {
     $settings = getAppSettings();
     $theme = $settings->active_theme ?? 'travel';
 
+    $countries = [];
+    $categories = [];
+    try {
+        $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+        $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
+    } catch (\Exception $e) {}
+
     if ($theme === 'playstore') {
-        return view('frontend.index', compact('settings'));
+        return view('frontend.index', compact('settings', 'countries'));
     }
 
     if ($theme === 'landing') {
-        return view('index', compact('settings'));
+        return view('index', compact('settings', 'countries'));
     }
 
-    return view('frontend.travel', compact('settings'));
+    return view('frontend.travel', compact('settings', 'countries', 'categories'));
 });
 
 // Travel App Routes
@@ -67,10 +74,12 @@ Route::get('/verify', function () {
 Route::get('/apply', function () {
     $settings = getAppSettings();
     $countries = [];
+    $categories = [];
     try {
         $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+        $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
     } catch (\Exception $e) {}
-    return view('frontend.travel_apply', compact('settings', 'countries'));
+    return view('frontend.travel_apply', compact('settings', 'countries', 'categories'));
 })->name('travel.apply');
 
 Route::get('/about', function () {
@@ -82,6 +91,9 @@ Route::get('/contact', function () {
     $settings = getAppSettings();
     return view('frontend.travel_contact', compact('settings'));
 })->name('travel.contact');
+
+// API for dynamic visa types
+Route::get('/api/visa-types/{category_id}', [AdminController::class, 'getVisaTypesByCategory']);
 
 // Admin Login Routes
 Route::get('/admin/login', [AdminController::class, 'showLogin'])->name('admin.login');
@@ -103,6 +115,14 @@ Route::middleware(['admin.auth'])->group(function () {
     // Country Management API
     Route::post('/admin/countries/add', [AdminController::class, 'addCountry'])->name('admin.countries.add');
     Route::post('/admin/countries/delete', [AdminController::class, 'deleteCountry'])->name('admin.countries.delete');
+
+    // Category Management API
+    Route::post('/admin/categories/add', [AdminController::class, 'addCategory'])->name('admin.categories.add');
+    Route::post('/admin/categories/delete', [AdminController::class, 'deleteCategory'])->name('admin.categories.delete');
+
+    // Visa Type Management API
+    Route::post('/admin/visa-types/add', [AdminController::class, 'addVisaType'])->name('admin.visa_types.add');
+    Route::post('/admin/visa-types/delete', [AdminController::class, 'deleteVisaType'])->name('admin.visa_types.delete');
 
     // Security API
     Route::post('/admin/password/update', [AdminController::class, 'updatePassword'])->name('admin.password.update');

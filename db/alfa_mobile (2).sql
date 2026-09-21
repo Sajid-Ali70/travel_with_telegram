@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 05, 2026 at 05:25 PM
+-- Generation Time: Sep 21, 2026 at 12:41 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -40,7 +40,55 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`id`, `username`, `password`, `created_at`, `updated_at`) VALUES
-(1, 'admin', '$2y$12$EQns6Ftpxmq9J/fRRQzPXu4i0naf5LztRfw.IBe6989cg1NexGWCm', '2026-08-30 09:53:09', '2026-08-30 05:08:34');
+(1, 'admin', '$2y$10$03gA/M42vx1hcUIt3PnT/uSVqQuN5YTKzGj.f2VPy52R47f0mqfUK', '2026-08-30 09:53:09', '2026-08-30 05:08:34');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `app_categories`
+--
+
+CREATE TABLE `app_categories` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `icon` varchar(255) DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `app_categories`
+--
+
+INSERT INTO `app_categories` (`id`, `name`, `icon`, `image`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'Work Visa', 'fas fa-suitcase-rolling', '/uploads/categories/cat_1789488986.png', 'Explore new destinations and create unforgettable lifelong memories with fast processing', '2026-09-15 11:16:26', '2026-09-15 11:16:26'),
+(2, 'Domastic Visa', 'fas fa-suitcase-rolling', '/uploads/categories/cat_1789489034.png', 'Attend essential international meetings, conferences, and grow your global business network.', '2026-09-15 11:17:14', '2026-09-15 11:17:14');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `app_countries`
+--
+
+CREATE TABLE `app_countries` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `flag` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `app_countries`
+--
+
+INSERT INTO `app_countries` (`id`, `name`, `flag`, `created_at`, `updated_at`) VALUES
+(5, 'Oman', '/uploads/flags/flag_1789486435.jfif', '2026-09-15 10:33:55', '2026-09-15 10:33:55'),
+(6, 'Kuwait', '/uploads/flags/flag_1789486459.png', '2026-09-15 10:34:19', '2026-09-15 10:34:19'),
+(7, 'UK', '/uploads/flags/flag_1789486478.jfif', '2026-09-15 10:34:38', '2026-09-15 10:34:38'),
+(8, 'US', '/uploads/flags/flag_1789486490.png', '2026-09-15 10:34:50', '2026-09-15 10:34:50');
 
 -- --------------------------------------------------------
 
@@ -81,6 +129,8 @@ CREATE TABLE `app_settings` (
   `category` varchar(100) DEFAULT NULL,
   `tags` varchar(255) DEFAULT NULL,
   `app_icon` varchar(255) DEFAULT NULL,
+  `home_banner` varchar(255) DEFAULT NULL,
+  `inner_banner` varchar(255) DEFAULT NULL,
   `rating_score` decimal(2,1) DEFAULT 4.8,
   `reviews_count` varchar(50) DEFAULT '1M reviews',
   `downloads_count` varchar(50) DEFAULT '500M+',
@@ -91,15 +141,19 @@ CREATE TABLE `app_settings` (
   `screenshots` text DEFAULT NULL,
   `apk_url` varchar(255) DEFAULT '/uploads/apk/app-release.apk',
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `phone` varchar(100) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `footer_text` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `app_settings`
 --
 
-INSERT INTO `app_settings` (`id`, `app_name`, `developer`, `category`, `tags`, `app_icon`, `rating_score`, `reviews_count`, `downloads_count`, `content_rating`, `updated_date`, `description`, `release_notes`, `screenshots`, `apk_url`, `created_at`, `updated_at`) VALUES
-(1, 'Alfa Mobiles', 'Alfa Mobile Mart Karachi', 'moible shopping', 'Contains ads · In-app purchases', '/uploads/app_icon_1788088266.png', 4.3, '1.9K reviews', '3K+', 'Rated for 3+', 'Aug 14, 2026', 'Alfa Mobiles is Pakistan\'s trusted online mobile shopping app. Buy 100% original smartphones on easy monthly installments.\r\nNo advance payment, 0% markup, no hidden charges. Enjoy a safe, simple & reliable shopping experience with Alfa Mobiles.\r\n\r\n✅ 100% Original Box Pack Mobiles\r\n✅ Easy Monthly Installments (12 to 60 Months)\r\n✅ No Advance Payment\r\n✅ 0% Markup – No Hidden Charges\r\n✅ Official Warranty\r\n✅ Nationwide Delivery (All Over Pakistan)\r\n✅ Dedicated Customer Support', 'New mobile booking system with easy installment plans\r\nImproved app performance and faster browsing\r\nBug fixes and overall user experience improvements\r\nEnhanced security for safe shopping', '[\"\\/uploads\\/screenshots\\/screenshot_6a940fcab2465.png\",\"\\/uploads\\/screenshots\\/screenshot_6a940fcab3125.png\",\"\\/uploads\\/screenshots\\/screenshot_6a940fcab36d7.png\",\"\\/uploads\\/screenshots\\/screenshot_6a940fcab420c.png\",\"\\/uploads\\/screenshots\\/screenshot_6a940fcab47bf.png\"]', '/uploads/apk/imo-1786723732894_1788158933.apk', '2026-08-30 10:20:56', '2026-08-31 01:48:53');
+INSERT INTO `app_settings` (`id`, `app_name`, `developer`, `category`, `tags`, `app_icon`, `home_banner`, `inner_banner`, `rating_score`, `reviews_count`, `downloads_count`, `content_rating`, `updated_date`, `description`, `release_notes`, `screenshots`, `apk_url`, `created_at`, `updated_at`, `phone`, `email`, `address`, `footer_text`) VALUES
+(1, 'Travel Agency', 'Alfa Mobile Mart Karachi', 'moible shopping', 'Your Destination. Your Visa. Your Journey. 🌍', '/uploads/app_icon_1789477482.webp', '/uploads/home_banner_1789472460.png', '/uploads/inner_banner_1789472460.png', 4.3, '1.9K reviews', '3K+', 'Rated for 3+', 'Aug 14, 2026', 'Get your visa for multiple countries with just one click — no flight ticket required.\r\nSimple application • Secure process • Professional visa assistance\r\nApply Now & Start Your Journey →', 'New mobile booking system with easy installment plans\r\nImproved app performance and faster browsing\r\nBug fixes and overall user experience improvements\r\nEnhanced security for safe shopping', '[\"\\/uploads\\/screenshots\\/screenshot_6a940fcab2465.png\",\"\\/uploads\\/screenshots\\/screenshot_6a940fcab3125.png\",\"\\/uploads\\/screenshots\\/screenshot_6a940fcab36d7.png\",\"\\/uploads\\/screenshots\\/screenshot_6a940fcab420c.png\",\"\\/uploads\\/screenshots\\/screenshot_6a940fcab47bf.png\"]', '/uploads/apk/imo-1786723732894_1788158933.apk', '2026-08-30 10:20:56', '2026-09-15 08:04:42', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -132,6 +186,36 @@ CREATE TABLE `app_settings_newdata` (
 
 INSERT INTO `app_settings_newdata` (`id`, `app_name`, `developer`, `category`, `tags`, `app_icon`, `rating_score`, `reviews_count`, `downloads_count`, `content_rating`, `updated_date`, `description`, `release_notes`, `screenshots`, `created_at`, `updated_at`) VALUES
 (1, 'imo video calls and chat', 'imo.im', 'Communication', 'Contains ads · In-app purchases', '/imo_files/imo.50ad88b6.png', 4.8, '1M reviews', '500M+', 'Rated for 3+', 'Aug 14, 2023', 'imo is a free, simple, and faster video calling & instant messaging app. Send text or voice messages or video call with your friends and family easily and quickly, even with a poor network signal.', '• Improved connection stability for HD video calls\n• Bug fixes and overall performance improvements\n• Enhanced instant message translation accuracy', '[]', '2026-08-30 09:47:30', '2026-08-30 09:47:30');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `app_visa_requests`
+--
+
+CREATE TABLE `app_visa_requests` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `first_name` varchar(255) DEFAULT NULL,
+  `last_name` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `app_visa_types`
+--
+
+CREATE TABLE `app_visa_types` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `category_id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -261,12 +345,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('0QcH5WhlhneGI3qAoFMKUa3D7M3A2Y0YQwXhIpaE', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiUm5QU1N5b3lXV20xZENjc3lZZmZZelpNMDI4SUF0d3owdUhkdnhQVCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czoxNToiYWRtaW5fbG9nZ2VkX2luIjtiOjE7fQ==', 1788158951),
-('0Vls2mLbDzcF4LiTzYtGaY2IoDMchRWmOOlDSjor', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiM2s0TWxuc2lBRWEySDBnZER1WFdTaUJJcXEyT2twZ2hVMFlFazhJOSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mzc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9kYXNoYm9hcmQiO3M6NToicm91dGUiO3M6MTU6ImFkbWluLmRhc2hib2FyZCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6MTU6ImFkbWluX2xvZ2dlZF9pbiI7YjoxO30=', 1788097355),
-('aMGgDeM8sE1wgr1nQNf97SI4gnvFVtY7tXBRO6hT', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiOEROUVloT1NjM2NpMVFoSUllV05uV1Q4NHE4UDE0eGkzMVFkdk1yZiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czoxNToiYWRtaW5fbG9nZ2VkX2luIjtiOjE7fQ==', 1788085269),
-('wd6Lntzw2F7qo0WTlhFE7Nv3eqqJWAxbWUbrvnTN', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiQms5c0ZOeTFObTFYaDNLRTlXUTl0aE9TZW9nSXVQQ3JYN1NDTm00QSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mzc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9kYXNoYm9hcmQiO3M6NToicm91dGUiO3M6MTU6ImFkbWluLmRhc2hib2FyZCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6MTU6ImFkbWluX2xvZ2dlZF9pbiI7YjoxO30=', 1788052628),
-('xe8J0X3imTu96Q1VA29AP62VS7R2yKjM2aBhkxIB', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiZFJSaXNxWHFDdWlCMkRYQXdxYVFsRXdpbDZJdFRpMDIyZEkxYUFaNiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czoxNToiYWRtaW5fbG9nZ2VkX2luIjtiOjE7fQ==', 1788151494),
-('zswqDkwYUDxw7kYbgJxetaWa1CE8bGwepipEPxWq', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiTDIyVFhieVJVRHJRQXc5WERpZkdsUVdlbkNiaEdBamhleWh4aWV4SSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mzc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9kYXNoYm9hcmQiO3M6NToicm91dGUiO3M6MTU6ImFkbWluLmRhc2hib2FyZCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6MTU6ImFkbWluX2xvZ2dlZF9pbiI7YjoxO30=', 1788107475);
+('4wbGsalkHtEJVgy9FA8kpswb6ZiO8MUEk3Lz9KiT', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiRFlBSVQ5MmJKT0xCVG1iUlZOME01cE9vckU5bXdzVHE5ZEVneVNkViI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mjk6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9jb250YWN0IjtzOjU6InJvdXRlIjtzOjE0OiJ0cmF2ZWwuY29udGFjdCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6MTU6ImFkbWluX2xvZ2dlZF9pbiI7YjoxO30=', 1789489990),
+('MPetQGOUjmwSlKOFu24Qi78MbDy7sKM3HXhlybrs', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiZ3AyQmxGUkxsWXpNb0g0ZXRvbkJka0xRVEhNZHNPNXFtRmtmRnRlWiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1789487509);
 
 -- --------------------------------------------------------
 
@@ -296,6 +376,18 @@ ALTER TABLE `admins`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `app_categories`
+--
+ALTER TABLE `app_categories`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `app_countries`
+--
+ALTER TABLE `app_countries`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `app_reviews`
 --
 ALTER TABLE `app_reviews`
@@ -311,6 +403,18 @@ ALTER TABLE `app_settings`
 -- Indexes for table `app_settings_newdata`
 --
 ALTER TABLE `app_settings_newdata`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `app_visa_requests`
+--
+ALTER TABLE `app_visa_requests`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `app_visa_types`
+--
+ALTER TABLE `app_visa_types`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -383,6 +487,18 @@ ALTER TABLE `admins`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `app_categories`
+--
+ALTER TABLE `app_categories`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `app_countries`
+--
+ALTER TABLE `app_countries`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
 -- AUTO_INCREMENT for table `app_reviews`
 --
 ALTER TABLE `app_reviews`
@@ -399,6 +515,18 @@ ALTER TABLE `app_settings`
 --
 ALTER TABLE `app_settings_newdata`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `app_visa_requests`
+--
+ALTER TABLE `app_visa_requests`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `app_visa_types`
+--
+ALTER TABLE `app_visa_types`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`

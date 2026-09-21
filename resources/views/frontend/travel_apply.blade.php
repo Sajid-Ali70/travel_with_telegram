@@ -177,33 +177,35 @@
                         </div>
 
                         <div class="visa-type-selector">
-                            <div class="visa-type-option">
-                                <input type="radio" name="visa_cat" id="v_work" checked>
-                                <label for="v_work" class="w-100 cursor-pointer m-0">
-                                    <div class="mt-1"><i class="fas fa-briefcase text-primary fs-5"></i></div>
-                                    <div class="fw-bold mt-2 text-white" style="font-size: 0.9rem;">WORK VISA</div>
-                                    <div class="text-muted" style="font-size: 0.8rem; margin-top: 2px;">Category Employment</div>
-                                </label>
-                            </div>
-                            <div class="visa-type-option">
-                                <input type="radio" name="visa_cat" id="v_domestic">
-                                <label for="v_domestic" class="w-100 cursor-pointer m-0">
-                                    <div class="mt-1"><i class="fas fa-home text-success fs-5"></i></div>
-                                    <div class="fw-bold mt-2 text-white" style="font-size: 0.9rem;">DOMESTIC</div>
-                                    <div class="text-muted" style="font-size: 0.8rem; margin-top: 2px;">Category Domestic Care</div>
-                                </label>
-                            </div>
+                            @if(isset($categories) && count($categories) > 0)
+                                @foreach($categories as $index => $cat)
+                                    <div class="visa-type-option">
+                                        <input type="radio" name="visa_cat" class="visa-cat-radio" id="v_{{ $cat->id }}" value="{{ $cat->id }}" {{ $index == 0 ? 'checked' : '' }}>
+                                        <label for="v_{{ $cat->id }}" class="w-100 cursor-pointer m-0">
+                                            <div class="mt-1"><i class="{{ $cat->icon ?? 'fas fa-briefcase' }} text-primary fs-5"></i></div>
+                                            <div class="fw-bold mt-2 text-white" style="font-size: 0.9rem;">{{ strtoupper($cat->name) }}</div>
+                                            <div class="text-muted" style="font-size: 0.8rem; margin-top: 2px;">{{ Str::limit($cat->description, 30) }}</div>
+                                        </label>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="visa-type-option">
+                                    <input type="radio" name="visa_cat" id="v_work" checked>
+                                    <label for="v_work" class="w-100 cursor-pointer m-0">
+                                        <div class="mt-1"><i class="fas fa-briefcase text-primary fs-5"></i></div>
+                                        <div class="fw-bold mt-2 text-white" style="font-size: 0.9rem;">WORK VISA</div>
+                                        <div class="text-muted" style="font-size: 0.8rem; margin-top: 2px;">Category Employment</div>
+                                    </label>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="form-group">
                             <label>VISA TYPE / OCCUPATION *</label>
                             <div class="input-with-icon">
                                 <i class="far fa-list-alt"></i>
-                                <select class="form-select" required style="padding-left: 48px;">
+                                <select id="visa_type_select" class="form-select" required style="padding-left: 48px;">
                                     <option value="" selected disabled>Select Visa Type</option>
-                                    <option>Construction Worker</option>
-                                    <option>Driver</option>
-                                    <option>Electrician</option>
                                 </select>
                             </div>
                         </div>
@@ -259,6 +261,54 @@
 
         @include('partials.footer')
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const catRadios = document.querySelectorAll('.visa-cat-radio');
+            const typeSelect = document.getElementById('visa_type_select');
+
+            async function updateVisaTypes(catId) {
+                typeSelect.innerHTML = '<option value="" selected disabled>Loading...</option>';
+                try {
+                    const response = await fetch(`/api/visa-types/${catId}`);
+                    const types = await response.json();
+
+                    typeSelect.innerHTML = '<option value="" selected disabled>Select Visa Type</option>';
+                    if (types.length > 0) {
+                        types.forEach(type => {
+                            const option = document.createElement('option');
+                            option.value = type.name;
+                            option.textContent = type.name;
+                            typeSelect.appendChild(option);
+                        });
+                    } else {
+                        const option = document.createElement('option');
+                        option.value = "";
+                        option.textContent = "No types available for this category";
+                        typeSelect.appendChild(option);
+                    }
+                } catch (error) {
+                    console.error('Error fetching visa types:', error);
+                    typeSelect.innerHTML = '<option value="" selected disabled>Error loading types</option>';
+                }
+            }
+
+            catRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        updateVisaTypes(this.value);
+                    }
+                });
+            });
+
+            // Initial load for checked radio
+            const checkedRadio = document.querySelector('.visa-cat-radio:checked');
+            if (checkedRadio) {
+                updateVisaTypes(checkedRadio.value);
+            }
+        });
+    </script>
+
     <script src="{{ asset('js/app.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

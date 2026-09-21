@@ -34,6 +34,31 @@ class AdminController extends Controller
                 Schema::create('app_countries', function (Blueprint $table) {
                     $table->id();
                     $table->string('name');
+                    $table->string('flag')->nullable();
+                    $table->timestamps();
+                });
+            } else {
+                if (!Schema::hasColumn('app_countries', 'flag')) {
+                    DB::statement("ALTER TABLE `app_countries` ADD `flag` VARCHAR(255) NULL DEFAULT NULL AFTER `name` ");
+                }
+            }
+
+            if (!Schema::hasTable('app_categories')) {
+                Schema::create('app_categories', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('name');
+                    $table->string('icon')->nullable();
+                    $table->string('image')->nullable();
+                    $table->text('description')->nullable();
+                    $table->timestamps();
+                });
+            }
+
+            if (!Schema::hasTable('app_visa_types')) {
+                Schema::create('app_visa_types', function (Blueprint $table) {
+                    $table->id();
+                    $table->unsignedBigInteger('category_id');
+                    $table->string('name');
                     $table->timestamps();
                 });
             }
@@ -81,8 +106,12 @@ class AdminController extends Controller
 
         $settings = null;
         $countries = [];
+        $categories = [];
+        $visa_types = [];
         $stats = [
             'total_countries' => 0,
+            'total_categories' => 0,
+            'total_visa_types' => 0,
             'pending_requests' => 0,
             'approved_requests' => 0
         ];
@@ -90,8 +119,17 @@ class AdminController extends Controller
         try {
             $settings = DB::table('app_settings')->where('id', 1)->first();
             $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+            $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
+
+            $visa_types = DB::table('app_visa_types')
+                ->join('app_categories', 'app_visa_types.category_id', '=', 'app_categories.id')
+                ->select('app_visa_types.*', 'app_categories.name as category_name')
+                ->orderBy('category_id', 'asc')
+                ->get();
 
             $stats['total_countries'] = DB::table('app_countries')->count();
+            $stats['total_categories'] = DB::table('app_categories')->count();
+            $stats['total_visa_types'] = DB::table('app_visa_types')->count();
             $stats['pending_requests'] = DB::table('app_visa_requests')->where('status', 'pending')->count();
             $stats['approved_requests'] = DB::table('app_visa_requests')->where('status', 'approved')->count();
         } catch (\Exception $e) {}
@@ -112,7 +150,7 @@ class AdminController extends Controller
             ];
         }
 
-        return view('admin.dashboard', compact('settings', 'countries', 'stats'));
+        return view('admin.dashboard', compact('settings', 'countries', 'categories', 'visa_types', 'stats'));
     }
 
     public function updateSettings(Request $request)
@@ -154,78 +192,28 @@ class AdminController extends Controller
         }
     }
 
-    public function removeScreenshot(Request $request)
-    {
-        return response()->json(['message' => 'Feature removed']);
-    }
-
-    private function convertDriveLink($url)
-    {
-        if (strpos($url, 'drive.google.com') !== false) {
-            if (preg_match('/\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
-                return "https://drive.google.com/uc?export=download&id=" . $matches[1];
-            }
-            if (preg_match('/[?&]id=([a-zA-Z0-9_-]+)/', $url, $matches)) {
-                return "https://drive.google.com/uc?export=download&id=" . $matches[1];
-            }
-        }
-        return $url;
-    }
-
-    public function updateApkUrl(Request $request)
-    {
-        $request->validate(['apk_url' => 'required']);
-        $apkUrl = $this->convertDriveLink($request->apk_url);
-
-        try {
-            DB::table('app_settings')->updateOrInsert(['id' => 1], [
-                'apk_url' => $apkUrl,
-                'updated_at' => now()
-            ]);
-            return response()->json(['message' => 'URL updated successfully', 'url' => $apkUrl]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Database error'], 500);
-        }
-    }
-
-    public function uploadApk(Request $request)
-    {
-        if (!$request->hasFile('apk_file')) {
-            return response()->json(['message' => 'No file uploaded'], 400);
-        }
-
-        $file = $request->file('apk_file');
-        try {
-            $apkDir = public_path('uploads/apk');
-            if (!File::isDirectory($apkDir)) File::makeDirectory($apkDir, 0777, true, true);
-
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $file->move($apkDir, $fileName);
-            $apkUrl = '/uploads/apk/' . $fileName;
-
-            DB::table('app_settings')->updateOrInsert(['id' => 1], [
-                'apk_url' => $apkUrl,
-                'updated_at' => now()
-            ]);
-
-            return response()->json(['message' => 'File uploaded successfully', 'url' => $apkUrl]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Upload error'], 500);
-        }
-    }
-
     public function addCountry(Request $request)
     {
         $request->validate(['name' => 'required']);
+
+        $flagUrl = null;
+        if ($request->hasFile('flag_file')) {
+            $file = $request->file('flag_file');
+            $fileName = 'flag_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/flags'), $fileName);
+            $flagUrl = '/uploads/flags/' . $fileName;
+        }
+
         try {
             DB::table('app_countries')->insert([
                 'name' => $request->name,
+                'flag' => $flagUrl,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
             return response()->json(['message' => 'Country added']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Database error'], 500);
+            return response()->json(['message' => 'Database error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -236,6 +224,90 @@ class AdminController extends Controller
             return response()->json(['message' => 'Country deleted']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Database error'], 500);
+        }
+    }
+
+    public function addCategory(Request $request)
+    {
+        $request->validate(['name' => 'required']);
+
+        $imageUrl = null;
+        if ($request->hasFile('image_file')) {
+            $file = $request->file('image_file');
+            $fileName = 'cat_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/categories'), $fileName);
+            $imageUrl = '/uploads/categories/' . $fileName;
+        }
+
+        try {
+            DB::table('app_categories')->insert([
+                'name' => $request->name,
+                'icon' => $request->icon ?? 'fas fa-suitcase-rolling',
+                'description' => $request->description,
+                'image' => $imageUrl,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            return response()->json(['message' => 'Category added']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Database error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteCategory(Request $request)
+    {
+        try {
+            DB::table('app_categories')->where('id', $request->id)->delete();
+            DB::table('app_visa_types')->where('category_id', $request->id)->delete();
+            return response()->json(['message' => 'Category deleted']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Database error'], 500);
+        }
+    }
+
+    public function addVisaType(Request $request)
+    {
+        $request->validate(['names' => 'required', 'category_id' => 'required']);
+
+        $names = explode(',', $request->names);
+        $inserted = 0;
+
+        try {
+            foreach ($names as $name) {
+                $trimmedName = trim($name);
+                if (!empty($trimmedName)) {
+                    DB::table('app_visa_types')->insert([
+                        'category_id' => $request->category_id,
+                        'name' => $trimmedName,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $inserted++;
+                }
+            }
+            return response()->json(['message' => $inserted . ' Visa types added']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Database error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteVisaType(Request $request)
+    {
+        try {
+            DB::table('app_visa_types')->where('id', $request->id)->delete();
+            return response()->json(['message' => 'Visa type deleted']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Database error'], 500);
+        }
+    }
+
+    public function getVisaTypesByCategory($categoryId)
+    {
+        try {
+            $types = DB::table('app_visa_types')->where('category_id', $categoryId)->get();
+            return response()->json($types);
+        } catch (\Exception $e) {
+            return response()->json([], 500);
         }
     }
 

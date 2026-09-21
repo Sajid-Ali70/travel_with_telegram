@@ -107,6 +107,26 @@
             @endif
         </div>
 
+        <!-- Country Logo Slider -->
+        <div class="logo-slider">
+            <div class="logo-slider-track">
+                @php
+                    $countries = ['pk', 'ae', 'sa', 'us', 'gb', 'de', 'fr', 'tr', 'my', 'cn'];
+                @endphp
+                @foreach($countries as $code)
+                <div class="logo-slide">
+                    <img src="https://flagcdn.com/w160/{{ $code }}.png" alt="{{ strtoupper($code) }}">
+                </div>
+                @endforeach
+                {{-- Repeat for seamless loop --}}
+                @foreach($countries as $code)
+                <div class="logo-slide">
+                    <img src="https://flagcdn.com/w160/{{ $code }}.png" alt="{{ strtoupper($code) }}">
+                </div>
+                @endforeach
+            </div>
+        </div>
+
         <!-- Category Tag -->
         <div class="mb-4">
             <span class="badge rounded-pill bg-light text-dark border px-3 py-2 fw-normal">{{ $settings->category ?? 'Shopping' }}</span>
