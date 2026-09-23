@@ -57,6 +57,19 @@
                     <form action="{{ route('travel.apply.post') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="form-group">
+                            <label>NATIONALITY *</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-flag"></i>
+                                <select name="nationality" class="form-select" required style="padding-left: 48px;">
+                                    <option value="" selected disabled>Select Nationality</option>
+                                    @foreach($nationalities as $nationality)
+                                        <option value="{{ $nationality->name }}" {{ old('nationality') == $nationality->name ? 'selected' : '' }}>{{ $nationality->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
                             <label>Apply Date *</label>
                             <div class="input-with-icon">
                                 <i class="far fa-calendar-alt"></i>

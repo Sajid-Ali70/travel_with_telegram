@@ -117,6 +117,18 @@
                         </div>
                     @endforeach
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label">Nationality</label>
+                    <select name="nationality" class="form-select">
+                        <option value="">Select nationality</option>
+                        @foreach($nationalities as $nationality)
+                            <option value="{{ $nationality->name }}" {{ old('nationality', $visaRequest->nationality) === $nationality->name ? 'selected' : '' }}>{{ $nationality->name }}</option>
+                        @endforeach
+                        @if($visaRequest->nationality && (!$nationalities->count() || !$nationalities->contains('name', $visaRequest->nationality)))
+                            <option value="{{ $visaRequest->nationality }}" selected>{{ $visaRequest->nationality }}</option>
+                        @endif
+                    </select>
+                </div>
             </div>
 
             <h2 class="section-title">Passport Details</h2>

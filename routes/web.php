@@ -73,12 +73,14 @@ Route::get('/apply/success/{id}', [AdminController::class, 'applicationSuccess']
 Route::get('/apply', function () {
     $settings = getAppSettings();
     $countries = [];
+    $nationalities = [];
     $categories = [];
     try {
         $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+        $nationalities = DB::table('app_nationalities')->orderBy('name', 'asc')->get();
         $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
     } catch (\Exception $e) {}
-    return view('frontend.travel_apply', compact('settings', 'countries', 'categories'));
+    return view('frontend.travel_apply', compact('settings', 'countries', 'nationalities', 'categories'));
 })->name('travel.apply');
 
 Route::post('/apply', [AdminController::class, 'submitVisaRequest'])->name('travel.apply.post');
@@ -116,6 +118,8 @@ Route::middleware(['admin.auth'])->group(function () {
     // Country Management API
     Route::post('/admin/countries/add', [AdminController::class, 'addCountry'])->name('admin.countries.add');
     Route::post('/admin/countries/delete', [AdminController::class, 'deleteCountry'])->name('admin.countries.delete');
+    Route::post('/admin/nationalities/add', [AdminController::class, 'addNationality'])->name('admin.nationalities.add');
+    Route::post('/admin/nationalities/delete', [AdminController::class, 'deleteNationality'])->name('admin.nationalities.delete');
 
     // Category Management API
     Route::post('/admin/categories/add', [AdminController::class, 'addCategory'])->name('admin.categories.add');

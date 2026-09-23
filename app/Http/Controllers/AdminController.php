@@ -41,6 +41,14 @@ class AdminController extends Controller
                 });
             }
 
+            if (!Schema::hasTable('app_nationalities')) {
+                Schema::create('app_nationalities', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('name')->unique();
+                    $table->timestamps();
+                });
+            }
+
             if (!Schema::hasTable('app_categories')) {
                 Schema::create('app_categories', function (Blueprint $table) {
                     $table->id();
@@ -71,6 +79,7 @@ class AdminController extends Controller
                     $table->string('mobile_number')->nullable();
                     $table->string('dob')->nullable();
                     $table->string('gender')->nullable();
+                    $table->string('nationality')->nullable();
                     $table->string('passport_number')->nullable();
                     $table->string('passport_expiry')->nullable();
                     $table->string('passport_photo')->nullable();
@@ -86,6 +95,7 @@ class AdminController extends Controller
                     'mobile_number' => "ALTER TABLE `app_visa_requests` ADD `mobile_number` VARCHAR(50) NULL DEFAULT NULL ",
                     'dob' => "ALTER TABLE `app_visa_requests` ADD `dob` VARCHAR(50) NULL DEFAULT NULL ",
                     'gender' => "ALTER TABLE `app_visa_requests` ADD `gender` VARCHAR(50) NULL DEFAULT NULL ",
+                    'nationality' => "ALTER TABLE `app_visa_requests` ADD `nationality` VARCHAR(255) NULL DEFAULT NULL ",
                     'passport_number' => "ALTER TABLE `app_visa_requests` ADD `passport_number` VARCHAR(100) NULL DEFAULT NULL ",
                     'passport_expiry' => "ALTER TABLE `app_visa_requests` ADD `passport_expiry` VARCHAR(50) NULL DEFAULT NULL ",
                     'passport_photo' => "ALTER TABLE `app_visa_requests` ADD `passport_photo` VARCHAR(255) NULL DEFAULT NULL ",
@@ -132,6 +142,7 @@ class AdminController extends Controller
 
         $settings = null;
         $countries = [];
+        $nationalities = [];
         $categories = [];
         $visa_requests = [];
         $stats = [
@@ -146,6 +157,7 @@ class AdminController extends Controller
         try {
             $settings = DB::table('app_settings')->where('id', 1)->first();
             $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+            $nationalities = DB::table('app_nationalities')->orderBy('name', 'asc')->get();
             $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
 
             foreach($categories as $cat) {
@@ -178,7 +190,7 @@ class AdminController extends Controller
             ];
         }
 
-        return view('admin.dashboard', compact('settings', 'countries', 'categories', 'visa_requests', 'stats'));
+        return view('admin.dashboard', compact('settings', 'countries', 'nationalities', 'categories', 'visa_requests', 'stats'));
     }
 
     public function updateSettings(Request $request)
@@ -231,12 +243,13 @@ class AdminController extends Controller
 
         $settings = DB::table('app_settings')->where('id', 1)->first();
         $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+        $nationalities = DB::table('app_nationalities')->orderBy('name', 'asc')->get();
         $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
         foreach ($categories as $category) {
             $category->types = DB::table('app_visa_types')->where('category_id', $category->id)->get();
         }
 
-        return view('admin.edit_request', compact('visaRequest', 'settings', 'countries', 'categories'));
+        return view('admin.edit_request', compact('visaRequest', 'settings', 'countries', 'nationalities', 'categories'));
     }
 
     public function updateRequest(Request $request, $id)
@@ -249,6 +262,7 @@ class AdminController extends Controller
             'mobile_number' => 'required|string|max:50',
             'dob' => 'nullable|string|max:50',
             'gender' => 'required|in:male,female,other',
+            'nationality' => 'nullable|string|max:255',
             'passport_number' => 'required|string|max:100',
             'passport_expiry' => 'nullable|string|max:50',
             'destination_country' => 'required|string|max:255',
@@ -286,6 +300,10 @@ class AdminController extends Controller
     public function submitVisaRequest(Request $request)
     {
         $this->autoManageSettingsColumns();
+
+        $request->validate([
+            'nationality' => 'required|string|max:255|exists:app_nationalities,name',
+        ]);
 
         $data = $request->except(['_token', 'passport_photo_file']);
 
@@ -466,6 +484,32 @@ class AdminController extends Controller
         try {
             DB::table('app_countries')->where('id', $request->id)->delete();
             return response()->json(['message' => 'Country deleted']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Database error'], 500);
+        }
+    }
+
+    public function addNationality(Request $request)
+    {
+        $data = $request->validate(['name' => 'required|string|max:255|unique:app_nationalities,name']);
+
+        try {
+            DB::table('app_nationalities')->insert([
+                'name' => $data['name'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            return response()->json(['message' => 'Nationality added']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Database error'], 500);
+        }
+    }
+
+    public function deleteNationality(Request $request)
+    {
+        try {
+            DB::table('app_nationalities')->where('id', $request->id)->delete();
+            return response()->json(['message' => 'Nationality deleted']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Database error'], 500);
         }

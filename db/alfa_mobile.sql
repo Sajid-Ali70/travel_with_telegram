@@ -92,6 +92,19 @@ INSERT INTO `app_countries` (`id`, `name`, `flag`, `created_at`, `updated_at`) V
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `app_nationalities`
+--
+
+CREATE TABLE `app_nationalities` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `app_reviews`
 --
 
@@ -201,6 +214,7 @@ CREATE TABLE `app_visa_requests` (
   `mobile_number` varchar(50) DEFAULT NULL,
   `dob` varchar(50) DEFAULT NULL,
   `gender` varchar(50) DEFAULT NULL,
+  `nationality` varchar(255) DEFAULT NULL,
   `passport_number` varchar(100) DEFAULT NULL,
   `passport_expiry` varchar(50) DEFAULT NULL,
   `passport_photo` varchar(255) DEFAULT NULL,
@@ -217,9 +231,9 @@ CREATE TABLE `app_visa_requests` (
 -- Dumping data for table `app_visa_requests`
 --
 
-INSERT INTO `app_visa_requests` (`id`, `apply_date`, `first_name`, `last_name`, `email`, `mobile_number`, `dob`, `gender`, `passport_number`, `passport_expiry`, `passport_photo`, `destination_country`, `visa_category`, `visa_type`, `status`, `created_at`, `updated_at`, `admin_remarks`) VALUES
-(4, '2026-09-21', 'Sajid', 'Ali', 'sajidalilyallpur@gmail.com', '03277949105', '12/12/2000', 'male', '123234234312', '12-12-2032', '/uploads/passports/passport_1789998746.png', 'Oman', 'Hospital / Medical Jobs', 'General Medicine', 'pending', '2026-09-21 08:52:26', '2026-09-21 08:52:26', NULL),
-(5, '2026-09-21', 'Sajid', 'Ali', 'sajidalilyallpur@gmail.com', '03277949105', '12/12/2000', 'male', '123234234312', '12-12-2032', '/uploads/passports/passport_1789999540.png', 'Oman', 'Hospital / Medical Jobs', 'General Medicine', 'approved', '2026-09-21 09:05:40', '2026-09-21 09:13:51', NULL);
+INSERT INTO `app_visa_requests` (`id`, `apply_date`, `first_name`, `last_name`, `email`, `mobile_number`, `dob`, `gender`, `nationality`, `passport_number`, `passport_expiry`, `passport_photo`, `destination_country`, `visa_category`, `visa_type`, `status`, `created_at`, `updated_at`, `admin_remarks`) VALUES
+(4, '2026-09-21', 'Sajid', 'Ali', 'sajidalilyallpur@gmail.com', '03277949105', '12/12/2000', 'male', NULL, '123234234312', '12-12-2032', '/uploads/passports/passport_1789998746.png', 'Oman', 'Hospital / Medical Jobs', 'General Medicine', 'pending', '2026-09-21 08:52:26', '2026-09-21 08:52:26', NULL),
+(5, '2026-09-21', 'Sajid', 'Ali', 'sajidalilyallpur@gmail.com', '03277949105', '12/12/2000', 'male', NULL, '123234234312', '12-12-2032', '/uploads/passports/passport_1789999540.png', 'Oman', 'Hospital / Medical Jobs', 'General Medicine', 'approved', '2026-09-21 09:05:40', '2026-09-21 09:13:51', NULL);
 
 -- --------------------------------------------------------
 

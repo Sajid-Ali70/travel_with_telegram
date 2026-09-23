@@ -368,6 +368,9 @@
             <a class="nav-link" id="nav-countries" onclick="showSection('countries')">
                 <i class="fas fa-globe"></i> Countries
             </a>
+            <a class="nav-link" id="nav-nationalities" onclick="showSection('nationalities')">
+                <i class="fas fa-flag"></i> Nationalities
+            </a>
             <a class="nav-link" id="nav-categories" onclick="showSection('categories')">
                 <i class="fas fa-th-large"></i> Categories
             </a>
@@ -474,7 +477,8 @@
                                 <td>{{ $req->id }}</td>
                                 <td>
                                     <strong>{{ $req->first_name }} {{ $req->last_name }}</strong><br>
-                                    <small class="text-muted">DOB: {{ $req->dob }}</small>
+                                    <small class="text-muted">DOB: {{ $req->dob }}</small><br>
+                                    <small class="text-muted">Nationality: {{ $req->nationality ?: 'Not provided' }}</small>
                                 </td>
                                 <td>
                                     {{ $req->email }}<br>
@@ -550,6 +554,42 @@
                                 </td>
                                 <td>{{ $country->name }}</td>
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteCountry({{ $country->id }})"><i class="fas fa-trash"></i></button></td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Nationalities -->
+        <section id="nationalitiesSection" class="dashboard-section d-none">
+            <div class="admin-card">
+                <h5 class="section-title">Add New Nationality</h5>
+                <form id="addNationalityForm">
+                    @csrf
+                    <div class="row g-3">
+                        <div class="col-md-9">
+                            <label class="form-label">Nationality Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Pakistani" required>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn-primary-custom w-100">Add Nationality</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="admin-card">
+                <h5 class="section-title">Manage Nationalities</h5>
+                <div class="table-responsive mt-3">
+                    <table class="reviews-table">
+                        <thead><tr><th>ID</th><th>Nationality</th><th>Action</th></tr></thead>
+                        <tbody>
+                            @foreach($nationalities as $nationality)
+                            <tr>
+                                <td>{{ $nationality->id }}</td>
+                                <td>{{ $nationality->name }}</td>
+                                <td><button class="btn btn-sm btn-danger" onclick="deleteNationality({{ $nationality->id }})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -831,6 +871,26 @@
             });
             if (res.ok) location.reload();
         };
+
+        document.getElementById('addNationalityForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const res = await fetch("{{ route('admin.nationalities.add') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                body: new FormData(this)
+            });
+            if (res.ok) location.reload();
+        };
+
+        async function deleteNationality(id) {
+            if (!confirm("Delete this nationality?")) return;
+            const res = await fetch("{{ route('admin.nationalities.delete') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) location.reload();
+        }
 
         async function deleteCountry(id) {
             if (!confirm("Delete this country?")) return;
