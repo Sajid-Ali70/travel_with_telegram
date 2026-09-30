@@ -43,6 +43,8 @@
             flex-direction: column;
             z-index: 1200;
             transition: transform 0.3s ease;
+            overflow-y: auto;
+            overscroll-behavior-y: contain;
         }
 
         .brand-section {

@@ -9,7 +9,7 @@
     <style>
         :root { --bg-color: #0b0e14; --sidebar-bg: #0f131a; --card-bg: #161b22; --text-main: #ffffff; --text-secondary: #8b949e; --accent-blue: #007bff; --border-color: #30363d; }
         body { background: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', sans-serif; margin: 0; }
-        .sidebar { width: 260px; height: 100vh; background: var(--sidebar-bg); border-right: 1px solid var(--border-color); position: fixed; padding: 20px; display: flex; flex-direction: column; z-index: 1200; }
+        .sidebar { width: 260px; height: 100vh; background: var(--sidebar-bg); border-right: 1px solid var(--border-color); position: fixed; padding: 20px; display: flex; flex-direction: column; z-index: 1200; overflow-y: auto; overscroll-behavior-y: contain; }
         .brand-section { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
         .brand-logo-img { width: 80px; height: 80px; border-radius: 0; object-fit: contain; background: transparent; border: 0; }
         .brand-name { font-size: 1.15rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -43,12 +43,16 @@
         </div>
         <nav class="nav flex-column">
             <a href="/" class="nav-link" target="_blank"><i class="fas fa-external-link-alt"></i> View Site</a>
-            <a href="{{ route('admin.dashboard') }}" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="{{ route('admin.dashboard') }}" class="nav-link" onclick="localStorage.setItem('activeAdminTab', 'dashboard')"><i class="fas fa-chart-line"></i> Dashboard</a>
             <a href="{{ route('admin.dashboard') }}" class="nav-link" onclick="localStorage.setItem('activeAdminTab', 'requests')"><i class="fas fa-file-signature"></i> Visa Requests</a>
-            <a href="{{ route('admin.dashboard') }}" class="nav-link"><i class="fas fa-globe"></i> Countries</a>
-            <a href="{{ route('admin.dashboard') }}" class="nav-link"><i class="fas fa-th-large"></i> Categories</a>
-            <a href="{{ route('admin.dashboard') }}" class="nav-link"><i class="fas fa-shield-alt"></i> Security</a>
-            <a href="{{ route('admin.dashboard') }}" class="nav-link"><i class="fas fa-cog"></i> Settings</a>
+            <a href="{{ route('admin.dashboard') }}" class="nav-link" onclick="localStorage.setItem('activeAdminTab', 'countries')"><i class="fas fa-globe"></i> Countries</a>
+            <a href="{{ route('admin.dashboard') }}" class="nav-link" onclick="localStorage.setItem('activeAdminTab', 'nationalities')"><i class="fas fa-flag"></i> Nationalities</a>
+            <a href="{{ route('admin.dashboard') }}" class="nav-link" onclick="localStorage.setItem('activeAdminTab', 'airports')"><i class="fas fa-plane-departure"></i> Airports</a>
+            <a href="{{ route('admin.dashboard') }}" class="nav-link" onclick="localStorage.setItem('activeAdminTab', 'categories')"><i class="fas fa-th-large"></i> Categories</a>
+            <a href="{{ route('admin.dashboard') }}" class="nav-link" onclick="localStorage.setItem('activeAdminTab', 'jobs')"><i class="fas fa-briefcase"></i> Jobs</a>
+            <a href="{{ route('admin.dashboard') }}" class="nav-link" onclick="localStorage.setItem('activeAdminTab', 'bank-accounts')"><i class="fas fa-building-columns"></i> Bank Accounts</a>
+            <a href="{{ route('admin.dashboard') }}" class="nav-link" onclick="localStorage.setItem('activeAdminTab', 'security')"><i class="fas fa-shield-alt"></i> Security</a>
+            <a href="{{ route('admin.dashboard') }}" class="nav-link" onclick="localStorage.setItem('activeAdminTab', 'playstore')"><i class="fas fa-cog"></i> Settings</a>
         </nav>
         <form action="{{ route('admin.logout') }}" method="POST" class="mt-auto">
             @csrf
