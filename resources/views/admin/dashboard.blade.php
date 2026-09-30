@@ -371,8 +371,17 @@
             <a class="nav-link" id="nav-nationalities" onclick="showSection('nationalities')">
                 <i class="fas fa-flag"></i> Nationalities
             </a>
+            <a class="nav-link" id="nav-airports" onclick="showSection('airports')">
+                <i class="fas fa-plane-departure"></i> Airports
+            </a>
             <a class="nav-link" id="nav-categories" onclick="showSection('categories')">
                 <i class="fas fa-th-large"></i> Categories
+            </a>
+            <a class="nav-link" id="nav-jobs" onclick="showSection('jobs')">
+                <i class="fas fa-briefcase"></i> Jobs
+            </a>
+            <a class="nav-link" id="nav-bank-accounts" onclick="showSection('bank-accounts')">
+                <i class="fas fa-building-columns"></i> Bank Accounts
             </a>
             <a class="nav-link" id="nav-security" onclick="showSection('security')">
                 <i class="fas fa-shield-alt"></i> Security
@@ -449,7 +458,152 @@
                 <div class="d-flex gap-3 mt-3">
                     <button class="btn btn-outline-primary" onclick="showSection('requests')">Manage Requests</button>
                     <button class="btn btn-outline-purple" style="color:#a371f7; border-color:#a371f7;" onclick="showSection('categories')">Manage Categories</button>
+                    <button class="btn btn-outline-info" onclick="showSection('jobs')">Manage Jobs</button>
                     <button class="btn btn-outline-info" onclick="showSection('playstore')">Edit Settings</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Jobs -->
+        <section id="jobsSection" class="dashboard-section d-none">
+            <div class="admin-card">
+                <h5 class="section-title">Add New Job</h5>
+                <form id="addJobForm">
+                    @csrf
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Job Title</label>
+                            <input type="text" name="job_title" class="form-control" placeholder="e.g. Hospital Nurse" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Salary</label>
+                            <input type="number" step="0.01" min="0" name="salary" class="form-control" placeholder="e.g. 1200" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Working Hours</label>
+                            <input type="text" name="working_hours" class="form-control" placeholder="e.g. 8 hours/day" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Paid Leave After 1 Year (Days)</label>
+                            <input type="number" min="0" name="paid_leave_days_after_one_year" class="form-control" placeholder="e.g. 12" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Job Description</label>
+                            <textarea name="job_description" class="form-control" rows="4" placeholder="Describe the job responsibilities and requirements..." required></textarea>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn-primary-custom w-100">Add Job</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="admin-card">
+                <h5 class="section-title">Manage Jobs</h5>
+                <div class="table-responsive mt-3">
+                    <table class="reviews-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Job Title</th>
+                                <th>Salary</th>
+                                <th>Working Hours</th>
+                                <th>Paid Leave (1 Year)</th>
+                                <th>Description</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($jobs as $job)
+                            <tr>
+                                <td>{{ $job->id }}</td>
+                                <td>{{ $job->job_title }}</td>
+                                <td>{{ $job->salary }}</td>
+                                <td>{{ $job->working_hours }}</td>
+                                <td>{{ $job->paid_leave_days_after_one_year }} days</td>
+                                <td>{{ Str::limit($job->job_description, 120) }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteJob({{ $job->id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Bank Accounts -->
+        <section id="bank-accountsSection" class="dashboard-section d-none">
+            <div class="admin-card">
+                <h5 class="section-title">Add Bank Account</h5>
+                <form id="addBankAccountForm">
+                    @csrf
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Bank Name</label>
+                            <input type="text" name="bank_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Account Holder Name</label>
+                            <input type="text" name="account_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Account Number</label>
+                            <input type="text" name="account_number" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">IBAN</label>
+                            <input type="text" name="iban" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Branch</label>
+                            <input type="text" name="branch" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">SWIFT / BIC Code</label>
+                            <input type="text" name="swift_code" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Currency</label>
+                            <input type="text" name="currency" class="form-control" value="PKR" maxlength="10" required>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn-primary-custom w-100">Add Account</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="admin-card">
+                <h5 class="section-title">Manage Bank Accounts</h5>
+                <div class="table-responsive mt-3">
+                    <table class="reviews-table">
+                        <thead>
+                            <tr><th>Bank</th><th>Account Holder</th><th>Account Number</th><th>IBAN</th><th>Branch</th><th>SWIFT / BIC</th><th>Currency</th><th>Action</th></tr>
+                        </thead>
+                        <tbody>
+                            @forelse($bankAccounts as $bankAccount)
+                            <tr>
+                                <td>{{ $bankAccount->bank_name }}</td>
+                                <td>{{ $bankAccount->account_name }}</td>
+                                <td>{{ $bankAccount->account_number }}</td>
+                                <td>{{ $bankAccount->iban ?: 'N/A' }}</td>
+                                <td>{{ $bankAccount->branch ?: 'N/A' }}</td>
+                                <td>{{ $bankAccount->swift_code ?: 'N/A' }}</td>
+                                <td>{{ $bankAccount->currency }}</td>
+                                <td class="text-nowrap">
+                                    <a href="{{ route('admin.bank_accounts.edit', $bankAccount->id) }}" class="btn btn-sm btn-outline-primary" title="Edit bank account"><i class="fas fa-pen"></i></a>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteBankAccount({{ $bankAccount->id }})" title="Delete bank account"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="8" class="text-center">No bank accounts added.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -495,8 +649,8 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="badge bg-{{ $req->status == 'approved' ? 'success' : ($req->status == 'rejected' ? 'danger' : ($req->status == 'processing' ? 'warning text-dark' : 'secondary')) }}">
-                                        {{ ucfirst($req->status) }}
+                                    <span class="badge bg-{{ in_array($req->status, ['Visa Approved', 'Payment Verified', 'Visa Issued', 'Flight Ticket Booked'], true) ? 'success' : ($req->status === 'Fee Payment' ? 'warning text-dark' : 'secondary') }}">
+                                        {{ $req->status }}
                                     </span>
                                 </td>
                                 <td>
@@ -522,15 +676,19 @@
                 <form id="addCountryForm" enctype="multipart/form-data">
                     @csrf
                     <div class="row g-3">
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <label class="form-label">Country Name</label>
                             <input type="text" name="name" class="form-control" placeholder="e.g. United Arab Emirates" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <label class="form-label">Visa Fee</label>
+                            <input type="number" name="visa_fee" class="form-control" step="0.01" min="0" placeholder="e.g. 1200">
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label">Country Flag</label>
                             <input type="file" name="flag_file" class="form-control" accept="image/*" required>
                         </div>
-                        <div class="col-md-3 d-flex align-items-end">
+                        <div class="col-md-2 d-flex align-items-end">
                             <button type="submit" class="btn-primary-custom w-100">Add Country</button>
                         </div>
                     </div>
@@ -540,7 +698,7 @@
                 <h5 class="section-title">Manage Countries</h5>
                 <div class="table-responsive mt-3">
                     <table class="reviews-table">
-                        <thead><tr><th>ID</th><th>Flag</th><th>Country Name</th><th>Action</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Flag</th><th>Country Name</th><th>Visa Fee</th><th>Action</th></tr></thead>
                         <tbody>
                             @foreach($countries as $country)
                             <tr>
@@ -553,6 +711,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $country->name }}</td>
+                                <td>{{ $country->visa_fee !== null ? 'PKR ' . number_format((float) $country->visa_fee, 2) : 'N/A' }}</td>
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteCountry({{ $country->id }})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                             @endforeach
@@ -592,6 +751,48 @@
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteNationality({{ $nationality->id }})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                             @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Airports -->
+        <section id="airportsSection" class="dashboard-section d-none">
+            <div class="admin-card">
+                <h5 class="section-title">Add New Airport</h5>
+                <form id="addAirportForm">
+                    @csrf
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label" for="airportCode">Airport Code</label>
+                            <input id="airportCode" type="text" name="code" class="form-control" maxlength="10" placeholder="e.g. DAC" required>
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label" for="airportName">Airport Name</label>
+                            <input id="airportName" type="text" name="name" class="form-control" maxlength="255" placeholder="e.g. Hazrat Shahjalal International Airport, Dhaka" required>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn-primary-custom w-100">Add Airport</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="admin-card">
+                <h5 class="section-title">Manage Airports</h5>
+                <div class="table-responsive mt-3">
+                    <table class="reviews-table">
+                        <thead><tr><th>Code</th><th>Airport Name</th><th>Action</th></tr></thead>
+                        <tbody>
+                            @forelse($airports as $airport)
+                            <tr>
+                                <td>{{ $airport->code }}</td>
+                                <td>{{ $airport->name }}</td>
+                                <td><button class="btn btn-sm btn-danger" onclick="deleteAirport({{ $airport->id }})" title="Delete airport"><i class="fas fa-trash"></i></button></td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="3" class="text-center">No airports added.</td></tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -882,6 +1083,28 @@
             if (res.ok) location.reload();
         };
 
+        document.getElementById('addAirportForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const res = await fetch("{{ route('admin.airports.add') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                body: new FormData(this)
+            });
+            if (res.ok) location.reload();
+            else alert((await res.json()).message || 'Unable to add airport.');
+        };
+
+        async function deleteAirport(id) {
+            if (!confirm('Delete this airport?')) return;
+            const res = await fetch("{{ route('admin.airports.delete') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) location.reload();
+            else alert((await res.json()).message || 'Unable to delete airport.');
+        }
+
         async function deleteNationality(id) {
             if (!confirm("Delete this nationality?")) return;
             const res = await fetch("{{ route('admin.nationalities.delete') }}", {
@@ -951,6 +1174,62 @@
                 body: JSON.stringify({ id })
             });
             if (res.ok) location.reload();
+        }
+
+        document.getElementById('addJobForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const res = await fetch("{{ route('admin.jobs.add') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'},
+                body: new FormData(this)
+            });
+            if (res.ok) location.reload();
+            else {
+                const data = await res.json();
+                alert(data.message || 'Unable to add job.');
+            }
+        };
+
+        async function deleteJob(id) {
+            if (!confirm("Delete this job?")) return;
+            const res = await fetch("{{ route('admin.jobs.delete') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) location.reload();
+            else {
+                const data = await res.json();
+                alert(data.message || 'Unable to delete job.');
+            }
+        }
+
+        document.getElementById('addBankAccountForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const res = await fetch("{{ route('admin.bank_accounts.add') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'},
+                body: new FormData(this)
+            });
+            if (res.ok) location.reload();
+            else {
+                const data = await res.json();
+                alert(data.message || 'Unable to add bank account.');
+            }
+        };
+
+        async function deleteBankAccount(id) {
+            if (!confirm('Delete this bank account?')) return;
+            const res = await fetch("{{ route('admin.bank_accounts.delete') }}", {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) location.reload();
+            else {
+                const data = await res.json();
+                alert(data.message || 'Unable to delete bank account.');
+            }
         }
 
         document.getElementById('passwordUpdateForm').onsubmit = async function(e) {

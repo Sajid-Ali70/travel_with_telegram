@@ -14,8 +14,7 @@
                 $banner = !empty($settings->home_banner) ? $settings->home_banner : "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
                 $bannerUrl = (str_starts_with($banner, 'http') || str_starts_with($banner, '//')) ? $banner : asset($banner);
             @endphp
-            background-image: linear-gradient(180deg, rgba(3, 7, 18, 0.4) 0%, #030712 100%),
-                              url('{{ $bannerUrl }}') !important;
+            background-image: url('{{ $bannerUrl }}') !important;
         }
 
         /* Hero actions */
@@ -25,10 +24,10 @@
         }
 
         .hero-btn-group .btn-verify {
-            background: rgba(255, 255, 255, .08) !important;
-            color: #ffffff !important;
-            border: 1px solid rgba(255, 255, 255, .28) !important;
-            box-shadow: 0 12px 28px rgba(0, 0, 0, .16);
+            background: #ffffff !important;
+            color: #166534 !important;
+            border: 1px solid #b7d9c0 !important;
+            box-shadow: 0 12px 28px rgba(22, 101, 52, .12);
         }
 
         .hero-btn-group a {
@@ -50,9 +49,9 @@
         }
 
         .hero-btn-group .btn-verify:hover {
-            background: rgba(255, 255, 255, .16) !important;
-            border-color: rgba(255, 255, 255, .5) !important;
-            box-shadow: 0 16px 32px rgba(0, 0, 0, .22);
+            background: #eef8f0 !important;
+            border-color: #15803d !important;
+            box-shadow: 0 16px 32px rgba(22, 101, 52, .16);
         }
 
         @media (max-width: 480px) {
@@ -68,8 +67,8 @@
 
         /* Country Ticker Styling - Scrolling Animation Restored */
         .country-ticker-container {
-            background: rgba(11, 19, 41, 0.8);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: #15803d;
+            border-bottom: 1px solid #166534;
             overflow: hidden;
             padding: 20px 0;
             backdrop-filter: blur(10px);
@@ -94,8 +93,8 @@
             height: 30px;
             object-fit: cover;
             border-radius: 4px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 3px 10px rgba(23, 37, 29, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.55);
         }
         .country-ticker-name {
             color: #ffffff;

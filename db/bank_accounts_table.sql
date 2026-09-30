@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS `app_bank_accounts` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `bank_name` VARCHAR(255) NOT NULL,
+  `account_name` VARCHAR(255) NOT NULL,
+  `account_number` VARCHAR(100) NOT NULL,
+  `iban` VARCHAR(100) DEFAULT NULL,
+  `branch` VARCHAR(255) DEFAULT NULL,
+  `swift_code` VARCHAR(50) DEFAULT NULL,
+  `currency` VARCHAR(10) NOT NULL DEFAULT 'PKR',
+  `created_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

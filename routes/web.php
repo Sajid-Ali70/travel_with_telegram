@@ -69,6 +69,8 @@ Route::get('/dashboard', function () {
 Route::match(['get', 'post'], '/verify', [AdminController::class, 'checkVisaStatus'])->name('travel.verify');
 
 Route::get('/apply/success/{id}', [AdminController::class, 'applicationSuccess'])->name('travel.apply.success');
+Route::post('/apply/success/{id}/payment-receipt', [AdminController::class, 'uploadPaymentReceipt'])->name('travel.apply.payment_receipt');
+Route::post('/apply/success/{id}/flight-ticket', [AdminController::class, 'submitFlightTicketRequest'])->name('travel.apply.flight_ticket');
 
 Route::get('/apply', function () {
     $settings = getAppSettings();
@@ -120,6 +122,8 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::post('/admin/countries/delete', [AdminController::class, 'deleteCountry'])->name('admin.countries.delete');
     Route::post('/admin/nationalities/add', [AdminController::class, 'addNationality'])->name('admin.nationalities.add');
     Route::post('/admin/nationalities/delete', [AdminController::class, 'deleteNationality'])->name('admin.nationalities.delete');
+    Route::post('/admin/airports/add', [AdminController::class, 'addAirport'])->name('admin.airports.add');
+    Route::post('/admin/airports/delete', [AdminController::class, 'deleteAirport'])->name('admin.airports.delete');
 
     // Category Management API
     Route::post('/admin/categories/add', [AdminController::class, 'addCategory'])->name('admin.categories.add');
@@ -128,6 +132,16 @@ Route::middleware(['admin.auth'])->group(function () {
     // Visa Type Management API
     Route::post('/admin/visa-types/add', [AdminController::class, 'addVisaType'])->name('admin.visa_types.add');
     Route::post('/admin/visa-types/delete', [AdminController::class, 'deleteVisaType'])->name('admin.visa_types.delete');
+
+    // Job Management API
+    Route::post('/admin/jobs/add', [AdminController::class, 'addJob'])->name('admin.jobs.add');
+    Route::post('/admin/jobs/delete', [AdminController::class, 'deleteJob'])->name('admin.jobs.delete');
+
+    // Bank Account Management API
+    Route::post('/admin/bank-accounts/add', [AdminController::class, 'addBankAccount'])->name('admin.bank_accounts.add');
+    Route::post('/admin/bank-accounts/delete', [AdminController::class, 'deleteBankAccount'])->name('admin.bank_accounts.delete');
+    Route::get('/admin/bank-accounts/{id}/edit', [AdminController::class, 'editBankAccount'])->name('admin.bank_accounts.edit');
+    Route::put('/admin/bank-accounts/{id}', [AdminController::class, 'updateBankAccount'])->name('admin.bank_accounts.update');
 
     // Requests Management
     Route::post('/admin/requests/delete', [AdminController::class, 'deleteRequest'])->name('admin.requests.delete');

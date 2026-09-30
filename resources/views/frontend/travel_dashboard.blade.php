@@ -14,8 +14,7 @@
                 $banner = !empty($settings->inner_banner) ? $settings->inner_banner : "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
                 $bannerUrl = (str_starts_with($banner, 'http') || str_starts_with($banner, '//')) ? $banner : asset($banner);
             @endphp
-            background-image: linear-gradient(180deg, rgba(3, 7, 18, 0.4) 0%, #030712 100%),
-                              url('{{ $bannerUrl }}') !important;
+            background-image: url('{{ $bannerUrl }}') !important;
         }
     </style>
 </head>
@@ -36,7 +35,7 @@
             <div class="form-sidebar-grid">
                 <div class="d-flex flex-column gap-4 reveal reveal-up delay-1">
                     <div class="brand-banner">
-                        <div class="logo-img" style="width: 48px; height: 48px; background: rgba(0, 102, 255, 0.1); color: var(--btn-primary); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden;">
+                        <div class="logo-img" style="width: 48px; height: 48px; background: #e8f5eb; color: var(--btn-primary); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden;">
                             @if(!empty($settings->app_icon))
                                 @php
                                     $icon = $settings->app_icon;
@@ -48,7 +47,7 @@
                             @endif
                         </div>
                         <div class="brand-name">
-                            <h1 style="color: #fff; font-size: 1.25rem; font-weight: 700; margin: 0;">{{ $settings->app_name ?? 'User Gateway' }}</h1>
+                            <h1 style="color: var(--text-main); font-size: 1.25rem; font-weight: 700; margin: 0;">{{ $settings->app_name ?? 'User Gateway' }}</h1>
                             <p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;">Welcome to your secure visa portal.</p>
                         </div>
                     </div>

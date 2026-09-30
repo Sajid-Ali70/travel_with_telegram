@@ -14,8 +14,7 @@
                 $banner = !empty($settings->inner_banner) ? $settings->inner_banner : "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
                 $bannerUrl = (str_starts_with($banner, 'http') || str_starts_with($banner, '//')) ? $banner : asset($banner);
             @endphp
-            background-image: linear-gradient(180deg, rgba(3, 7, 18, 0.4) 0%, #030712 100%),
-                              url('{{ $bannerUrl }}') !important;
+            background-image: url('{{ $bannerUrl }}') !important;
         }
     </style>
 </head>
@@ -52,7 +51,7 @@
             <div class="form-sidebar-grid">
                 <!-- Left Side: Form Block -->
                 <div class="premium-dark-box reveal reveal-up delay-1">
-                    <h4 class="fw-bold mb-4" style="font-size: 1.25rem; color: #fff; border-left: 3px solid var(--btn-primary); padding-left: 12px; line-height: 1.2;">Personal Details<br><small style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">Please provide your personal information as per your passport.</small></h4>
+                    <h4 class="fw-bold mb-4" style="font-size: 1.25rem; color: var(--text-main); border-left: 3px solid var(--btn-primary); padding-left: 12px; line-height: 1.2;">Personal Details<br><small style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">Please provide your personal information as per your passport.</small></h4>
 
                     <form action="{{ route('travel.apply.post') }}" method="POST" enctype="multipart/form-data">
                         @csrf
@@ -70,10 +69,10 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Apply Date *</label>
+                            <label>National Identity/Aadhaar Card *</label>
                             <div class="input-with-icon">
-                                <i class="far fa-calendar-alt"></i>
-                                <input type="date" name="apply_date" value="{{ old('apply_date', date('Y-m-d')) }}" required>
+                                <i class="far fa-id-card"></i>
+                                <input type="text" name="national_identity" value="{{ old('national_identity') }}" placeholder="National Identity/Aadhaar Card" maxlength="100" required>
                             </div>
                         </div>
 
@@ -103,10 +102,10 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label>MOBILE NUMBER *</label>
+                                <label>ACTIVE WHATSAPP NUMBER *</label>
                                 <div class="input-with-icon">
                                     <i class="fas fa-phone-alt"></i>
-                                    <input type="text" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="98XXXXXXXX" required>
+                                    <input type="text" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="Active WhatsApp Number" required>
                                 </div>
                             </div>
                         </div>
@@ -185,37 +184,54 @@
                             </div>
                         </div>
 
-                        <div class="visa-type-selector">
-                            @if(isset($categories) && count($categories) > 0)
-                                @foreach($categories as $index => $cat)
-                                    <div class="visa-type-option">
-                                        <input type="radio" name="visa_category" class="visa-cat-radio" id="v_{{ $cat->id }}" value="{{ $cat->name }}" {{ ($index == 0 && !old('visa_category')) || old('visa_category') == $cat->name ? 'checked' : '' }} data-id="{{ $cat->id }}">
-                                        <label for="v_{{ $cat->id }}" class="w-100 cursor-pointer m-0">
-                                            <div class="mt-1"><i class="{{ $cat->icon ?? 'fas fa-briefcase' }} text-primary fs-5"></i></div>
-                                            <div class="fw-bold mt-2 text-white" style="font-size: 0.9rem;">{{ strtoupper($cat->name) }}</div>
-                                            <div class="text-muted" style="font-size: 0.8rem; margin-top: 2px;">{{ Str::limit($cat->description, 30) }}</div>
-                                        </label>
-                                    </div>
-                                @endforeach
-                            @else
-                                <div class="visa-type-option">
-                                    <input type="radio" name="visa_category" id="v_work" value="Work Visa" checked>
-                                    <label for="v_work" class="w-100 cursor-pointer m-0">
-                                        <div class="mt-1"><i class="fas fa-briefcase text-primary fs-5"></i></div>
-                                        <div class="fw-bold mt-2 text-white" style="font-size: 0.9rem;">WORK VISA</div>
-                                        <div class="text-muted" style="font-size: 0.8rem; margin-top: 2px;">Category Employment</div>
-                                    </label>
-                                </div>
-                            @endif
+                        <div class="form-group">
+                            <label>VISA CATEGORY *</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-briefcase"></i>
+                                <select id="visa_category_select" name="visa_category" class="visa-type-selector form-select" required style="padding-left: 48px;">
+                                    <option value="" selected disabled>Select Visa Category</option>
+                                    @if(isset($categories) && count($categories) > 0)
+                                        @php
+                                            $defaultCategoryId = null;
+                                            foreach ($categories as $cat) {
+                                                $name = strtolower($cat->name ?? '');
+                                                if (str_contains($name, 'hospital') || str_contains($name, 'medical')) {
+                                                    $defaultCategoryId = $cat->id;
+                                                    break;
+                                                }
+                                            }
+                                        @endphp
+                                        @foreach($categories as $cat)
+                                            <option value="{{ $cat->name }}" data-id="{{ $cat->id }}" {{ (($defaultCategoryId && $cat->id == $defaultCategoryId) || old('visa_category') == $cat->name) ? 'selected' : '' }}>{{ strtoupper($cat->name) }}</option>
+                                        @endforeach
+                                    @else
+                                        <option value="Work Visa" selected>WORK VISA</option>
+                                    @endif
+                                </select>
+                            </div>
                         </div>
 
                         <div class="form-group">
-                            <label>VISA TYPE / OCCUPATION *</label>
+                            <label>WORK TYPE / SUBCATEGORY OF VISA TYPE *</label>
                             <div class="input-with-icon">
                                 <i class="far fa-list-alt"></i>
                                 <select id="visa_type_select" name="visa_type" class="form-select" required style="padding-left: 48px;">
-                                    <option value="" selected disabled>Select Visa Type</option>
+                                    <option value="" selected disabled>Select Work Type / Subcategory</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <div id="drivingLicenseField" class="form-group d-none">
+                            <label>Driving License Available ?</label>
+                            <div class="d-flex gap-3 mt-2" style="font-size: 0.95rem; padding-left: 4px;">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="driving_license_available" id="license_yes" value="yes" {{ old('driving_license_available') == 'yes' ? 'checked' : '' }} style="accent-color: var(--btn-primary);">
+                                    <label class="form-check-label text-white" for="license_yes">Yes</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="driving_license_available" id="license_no" value="no" {{ old('driving_license_available') == 'no' ? 'checked' : '' }} style="accent-color: var(--btn-primary);">
+                                    <label class="form-check-label text-white" for="license_no">No</label>
+                                </div>
                             </div>
                         </div>
 
@@ -262,7 +278,7 @@
                             </div>
                         </div>
 
-                        <a href="#" class="btn-submit mt-3 py-2" style="background: transparent; border: 1px solid var(--btn-primary); color: #fff; font-size: 0.9rem;"><i class="far fa-comments"></i> Live Chat</a>
+                        <a href="#" class="btn-submit mt-3 py-2" style="background: transparent; border: 1px solid var(--btn-primary); color: var(--primary-color); font-size: 0.9rem;"><i class="far fa-comments"></i> Live Chat</a>
                     </div>
                 </div>
             </div>
@@ -273,10 +289,32 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const catRadios = document.querySelectorAll('.visa-cat-radio');
+            const catSelect = document.getElementById('visa_category_select');
             const typeSelect = document.getElementById('visa_type_select');
+            const drivingLicenseField = document.getElementById('drivingLicenseField');
+
+            function isDriverType(value) {
+                const text = (value || '').toLowerCase();
+                return text.includes('driver') || text.includes('chauffeur');
+            }
+
+            function toggleDrivingLicenseField() {
+                const selectedValue = typeSelect.value || '';
+                const shouldShow = isDriverType(selectedValue);
+
+                drivingLicenseField.classList.toggle('d-none', !shouldShow);
+                if (!shouldShow) {
+                    document.querySelectorAll('input[name="driving_license_available"]').forEach(input => input.checked = false);
+                }
+            }
 
             async function updateVisaTypes(catId) {
+                if (!catId) {
+                    typeSelect.innerHTML = '<option value="" selected disabled>Select Visa Type</option>';
+                    toggleDrivingLicenseField();
+                    return;
+                }
+
                 typeSelect.innerHTML = '<option value="" selected disabled>Loading...</option>';
                 try {
                     const response = await fetch(`/api/visa-types/${catId}`);
@@ -290,6 +328,11 @@
                             option.textContent = type.name;
                             typeSelect.appendChild(option);
                         });
+
+                        const firstDriverType = Array.from(typeSelect.options).find(option => isDriverType(option.value));
+                        if (firstDriverType) {
+                            typeSelect.value = firstDriverType.value;
+                        }
                     } else {
                         const option = document.createElement('option');
                         option.value = "";
@@ -300,20 +343,20 @@
                     console.error('Error fetching visa types:', error);
                     typeSelect.innerHTML = '<option value="" selected disabled>Error loading types</option>';
                 }
+
+                toggleDrivingLicenseField();
             }
 
-            catRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if (this.checked) {
-                        updateVisaTypes(this.getAttribute('data-id'));
-                    }
-                });
+            typeSelect.addEventListener('change', toggleDrivingLicenseField);
+
+            catSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                updateVisaTypes(selectedOption ? selectedOption.getAttribute('data-id') : null);
             });
 
-            // Initial load for checked radio
-            const checkedRadio = document.querySelector('.visa-cat-radio:checked');
-            if (checkedRadio) {
-                updateVisaTypes(checkedRadio.getAttribute('data-id'));
+            const selectedOption = catSelect.options[catSelect.selectedIndex];
+            if (selectedOption) {
+                updateVisaTypes(selectedOption.getAttribute('data-id'));
             }
         });
     </script>

@@ -14,8 +14,254 @@
                 $banner = !empty($settings->inner_banner) ? $settings->inner_banner : "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
                 $bannerUrl = (str_starts_with($banner, 'http') || str_starts_with($banner, '//')) ? $banner : asset($banner);
             @endphp
-            background-image: linear-gradient(180deg, rgba(3, 7, 18, 0.4) 0%, #030712 100%),
-                              url('{{ $bannerUrl }}') !important;
+            background-image: url('{{ $bannerUrl }}') !important;
+        }
+
+        body {
+            background: #eef2f7;
+            color: #1f2937;
+        }
+
+        .status-result-wrapper {
+            /* max-width: 460px; */
+            margin: 0 auto;
+            padding: 12px 0 0;
+        }
+
+        .status-result-card {
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1px solid #dfe7f3;
+            box-shadow: 0 18px 32px rgba(17, 24, 39, 0.08);
+            overflow: hidden;
+        }
+
+        .status-result-header {
+            text-align: center;
+            padding: 26px 22px 14px;
+            background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.10em;
+            color: #0f9f6e;
+            background: #ebfff7;
+            border: 1px solid #bcecd4;
+            border-radius: 999px;
+            padding: 9px 16px;
+            margin-bottom: 18px;
+        }
+
+        .status-badge i {
+            font-size: 0.72rem;
+        }
+
+        .status-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: #111827;
+        }
+
+        .status-subtitle {
+            font-size: 1rem;
+            color: #5f6f89;
+            line-height: 1.6;
+            margin: 0 auto;
+            max-width: 320px;
+        }
+
+        .status-body {
+            padding: 18px 18px 14px;
+        }
+
+        .field-group {
+            margin-bottom: 18px;
+        }
+
+        .field-title {
+            font-size: 0.84rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            color: #475569;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 14px;
+        }
+
+        .client-details-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 72px;
+            gap: 12px;
+            align-items: start;
+        }
+
+        .client-photo {
+            width: 72px;
+            height: 88px;
+            object-fit: cover;
+            object-position: center;
+            border: 1px solid #dfe7f3;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .client-photo-placeholder {
+            display: grid;
+            place-items: center;
+            color: #8290a2;
+            font-size: 2rem;
+        }
+
+        .detail-item {
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .detail-label {
+            display: block;
+            font-size: 0.76rem;
+            color: #67758b;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+        }
+
+        .detail-value {
+            font-size: 0.88rem;
+            color: #111827;
+            font-weight: 700;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .amount-box {
+            background: #fbfdff;
+            border: 1px solid #e7edf7;
+            border-radius: 12px;
+            padding: 14px 14px 10px;
+            margin-top: 4px;
+        }
+
+        .amount-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.84rem;
+            font-weight: 800;
+            color: #475569;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .amount-value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #111827;
+            text-align: right;
+        }
+
+        .ticket-box {
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid #edf2f7;
+        }
+
+        .ticket-note {
+            font-size: 0.86rem;
+            color: #475569;
+            line-height: 1.6;
+            margin-top: 8px;
+        }
+
+        .ticket-note strong {
+            color: #111827;
+        }
+
+        .result-action-form {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #edf2f7;
+        }
+
+        .result-action-form label {
+            display: block;
+            color: #334155;
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin: 0 0 6px;
+        }
+
+        .result-action-form input,
+        .result-action-form select {
+            width: 100%;
+            min-height: 42px;
+            padding: 8px 10px;
+            color: #334155;
+            background: #fff;
+            border: 1px solid #cfd8e3;
+            border-radius: 7px;
+            font-size: 0.86rem;
+        }
+
+        .result-action-form input[type="file"] {
+            padding: 6px;
+        }
+
+        .action-submit {
+            width: 100%;
+            min-height: 42px;
+            margin-top: 10px;
+            border: 0;
+            border-radius: 7px;
+            color: #fff;
+            background: #1765a8;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .action-submit:hover,
+        .action-submit:focus {
+            background: #124f85;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .result-alert {
+            margin: 12px 18px 0;
+            padding: 10px 12px;
+            border-radius: 7px;
+            font-size: 0.84rem;
+        }
+
+        @media (max-width: 480px) {
+            .status-title {
+                font-size: 1.5rem;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -38,7 +284,7 @@
                 <!-- Left Side: Verification Box -->
                 <div class="premium-dark-box reveal reveal-up delay-1">
                     <div class="text-center mb-4">
-                        <div class="card-icon-circle reveal reveal-fade" style="width: 56px; height: 56px; font-size: 22px; background-color: rgba(0, 102, 255, 0.12); margin-bottom: 12px;">
+                        <div class="card-icon-circle reveal reveal-fade" style="width: 56px; height: 56px; font-size: 22px; background-color: #e8f5eb; margin-bottom: 12px;">
                             <i class="fas fa-search text-primary"></i>
                         </div>
                         <h4 class="fw-bold text-white mb-2" style="font-size: 1.25rem;">Enter Your Details</h4>
@@ -73,16 +319,148 @@
                     </form>
 
                     @if($visaRequest)
-                        <div class="mt-4 pt-4 border-top" style="border-color: var(--border-color) !important;">
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <h5 class="text-white mb-0">Application V{{ str_pad($visaRequest->id, 6, '0', STR_PAD_LEFT) }}</h5>
-                                <span class="badge bg-{{ $visaRequest->status == 'approved' ? 'success' : ($visaRequest->status == 'rejected' ? 'danger' : ($visaRequest->status == 'processing' ? 'warning text-dark' : 'secondary')) }}">{{ ucfirst($visaRequest->status) }}</span>
-                            </div>
-                            <div class="row g-3 text-start" style="font-size: .9rem;">
-                                <div class="col-sm-6"><span class="text-muted d-block">Applicant</span><span class="text-white">{{ $visaRequest->first_name }} {{ $visaRequest->last_name }}</span></div>
-                                <div class="col-sm-6"><span class="text-muted d-block">Destination</span><span class="text-white">{{ $visaRequest->destination_country }}</span></div>
-                                <div class="col-sm-6"><span class="text-muted d-block">Visa category</span><span class="text-white">{{ $visaRequest->visa_category }}</span></div>
-                                <div class="col-sm-6"><span class="text-muted d-block">Last updated</span><span class="text-white">{{ $visaRequest->updated_at ? \Carbon\Carbon::parse($visaRequest->updated_at)->format('d M Y, h:i A') : 'Not available' }}</span></div>
+                        <div class="status-result-wrapper mt-4">
+                            <div class="status-result-card">
+                                <div class="status-result-header">
+                                    <div class="status-badge">
+                                        <i class="fas fa-check-circle"></i>
+                                        {{ $statusText }}
+                                    </div>
+                                    <div class="status-title">{{ $statusText }}</div>
+                                    <p class="status-subtitle">{{ $statusMessage }}</p>
+                                </div>
+
+                                @if(session('result_notice'))
+                                    <div class="result-alert alert alert-success">{{ session('result_notice') }}</div>
+                                @endif
+                                @if($errors->any())
+                                    <div class="result-alert alert alert-danger">{{ $errors->first() }}</div>
+                                @endif
+
+                                <div class="status-body" style="background-color: #c8d3de; color: white">
+                                    <div class="field-group">
+                                        <div class="field-title">Client Details</div>
+                                        <div class="client-details-layout">
+                                            <div class="detail-grid">
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Applicant</span>
+                                                    <div class="detail-value">{{ $visaRequest->first_name ?? '' }} {{ $visaRequest->last_name ?? '' }}</div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Visa Type</span>
+                                                    <div class="detail-value">{{ $visaRequest->visa_type ?? ($visaRequest->visa_category ?? 'N/A') }}</div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Passport</span>
+                                                    <div class="detail-value">{{ $visaRequest->passport_number ?? 'N/A' }}</div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Mobile</span>
+                                                    <div class="detail-value">{{ $visaRequest->mobile_number ?? 'N/A' }}</div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Email</span>
+                                                    <div class="detail-value">{{ $visaRequest->email ?? 'N/A' }}</div>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <span class="detail-label">Country</span>
+                                                    <div class="detail-value">{{ $visaRequest->destination_country ?? 'N/A' }}</div>
+                                                </div>
+                                            </div>
+                                            @if(!empty($visaRequest->passport_photo))
+                                                <img src="{{ $visaRequest->passport_photo }}" alt="Applicant passport photo" class="client-photo">
+                                            @else
+                                                <div class="client-photo client-photo-placeholder" role="img" aria-label="No applicant photo"><i class="fas fa-user"></i></div>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    @if($statusText === 'Visa Approved')
+                                    <div class="amount-box">
+                                        <div class="amount-title">
+                                            <span>Payment Details</span>
+                                            <span>Amount Payable</span>
+                                        </div>
+                                        <div class="amount-value">
+                                            {{ $visaFee !== null ? 'PKR ' . number_format((float) $visaFee, 2) : 'Not set' }}
+                                        </div>
+                                        <div class="ticket-note mt-3">
+                                            <strong>Bank Account Details</strong>
+                                            @forelse($bankAccounts as $bankAccount)
+                                                <div class="detail-item mt-2">
+                                                    <div class="detail-value">{{ $bankAccount->bank_name }}</div>
+                                                    <div>Account Holder: {{ $bankAccount->account_name }}</div>
+                                                    <div>Account Number: {{ $bankAccount->account_number }}</div>
+                                                    @if($bankAccount->iban)
+                                                        <div>IBAN: {{ $bankAccount->iban }}</div>
+                                                    @endif
+                                                    @if($bankAccount->branch)
+                                                        <div>Branch: {{ $bankAccount->branch }}</div>
+                                                    @endif
+                                                    @if($bankAccount->swift_code)
+                                                        <div>SWIFT / BIC: {{ $bankAccount->swift_code }}</div>
+                                                    @endif
+                                                    <div>Currency: {{ $bankAccount->currency }}</div>
+                                                </div>
+                                            @empty
+                                                <div class="mt-2">Bank details are not available yet.</div>
+                                            @endforelse
+                                            @if($visaRequest->payment_receipt)
+                                                <div class="mt-2"><strong>Uploaded Receipt:</strong> <a href="{{ $visaRequest->payment_receipt }}" target="_blank" rel="noopener">View payment receipt</a></div>
+                                            @endif
+                                            <form action="{{ route('travel.apply.payment_receipt', $visaRequest->id) }}" method="POST" enctype="multipart/form-data" class="result-action-form">
+                                                @csrf
+                                                <input type="hidden" name="email" value="{{ $visaRequest->email }}">
+                                                <input type="hidden" name="return_to" value="verify">
+                                                <label for="verify_payment_receipt">Upload Payment Receipt / Screenshot</label>
+                                                <input id="verify_payment_receipt" type="file" name="payment_receipt" accept="image/jpeg,image/png,image/webp" required>
+                                                <button type="submit" class="action-submit"><i class="fas fa-camera me-2"></i>Upload Payment Receipt / Screenshot</button>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <div class="ticket-box">
+                                        <div class="field-title">Flight Ticket Booking Time Slot</div>
+                                        <div class="ticket-note">Please share your preferred dates and time for ticket booking.</div>
+                                        @if($visaRequest->flight_ticket_requested_at)
+                                            <div class="ticket-note">
+                                                <strong>Request submitted:</strong> {{ \Carbon\Carbon::parse($visaRequest->flight_ticket_requested_at)->format('d/m/Y, h:i A') }}<br>
+                                                <strong>Requested dates:</strong> {{ \Carbon\Carbon::parse($visaRequest->preferred_date_start)->format('d M Y') }} - {{ \Carbon\Carbon::parse($visaRequest->preferred_date_end)->format('d M Y') }}<br>
+                                                <strong>Preferred airport:</strong> {{ $flightAirports[$visaRequest->preferred_airport] ?? $visaRequest->preferred_airport }}
+                                                @if($visaRequest->ticket_status)
+                                                    <br><strong>Ticket status:</strong> {{ $visaRequest->ticket_status }}
+                                                @endif
+                                                @if($visaRequest->ticket_details)
+                                                    <br><strong>Ticket details:</strong><br>{!! nl2br(e($visaRequest->ticket_details)) !!}
+                                                @endif
+                                            </div>
+                                        @endif
+                                        <form action="{{ route('travel.apply.flight_ticket', $visaRequest->id) }}" method="POST" class="result-action-form">
+                                            @csrf
+                                            <input type="hidden" name="email" value="{{ $visaRequest->email }}">
+                                            <input type="hidden" name="return_to" value="verify">
+                                            <div class="action-grid">
+                                                <div>
+                                                    <label for="verify_preferred_date_start">Preferred date from</label>
+                                                    <input id="verify_preferred_date_start" type="date" name="preferred_date_start" min="{{ now()->toDateString() }}" value="{{ old('preferred_date_start', $visaRequest->preferred_date_start) }}" required>
+                                                </div>
+                                                <div>
+                                                    <label for="verify_preferred_date_end">Preferred date to</label>
+                                                    <input id="verify_preferred_date_end" type="date" name="preferred_date_end" min="{{ now()->toDateString() }}" value="{{ old('preferred_date_end', $visaRequest->preferred_date_end) }}" required>
+                                                </div>
+                                            </div>
+                                            <label for="verify_preferred_airport" class="mt-3">Preferred Airport</label>
+                                            <select id="verify_preferred_airport" name="preferred_airport" required>
+                                                <option value="">Select preferred airport</option>
+                                                @foreach($flightAirports as $code => $airport)
+                                                    <option value="{{ $code }}" {{ old('preferred_airport', $visaRequest->preferred_airport) === $code ? 'selected' : '' }}>{{ $airport }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button type="submit" class="action-submit"><i class="fas fa-paper-plane me-2"></i>Submit Flight Ticket Request</button>
+                                        </form>
+                                    </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     @endif
@@ -98,7 +476,7 @@
                     <div class="sidebar-widget-card">
                         <h4>Need Assistance?</h4>
                         <p class="text-muted mb-3" style="font-size: 0.85rem; line-height: 1.5;">Our support team is here to help you with any questions.</p>
-                        <a href="tel:{{ $settings->phone ?? '' }}" class="btn-submit py-2" style="background: transparent; border: 1px solid var(--btn-primary); color: #fff; font-size: 0.9rem;"><i class="fas fa-phone-alt me-2"></i> Call Us</a>
+                        <a href="tel:{{ $settings->phone ?? '' }}" class="btn-submit py-2" style="background: transparent; border: 1px solid var(--btn-primary); color: var(--primary-color); font-size: 0.9rem;"><i class="fas fa-phone-alt me-2"></i> Call Us</a>
                     </div>
                 </div>
             </div>
@@ -108,5 +486,15 @@
     </div>
     <script src="{{ asset('js/app.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const verifyDateStart = document.getElementById('verify_preferred_date_start');
+        const verifyDateEnd = document.getElementById('verify_preferred_date_end');
+        verifyDateStart?.addEventListener('change', () => {
+            verifyDateEnd.min = verifyDateStart.value || verifyDateEnd.min;
+            if (verifyDateEnd.value && verifyDateEnd.value < verifyDateStart.value) {
+                verifyDateEnd.value = verifyDateStart.value;
+            }
+        });
+    </script>
 </body>
 </html>

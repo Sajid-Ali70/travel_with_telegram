@@ -1,17 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --bg-main: #030712;
-    --bg-surface: #0b1329;
-    --bg-card: #111c44;
-    --primary-color: #1d4ed8;
-    --accent-color: #06b6d4;
-    --btn-primary: #0066ff;
-    --btn-primary-hover: #0052cc;
-    --text-main: #ffffff;
-    --text-muted: #94a3b8;
-    --border-color: rgba(255, 255, 255, 0.08);
-    --input-bg: #070d1e;
+    --bg-main: #f5f8f5;
+    --bg-surface: #ffffff;
+    --bg-card: #ffffff;
+    --primary-color: #166534;
+    --accent-color: #22a447;
+    --btn-primary: #15803d;
+    --btn-primary-hover: #166534;
+    --text-main: #17251d;
+    --text-muted: #64746a;
+    --border-color: #dce7df;
+    --input-bg: #ffffff;
     --radius-sm: 8px;
     --radius-md: 14px;
     --radius-lg: 24px;
@@ -54,6 +54,10 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     color: var(--text-muted) !important;
 }
 
+.text-white {
+    color: var(--text-main) !important;
+}
+
 /* Full Width Premium Layout Wrapper */
 .mobile-container {
     width: 100%;
@@ -65,9 +69,9 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 
 /* Beautiful Top Header Navbar */
 .main-navbar {
-    background-color: rgba(11, 19, 41, 0.95);
+    background-color: #166534;
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid #14532d;
     padding: 15px 5%;
     display: flex;
     justify-content: space-between;
@@ -88,7 +92,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     width: 80px;
     height: 80px;
     background: transparent;
-    color: #fff;
+    color: var(--primary-color);
     border-radius: 0;
     display: flex;
     align-items: center;
@@ -99,14 +103,14 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 .nav-logo-text h1 {
     font-size: 1.3rem;
     font-weight: 800;
-    color: #fff !important;
+    color: #ffffff !important;
     margin: 0;
     letter-spacing: -0.5px;
 }
 
 .nav-logo-text p {
     font-size: 0.65rem;
-    color: var(--accent-color) !important;
+    color: #c9f2d2 !important;
     margin: 0;
     text-transform: uppercase;
     font-weight: 600;
@@ -135,11 +139,11 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
         top: 100%;
         left: 0;
         width: 100%;
-        background-color: var(--bg-surface);
+        background-color: #166534;
         padding: 30px 20px;
         gap: 25px;
-        border-bottom: 1px solid var(--border-color);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        border-bottom: 1px solid #14532d;
+        box-shadow: 0 10px 30px rgba(23, 37, 29, 0.2);
         text-align: center;
     }
     .nav-links.show {
@@ -162,14 +166,14 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 }
 
 .nav-link-item {
-    color: var(--text-muted) !important;
+    color: #e5f3e8 !important;
     text-decoration: none !important;
     font-size: 0.95rem;
     font-weight: 500;
 }
 
 .nav-link-item:hover, .nav-link-item.active {
-    color: #fff !important;
+    color: #ffffff !important;
 }
 
 .nav-actions {
@@ -206,12 +210,14 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 
 .hero-overlay-content {
     max-width: 650px;
+    position: relative;
+    z-index: 1;
 }
 
 .tag-reliable {
     font-size: 0.8rem;
     font-weight: 700;
-    color: var(--accent-color) !important;
+    color: #ffffff !important;
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 12px;
@@ -221,22 +227,25 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     font-size: 2.8rem;
     font-weight: 800;
     line-height: 1.2;
-    color: #fff !important;
+    color: #ffffff !important;
     margin-bottom: 20px;
 }
 
 .hero-overlay-content h2 span {
-    color: #0088ff;
-    background: linear-gradient(to right, #2563eb, #06b6d4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #ffffff !important;
+    background: none;
+    -webkit-text-fill-color: #ffffff;
 }
 
 .hero-overlay-content p {
-    color: var(--text-muted) !important;
+    color: #ffffff !important;
     font-size: 1.05rem;
     line-height: 1.6;
     margin-bottom: 35px;
+}
+
+.visa-hero-section .hero-overlay-content p a {
+    color: #ffffff !important;
 }
 
 .hero-btn-group {
@@ -260,8 +269,8 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 
 /* Quick Features Grid */
 .features-grid-bar {
-    background-color: var(--bg-surface);
-    border-bottom: 1px solid var(--border-color);
+    background-color: #e8f5eb;
+    border-bottom: 1px solid #cfe5d4;
     padding: 40px 5%;
     display: grid;
     grid-template-columns: 1fr;
@@ -289,7 +298,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 .feature-bar-icon {
     width: 44px;
     height: 44px;
-    background-color: rgba(0, 102, 255, 0.15);
+    background-color: #e8f5eb;
     color: var(--accent-color);
     border-radius: var(--radius-sm);
     display: flex;
@@ -302,7 +311,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 .feature-bar-text h4 {
     font-size: 1rem;
     font-weight: 700;
-    color: #fff !important;
+    color: var(--text-main) !important;
     margin-bottom: 6px;
 }
 
@@ -330,7 +339,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 .section-header-flex h3 {
     font-size: 1.8rem;
     font-weight: 800;
-    color: #fff !important;
+    color: var(--text-main) !important;
 }
 
 .section-header-flex p {
@@ -401,7 +410,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 .category-card-icon-title h4 {
     font-size: 1.05rem;
     font-weight: 700;
-    color: #fff !important;
+    color: var(--text-main) !important;
     margin: 0;
 }
 
@@ -436,7 +445,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #edf3ee;
     color: var(--text-muted) !important;
     display: flex;
     align-items: center;
@@ -457,7 +466,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 }
 
 .step-tracker-item.active .step-tracker-title {
-    color: #fff !important;
+    color: var(--primary-color) !important;
 }
 
 /* Modern Form & Sidebar Dual Layout Grid */
@@ -497,7 +506,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 .sidebar-widget-card h4 {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #fff !important;
+    color: var(--text-main) !important;
     margin-bottom: 16px;
     border-left: 3px solid var(--btn-primary);
     padding-left: 10px;
@@ -525,7 +534,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 .help-contact-row div h5 {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #fff !important;
+    color: var(--text-main) !important;
     margin: 0;
 }
 
@@ -538,7 +547,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     display: block;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #fff !important;
+    color: var(--text-main) !important;
     margin-bottom: 8px;
     text-transform: none;
     letter-spacing: normal;
@@ -562,7 +571,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 14px 16px 14px 48px;
-    color: #fff !important;
+    color: var(--text-main) !important;
     font-size: 0.95rem;
     font-family: inherit;
 }
@@ -587,32 +596,28 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 
 /* Category Grid Selector */
 .visa-type-selector {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin: 24px 0;
-}
-
-.visa-type-option {
+    width: 100%;
+    min-height: 52px;
+    background-color: var(--input-bg);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    padding: 16px;
-    text-align: center;
+    color: var(--text-main);
+    padding: 12px 16px 12px 48px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
     cursor: pointer;
-    background-color: var(--input-bg);
-    position: relative;
 }
 
-.visa-type-option input[type="radio"] {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    accent-color: var(--btn-primary);
-}
-
-.visa-type-option.active, .visa-type-option:has(input[type="radio"]:checked) {
+.visa-type-selector:focus {
+    outline: none;
     border-color: var(--btn-primary);
-    background-color: rgba(0, 102, 255, 0.08);
 }
 
 /* Upload modern container */
@@ -653,8 +658,9 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 
 /* Premium Footer */
 .main-footer-global {
-    background-color: var(--bg-surface);
-    border-top: 1px solid var(--border-color);
+    background-color: #166534;
+    color: #ffffff;
+    border-top: 1px solid #14532d;
     padding: 60px 5% 30px;
     margin-top: auto;
 }
@@ -666,7 +672,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     grid-template-columns: 1fr;
     gap: 40px;
     padding-bottom: 40px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 @media (min-width: 768px) {
@@ -676,17 +682,31 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 }
 
 .footer-brand-col p {
-    color: var(--text-muted) !important;
+    color: #e5f3e8 !important;
     font-size: 0.9rem;
     line-height: 1.6;
     margin-top: 16px;
     max-width: 320px;
 }
 
+.main-footer-global .nav-logo-icon {
+    color: #ffffff;
+}
+
+.main-footer-global ul,
+.main-footer-global li,
+.main-footer-global i {
+    color: #e5f3e8;
+}
+
+.main-footer-global .text-muted {
+    color: #c9ded0 !important;
+}
+
 .footer-links-col h5 {
     font-size: 1rem;
     font-weight: 700;
-    color: #fff !important;
+    color: #ffffff !important;
     margin-bottom: 20px;
 }
 
@@ -701,13 +721,13 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 }
 
 .footer-links-col ul li a {
-    color: var(--text-muted) !important;
+    color: #e5f3e8 !important;
     text-decoration: none !important;
     font-size: 0.9rem;
 }
 
 .footer-links-col ul li a:hover {
-    color: #fff !important;
+    color: #ffffff !important;
 }
 
 .footer-bottom-copyright {
@@ -728,12 +748,21 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 
 .footer-bottom-copyright p {
     font-size: 0.8rem;
-    color: var(--text-muted) !important;
+    color: #c9ded0 !important;
+}
+
+.main-footer-global .nav-logo-text h1,
+.main-footer-global .text-white {
+    color: #ffffff !important;
+}
+
+.main-footer-global .footer-bottom-copyright a {
+    color: #c9ded0 !important;
 }
 
 /* Trusted Partner Banner Section */
 .trusted-partner-banner {
-    background: linear-gradient(rgba(11, 19, 41, 0.9), rgba(11, 19, 41, 0.9)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
+    background: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
     background-size: cover;
     background-position: center;
     border-radius: var(--radius-md);
@@ -782,7 +811,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 .card-icon-circle {
     width: 60px;
     height: 60px;
-    background-color: rgba(0, 102, 255, 0.12);
+    background-color: #e8f5eb;
     color: var(--btn-primary);
     border-radius: 50%;
     display: flex;
@@ -793,7 +822,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
 }
 
 .card-icon-circle.green {
-    background-color: rgba(13, 148, 136, 0.12);
+    background-color: #e8f5eb;
     color: var(--accent-color);
 }
 
@@ -801,7 +830,7 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     font-size: 1.3rem;
     font-weight: 700;
     margin-bottom: 12px;
-    color: #fff !important;
+    color: var(--text-main) !important;
 }
 
 .dashboard-card p {

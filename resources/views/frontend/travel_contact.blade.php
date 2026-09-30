@@ -14,8 +14,7 @@
                 $banner = !empty($settings->inner_banner) ? $settings->inner_banner : "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
                 $bannerUrl = (str_starts_with($banner, 'http') || str_starts_with($banner, '//')) ? $banner : asset($banner);
             @endphp
-            background-image: linear-gradient(180deg, rgba(3, 7, 18, 0.4) 0%, #030712 100%),
-                              url('{{ $bannerUrl }}') !important;
+            background-image: url('{{ $bannerUrl }}') !important;
         }
         .contact-detail-card {
             background-color: var(--bg-surface);
@@ -32,7 +31,7 @@
         .contact-icon {
             width: 50px;
             height: 50px;
-            background: rgba(0, 102, 255, 0.1);
+            background: #e8f5eb;
             color: var(--btn-primary);
             border-radius: 50%;
             display: flex;

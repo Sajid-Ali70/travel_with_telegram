@@ -85,8 +85,8 @@
             <h2 class="section-title">Personal Details</h2>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Apply Date</label>
-                    <input type="date" name="apply_date" class="form-control" value="{{ old('apply_date', $visaRequest->apply_date) }}">
+                    <label class="form-label">National Identity/Aadhaar Card</label>
+                    <input type="text" name="national_identity" class="form-control" value="{{ old('national_identity', $visaRequest->national_identity) }}" maxlength="100">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">First Name <span class="text-danger">*</span></label>
@@ -118,13 +118,13 @@
                     @endforeach
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Nationality</label>
+                    <label class="form-label">Country</label>
                     <select name="nationality" class="form-select">
-                        <option value="">Select nationality</option>
-                        @foreach($nationalities as $nationality)
-                            <option value="{{ $nationality->name }}" {{ old('nationality', $visaRequest->nationality) === $nationality->name ? 'selected' : '' }}>{{ $nationality->name }}</option>
+                        <option value="">Select country</option>
+                        @foreach($countries as $country)
+                            <option value="{{ $country->name }}" {{ old('nationality', $visaRequest->nationality) === $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
                         @endforeach
-                        @if($visaRequest->nationality && (!$nationalities->count() || !$nationalities->contains('name', $visaRequest->nationality)))
+                        @if($visaRequest->nationality && (!$countries->count() || !$countries->contains('name', $visaRequest->nationality)))
                             <option value="{{ $visaRequest->nationality }}" selected>{{ $visaRequest->nationality }}</option>
                         @endif
                     </select>
@@ -182,14 +182,85 @@
                     <input type="text" name="visa_type" class="form-control" value="{{ old('visa_type', $visaRequest->visa_type) }}">
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label">Driving License Available ?</label>
+                    <select name="driving_license_available" class="form-select">
+                        <option value="">Select</option>
+                        <option value="yes" {{ old('driving_license_available', $visaRequest->driving_license_available) === 'yes' ? 'selected' : '' }}>Yes</option>
+                        <option value="no" {{ old('driving_license_available', $visaRequest->driving_license_available) === 'no' ? 'selected' : '' }}>No</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
                     <label class="form-label">Status <span class="text-danger">*</span></label>
+                    @php
+                        $selectedStatus = old('status', $visaRequest->status);
+                        $selectedStatus = match ($selectedStatus) {
+                            'pending' => 'Visa Application Submitted',
+                            'processing' => 'Documents Verification',
+                            'approved' => 'Visa Approved',
+                            'rejected' => 'Application Rejected',
+                            default => $selectedStatus,
+                        };
+                    @endphp
                     <select name="status" class="form-select" required>
-                        @foreach(['pending' => 'Pending', 'processing' => 'Processing', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $value => $label)
-                            <option value="{{ $value }}" {{ old('status', $visaRequest->status) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @foreach(['Visa Application Submitted', 'Documents Verification', 'Verification of Documents Successful', 'Visa Approved', 'Fee Payment', 'Payment Verified', 'Visa Issued', 'Flight Ticket Booked'] as $statusOption)
+                            <option value="{{ $statusOption }}" {{ $selectedStatus === $statusOption ? 'selected' : '' }}>{{ $statusOption }}</option>
                         @endforeach
+                        @if($selectedStatus === 'Application Rejected')
+                            <option value="rejected" selected>Application Rejected (existing status)</option>
+                        @endif
                     </select>
                 </div>
             </div>
+
+            <h2 class="section-title">Payment and Flight Requests</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Payment Receipt</label>
+                    @if($visaRequest->payment_receipt)
+                        <div><a href="{{ $visaRequest->payment_receipt }}" target="_blank" rel="noopener" class="btn btn-outline-info btn-sm">View uploaded receipt</a></div>
+                        <div class="form-text">Uploaded {{ $visaRequest->payment_receipt_uploaded_at ? \Carbon\Carbon::parse($visaRequest->payment_receipt_uploaded_at)->format('d M Y, h:i A') : '' }}</div>
+                    @else
+                        <div class="form-text">No payment receipt uploaded.</div>
+                    @endif
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="preferred_airport">Preferred Airport</label>
+                    <select name="preferred_airport" id="preferred_airport" class="form-select">
+                        <option value="">Not selected</option>
+                        @foreach($flightAirports as $airportCode => $airportName)
+                            <option value="{{ $airportCode }}" {{ old('preferred_airport', $visaRequest->preferred_airport) === $airportCode ? 'selected' : '' }}>{{ $airportName }}</option>
+                        @endforeach
+                    </select>
+                    @error('preferred_airport')
+                        <div class="text-danger small">{{ $message }}</div>
+                    @enderror
+                    @if($visaRequest->flight_ticket_requested_at)
+                        <div class="form-text">Dates: {{ \Carbon\Carbon::parse($visaRequest->preferred_date_start)->format('d M Y') }} - {{ \Carbon\Carbon::parse($visaRequest->preferred_date_end)->format('d M Y') }}</div>
+                        <div class="form-text">Requested {{ \Carbon\Carbon::parse($visaRequest->flight_ticket_requested_at)->format('d M Y, h:i A') }}</div>
+                    @else
+                        <div class="form-text">No flight ticket request submitted yet.</div>
+                    @endif
+                </div>
+            </div>
+            <div class="row g-3 mt-1">
+                <div class="col-md-4">
+                    <label class="form-label" for="ticket_status">Ticket Status</label>
+                    <select name="ticket_status" id="ticket_status" class="form-select">
+                        <option value="">Not set</option>
+                        @foreach($ticketStatuses as $ticketStatus)
+                            <option value="{{ $ticketStatus }}" {{ old('ticket_status', $visaRequest->ticket_status) === $ticketStatus ? 'selected' : '' }}>{{ $ticketStatus }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="ticket_details">Ticket Details</label>
+                    <textarea name="ticket_details" id="ticket_details" class="form-control" rows="4" maxlength="10000" placeholder="Airline, flight number, route, departure time, ticket number...">{{ old('ticket_details', $visaRequest->ticket_details) }}</textarea>
+                    <div class="form-text">Changing the ticket status sends an update email to the applicant.</div>
+                </div>
+            </div>
+            @if($visaRequest->ticket_status_updated_at)
+                <div class="form-text mt-2">Ticket status updated {{ \Carbon\Carbon::parse($visaRequest->ticket_status_updated_at)->format('d M Y, h:i A') }}</div>
+            @endif
 
             <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
                 <a href="{{ route('admin.dashboard') }}" class="btn btn-light">Cancel</a>
