@@ -9,7 +9,7 @@
 body {
     font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text-primary);
-    background-color: #fff;
+    background-color: #f1f3f4;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -23,6 +23,8 @@ body {
     position: sticky;
     top: 0;
     z-index: 1000;
+    max-width: 500px;
+    margin: 0 auto;
 }
 
 .play-logo {
@@ -58,14 +60,17 @@ body {
 
 /* Main Container */
 .main-content {
-    max-width: 800px;
-    margin: 20px auto;
+    max-width: 500px;
+    margin: 0 auto;
     padding: 0 16px;
+    background-color: #fff;
+    min-height: 100vh;
 }
 
 /* App Header */
 .app-header {
     display: flex;
+    padding-top: 20px;
     margin-bottom: 24px;
 }
 
@@ -425,6 +430,9 @@ body {
     margin-top: 40px;
     font-size: 11px;
     color: var(--text-secondary);
+    max-width: 500px;
+    margin: 40px auto 0;
+    background-color: #fff;
 }
 
 .footer-links {
@@ -443,6 +451,13 @@ body {
 @media (max-width: 576px) {
     .navbar-play {
         padding: 4px 0;
+        max-width: 100%;
+    }
+    .main-content {
+        max-width: 100%;
+    }
+    .footer-play {
+        max-width: 100%;
     }
     .navbar-play .container {
         padding-left: 12px !important;

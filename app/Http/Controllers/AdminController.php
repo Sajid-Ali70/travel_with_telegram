@@ -63,12 +63,19 @@ class AdminController extends Controller
                     $table->id();
                     $table->string('name');
                     $table->decimal('visa_fee', 12, 2)->nullable();
+                    $table->string('currency', 20)->nullable();
+                    $table->text('visa_fee_details')->nullable();
                     $table->string('flag')->nullable();
                     $table->timestamps();
                 });
             } else {
                 $countryColumns = [
-                    'visa_fee' => "ALTER TABLE `app_countries` ADD `visa_fee` DECIMAL(12,2) NULL DEFAULT NULL AFTER `name` "
+                    'visa_fee' => "ALTER TABLE `app_countries` ADD `visa_fee` DECIMAL(12,2) NULL DEFAULT NULL AFTER `name` ",
+                    'currency' => "ALTER TABLE `app_countries` ADD `currency` VARCHAR(20) NULL DEFAULT NULL AFTER `visa_fee` ",
+                    'visa_fee_details' => "ALTER TABLE `app_countries` ADD `visa_fee_details` TEXT NULL DEFAULT NULL AFTER `currency` ",
+                    'flag' => "ALTER TABLE `app_countries` ADD `flag` VARCHAR(255) NULL DEFAULT NULL AFTER `visa_fee_details` ",
+                    'created_at' => "ALTER TABLE `app_countries` ADD `created_at` TIMESTAMP NULL DEFAULT NULL ",
+                    'updated_at' => "ALTER TABLE `app_countries` ADD `updated_at` TIMESTAMP NULL DEFAULT NULL "
                 ];
                 foreach ($countryColumns as $column => $sql) {
                     if (!Schema::hasColumn('app_countries', $column)) {
@@ -81,8 +88,22 @@ class AdminController extends Controller
                 Schema::create('app_nationalities', function (Blueprint $table) {
                     $table->id();
                     $table->string('name')->unique();
+                    $table->string('currency', 20)->nullable();
+                    $table->string('phone_code', 20)->nullable();
+                    $table->unsignedInteger('id_number_length')->nullable();
                     $table->timestamps();
                 });
+            } else {
+                $nationalityColumns = [
+                    'currency' => "ALTER TABLE `app_nationalities` ADD `currency` VARCHAR(20) NULL DEFAULT NULL AFTER `name` ",
+                    'phone_code' => "ALTER TABLE `app_nationalities` ADD `phone_code` VARCHAR(20) NULL DEFAULT NULL AFTER `currency` ",
+                    'id_number_length' => "ALTER TABLE `app_nationalities` ADD `id_number_length` INT UNSIGNED NULL DEFAULT NULL AFTER `phone_code` "
+                ];
+                foreach ($nationalityColumns as $column => $sql) {
+                    if (!Schema::hasColumn('app_nationalities', $column)) {
+                        DB::statement($sql);
+                    }
+                }
             }
 
             if (!Schema::hasTable('app_categories')) {
@@ -109,19 +130,49 @@ class AdminController extends Controller
                 Schema::create('app_jobs', function (Blueprint $table) {
                     $table->id();
                     $table->string('job_title');
+                    $table->string('category_visa_type')->nullable();
+                    $table->string('country_location')->nullable();
+                    $table->unsignedInteger('number_of_vacancies')->default(1);
                     $table->text('job_description');
+                    $table->text('requirements')->nullable();
                     $table->decimal('salary', 12, 2)->nullable();
+                    $table->string('salary_currency', 10)->default('SAR');
+                    $table->string('salary_period', 20)->default('month');
                     $table->string('working_hours')->nullable();
+                    $table->text('working_days')->nullable();
+                    $table->text('overtime_policy')->nullable();
+                    $table->string('contract_duration')->nullable();
+                    $table->boolean('accommodation_provided')->default(false);
+                    $table->boolean('food_allowance_provided')->default(false);
+                    $table->boolean('medical_insurance')->default(false);
+                    $table->boolean('ticket_provided')->default(false);
                     $table->integer('paid_leave_days_after_one_year')->nullable();
+                    $table->string('status', 20)->default('Active');
                     $table->timestamps();
                 });
             } else {
                 $jobColumns = [
                     'job_title' => "ALTER TABLE `app_jobs` ADD `job_title` VARCHAR(255) NULL DEFAULT NULL AFTER `id` ",
+                    'category_visa_type' => "ALTER TABLE `app_jobs` ADD `category_visa_type` VARCHAR(255) NULL DEFAULT NULL ",
+                    'country_location' => "ALTER TABLE `app_jobs` ADD `country_location` VARCHAR(255) NULL DEFAULT NULL ",
+                    'number_of_vacancies' => "ALTER TABLE `app_jobs` ADD `number_of_vacancies` INT UNSIGNED NOT NULL DEFAULT 1 ",
                     'job_description' => "ALTER TABLE `app_jobs` ADD `job_description` TEXT NULL DEFAULT NULL ",
+                    'requirements' => "ALTER TABLE `app_jobs` ADD `requirements` TEXT NULL DEFAULT NULL ",
                     'salary' => "ALTER TABLE `app_jobs` ADD `salary` DECIMAL(12,2) NULL DEFAULT NULL ",
+                    'salary_currency' => "ALTER TABLE `app_jobs` ADD `salary_currency` VARCHAR(10) NOT NULL DEFAULT 'SAR' ",
+                    'salary_period' => "ALTER TABLE `app_jobs` ADD `salary_period` VARCHAR(20) NOT NULL DEFAULT 'month' ",
                     'working_hours' => "ALTER TABLE `app_jobs` ADD `working_hours` VARCHAR(100) NULL DEFAULT NULL ",
-                    'paid_leave_days_after_one_year' => "ALTER TABLE `app_jobs` ADD `paid_leave_days_after_one_year` INT NULL DEFAULT NULL "
+                    'working_days' => "ALTER TABLE `app_jobs` ADD `working_days` TEXT NULL DEFAULT NULL ",
+                    'overtime_policy' => "ALTER TABLE `app_jobs` ADD `overtime_policy` TEXT NULL DEFAULT NULL ",
+                    'contract_duration' => "ALTER TABLE `app_jobs` ADD `contract_duration` VARCHAR(255) NULL DEFAULT NULL ",
+                    'accommodation_provided' => "ALTER TABLE `app_jobs` ADD `accommodation_provided` TINYINT(1) NOT NULL DEFAULT 0 ",
+                    'food_allowance_provided' => "ALTER TABLE `app_jobs` ADD `food_allowance_provided` TINYINT(1) NOT NULL DEFAULT 0 ",
+                    'medical_insurance' => "ALTER TABLE `app_jobs` ADD `medical_insurance` TINYINT(1) NOT NULL DEFAULT 0 ",
+                    'ticket_provided' => "ALTER TABLE `app_jobs` ADD `ticket_provided` TINYINT(1) NOT NULL DEFAULT 0 ",
+                    'paid_leave_days_after_one_year' => "ALTER TABLE `app_jobs` ADD `paid_leave_days_after_one_year` INT NULL DEFAULT NULL ",
+                    'status' => "ALTER TABLE `app_jobs` ADD `status` VARCHAR(20) NOT NULL DEFAULT 'Active' ",
+                    'created_at' => "ALTER TABLE `app_jobs` ADD `created_at` TIMESTAMP NULL DEFAULT NULL ",
+                    'updated_at' => "ALTER TABLE `app_jobs` ADD `updated_at` TIMESTAMP NULL DEFAULT NULL "
                 ];
                 foreach ($jobColumns as $column => $sql) {
                     if (!Schema::hasColumn('app_jobs', $column)) {
@@ -320,42 +371,185 @@ class AdminController extends Controller
         return view('admin.dashboard', compact('settings', 'countries', 'nationalities', 'categories', 'jobs', 'bankAccounts', 'airports', 'visa_requests', 'stats'));
     }
 
+    public function publicJobs(Request $request)
+    {
+        $this->autoManageSettingsColumns();
+
+        $settings = null;
+        try {
+            $settings = DB::table('app_settings')->where('id', 1)->first();
+        } catch (\Exception $e) {}
+
+        if (!$settings) {
+            $settings = (object) [
+                'app_name' => 'VisaBook',
+                'tags' => 'Your Journey. Our Priority.',
+                'app_icon' => '',
+                'description' => 'Apply for your visa online with ease.'
+            ];
+        }
+
+        $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+        $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
+
+        $selectedCountry = trim((string) $request->query('country', ''));
+        $selectedCategory = trim((string) $request->query('category', ''));
+
+        $jobsQuery = DB::table('app_jobs')->where('status', 'Active')->orderByDesc('id');
+
+        if ($selectedCountry !== '') {
+            $jobsQuery->whereRaw('LOWER(country_location) = ?', [mb_strtolower($selectedCountry)]);
+        }
+
+        if ($selectedCategory !== '') {
+            $jobsQuery->whereRaw('LOWER(category_visa_type) = ?', [mb_strtolower($selectedCategory)]);
+        }
+
+        $jobs = $jobsQuery->get();
+
+        return view('frontend.jobs', compact('settings', 'countries', 'categories', 'jobs', 'selectedCountry', 'selectedCategory'));
+    }
+
     public function addJob(Request $request)
     {
-        $request->validate([
-            'job_title' => 'required|string|max:255',
-            'job_description' => 'required|string',
-            'salary' => 'required',
-            'working_hours' => 'required|string|max:100',
-            'paid_leave_days_after_one_year' => 'required|integer|min:0'
-        ]);
+        $this->autoManageSettingsColumns();
+        $validated = $this->validateJobData($request);
 
         try {
-            DB::table('app_jobs')->insert([
-                'job_title' => trim($request->job_title),
-                'job_description' => trim($request->job_description),
-                'salary' => $request->salary,
-                'working_hours' => trim($request->working_hours),
-                'paid_leave_days_after_one_year' => (int) $request->paid_leave_days_after_one_year,
+            DB::table('app_jobs')->insert($this->jobDataFromValidated($request, $validated) + [
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            return response()->json(['message' => 'Job added successfully']);
+            return redirect()->route('admin.jobs.index')->with('success', 'Job posting added successfully.');
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Database error'], 500);
+            return back()->withInput()->withErrors(['job' => 'Unable to save the job posting.']);
         }
+    }
+
+    public function jobsIndex()
+    {
+        $pageData = $this->jobAdminPageData();
+        $jobs = DB::table('app_jobs')->orderByDesc('id')->get();
+
+        return view('admin.jobs.index', array_merge($pageData, compact('jobs')));
+    }
+
+    public function createJob()
+    {
+        $pageData = $this->jobAdminPageData();
+        $job = null;
+        $selectedWorkingDays = [];
+
+        return view('admin.jobs.form', array_merge($pageData, compact('job', 'selectedWorkingDays')));
+    }
+
+    public function editJob($id)
+    {
+        $pageData = $this->jobAdminPageData();
+        $job = DB::table('app_jobs')->where('id', $id)->first();
+        if (!$job) {
+            abort(404);
+        }
+        $selectedWorkingDays = json_decode($job->working_days ?? '[]', true) ?: [];
+
+        return view('admin.jobs.form', array_merge($pageData, compact('job', 'selectedWorkingDays')));
+    }
+
+    public function updateJob(Request $request, $id)
+    {
+        $this->autoManageSettingsColumns();
+        $validated = $this->validateJobData($request);
+        $job = DB::table('app_jobs')->where('id', $id)->first();
+        if (!$job) {
+            abort(404);
+        }
+
+        try {
+            DB::table('app_jobs')->where('id', $id)->update($this->jobDataFromValidated($request, $validated) + [
+                'updated_at' => now(),
+            ]);
+
+            return redirect()->route('admin.jobs.index')->with('success', 'Job posting updated successfully.');
+        } catch (\Exception $e) {
+            return back()->withInput()->withErrors(['job' => 'Unable to update the job posting.']);
+        }
+    }
+
+    private function jobAdminPageData(): array
+    {
+        $this->autoManageSettingsColumns();
+        $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'VisaBook', 'app_icon' => ''];
+        $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
+        $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+        foreach ($categories as $category) {
+            $category->types = DB::table('app_visa_types')->where('category_id', $category->id)->get();
+        }
+
+        return compact('settings', 'categories', 'countries');
+    }
+
+    private function validateJobData(Request $request): array
+    {
+        return $request->validate([
+            'job_title' => 'required|string|max:255',
+            'category_visa_type' => 'required|string|max:255',
+            'country_location' => 'required|string|max:255',
+            'number_of_vacancies' => 'required|integer|min:1|max:100000',
+            'job_description' => 'required|string',
+            'requirements' => 'required|string',
+            'salary' => 'required|numeric|min:0|max:9999999999.99',
+            'salary_currency' => 'required|in:SAR,USD,AED,QAR,KWD,BHD,OMR,PKR',
+            'salary_period' => 'required|in:month,week,day',
+            'working_hours' => 'required|string|max:100',
+            'working_days' => 'required|array|min:1',
+            'working_days.*' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'overtime_policy' => 'required|string|max:1000',
+            'contract_duration' => 'required|string|max:255',
+            'accommodation_provided' => 'required|in:0,1',
+            'food_allowance_provided' => 'required|in:0,1',
+            'medical_insurance' => 'nullable|boolean',
+            'ticket_provided' => 'nullable|boolean',
+            'paid_leave_days_after_one_year' => 'nullable|integer|min:0',
+            'status' => 'required|in:Active,Inactive'
+        ]);
+    }
+
+    private function jobDataFromValidated(Request $request, array $validated): array
+    {
+        return [
+            'job_title' => trim($validated['job_title']),
+            'category_visa_type' => trim($validated['category_visa_type']),
+            'country_location' => trim($validated['country_location']),
+            'number_of_vacancies' => (int) $validated['number_of_vacancies'],
+            'job_description' => trim($validated['job_description']),
+            'requirements' => trim($validated['requirements']),
+            'salary' => $validated['salary'],
+            'salary_currency' => $validated['salary_currency'],
+            'salary_period' => $validated['salary_period'],
+            'working_hours' => trim($validated['working_hours']),
+            'working_days' => json_encode($validated['working_days']),
+            'overtime_policy' => trim($validated['overtime_policy']),
+            'contract_duration' => trim($validated['contract_duration']),
+            'accommodation_provided' => (int) $validated['accommodation_provided'],
+            'food_allowance_provided' => (int) $validated['food_allowance_provided'],
+            'medical_insurance' => $request->boolean('medical_insurance'),
+            'ticket_provided' => $request->boolean('ticket_provided'),
+            'paid_leave_days_after_one_year' => $validated['paid_leave_days_after_one_year'] ?? null,
+            'status' => $validated['status'],
+        ];
     }
 
     public function deleteJob(Request $request)
     {
+        $this->autoManageSettingsColumns();
         $request->validate(['id' => 'required|integer']);
 
         try {
             DB::table('app_jobs')->where('id', $request->id)->delete();
-            return response()->json(['message' => 'Job deleted']);
+            return redirect()->route('admin.jobs.index')->with('success', 'Job deleted successfully.');
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Database error'], 500);
+            return back()->withErrors(['job' => 'Unable to delete the job posting.']);
         }
     }
 
@@ -557,11 +751,20 @@ class AdminController extends Controller
     {
         $this->autoManageSettingsColumns();
 
-        $request->validate([
+        $validated = $request->validate([
             'nationality' => 'required|string|max:255|exists:app_nationalities,name',
             'national_identity' => 'required|string|max:100',
             'driving_license_available' => 'nullable|in:yes,no',
         ]);
+
+        $identityDigitLength = DB::table('app_nationalities')
+            ->where('name', $validated['nationality'])
+            ->value('id_number_length');
+        if ($identityDigitLength) {
+            $request->validate([
+                'national_identity' => 'required|digits:' . (int) $identityDigitLength,
+            ]);
+        }
 
         $data = $request->except(['_token', 'passport_photo_file']);
 
@@ -668,11 +871,6 @@ class AdminController extends Controller
         if (!$this->isVisaApproved($visaRequest)) {
             abort(403);
         }
-        $returnToVerify = $request->input('return_to') === 'verify';
-        if ($returnToVerify) {
-            session()->flash('verified_status_request_id', (int) $id);
-        }
-
         $validated = $request->validate([
             'preferred_date_start' => 'required|date|after_or_equal:today',
             'preferred_date_end' => 'required|date|after_or_equal:preferred_date_start',
@@ -691,10 +889,6 @@ class AdminController extends Controller
 
         $updatedRequest = DB::table('app_visa_requests')->where('id', $id)->first();
         $this->sendTicketBookingEmail($updatedRequest);
-
-        if ($returnToVerify) {
-            return redirect()->route('travel.verify')->with('verified_status_request_id', (int) $id)->with('result_notice', 'Flight ticket request submitted successfully.');
-        }
 
         return redirect()->route('travel.apply.success', $id)->with('result_notice', 'Flight ticket request submitted successfully.');
     }
@@ -914,10 +1108,52 @@ class AdminController extends Controller
 
     public function addCountry(Request $request)
     {
+        $this->autoManageSettingsColumns();
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'visa_fee' => 'nullable|numeric|min:0'
+            'visa_fee' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|array',
+            'currency.*' => 'nullable|string|max:20',
+            'fee' => 'nullable|array',
+            'fee.*' => 'nullable|numeric|min:0',
         ]);
+
+        $currencyEntries = [];
+        $currencies = $request->input('currency', []);
+        $fees = $request->input('fee', []);
+
+        foreach ($currencies as $index => $currency) {
+            $currencyCode = trim((string) $currency);
+            $feeValue = $fees[$index] ?? null;
+
+            if ($currencyCode === '' && ($feeValue === null || $feeValue === '')) {
+                continue;
+            }
+
+            $cleanCurrency = strtoupper($currencyCode !== '' ? $currencyCode : 'PKR');
+            $cleanFee = $feeValue !== null && $feeValue !== '' ? (float) $feeValue : null;
+
+            if ($cleanFee === null) {
+                continue;
+            }
+
+            $currencyEntries[] = [
+                'currency' => $cleanCurrency,
+                'fee' => round($cleanFee, 2),
+            ];
+        }
+
+        if (empty($currencyEntries) && $request->filled('visa_fee')) {
+            $currencyEntries[] = [
+                'currency' => strtoupper(trim((string) $request->input('currency_primary', 'PKR'))),
+                'fee' => round((float) $request->visa_fee, 2),
+            ];
+        }
+
+        $primaryCurrency = $currencyEntries[0]['currency'] ?? strtoupper(trim((string) $request->input('currency_primary', 'PKR')));
+        $primaryFee = $currencyEntries[0]['fee'] ?? ($request->visa_fee !== null && $request->visa_fee !== '' ? (float) $request->visa_fee : null);
+
         $flagUrl = null;
         if ($request->hasFile('flag_file')) {
             $file = $request->file('flag_file');
@@ -929,7 +1165,9 @@ class AdminController extends Controller
         try {
             DB::table('app_countries')->insert([
                 'name' => $request->name,
-                'visa_fee' => $request->visa_fee !== null && $request->visa_fee !== '' ? $request->visa_fee : null,
+                'visa_fee' => $primaryFee,
+                'currency' => $primaryCurrency,
+                'visa_fee_details' => !empty($currencyEntries) ? json_encode($currencyEntries) : null,
                 'flag' => $flagUrl,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -952,11 +1190,19 @@ class AdminController extends Controller
 
     public function addNationality(Request $request)
     {
-        $data = $request->validate(['name' => 'required|string|max:255|unique:app_nationalities,name']);
+        $data = $request->validate([
+            'name' => 'required|string|max:255|unique:app_nationalities,name',
+            'currency' => 'nullable|string|max:20',
+            'phone_code' => 'nullable|string|max:20',
+            'id_number_length' => 'nullable|integer|min:1|max:30',
+        ]);
 
         try {
             DB::table('app_nationalities')->insert([
-                'name' => $data['name'],
+                'name' => trim($data['name']),
+                'currency' => !empty($data['currency']) ? trim($data['currency']) : null,
+                'phone_code' => !empty($data['phone_code']) ? trim($data['phone_code']) : null,
+                'id_number_length' => $data['id_number_length'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

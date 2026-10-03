@@ -65,51 +65,273 @@
             }
         }
 
-        /* Country Ticker Styling - Scrolling Animation Restored */
-        .country-ticker-container {
-            background: #15803d;
-            border-bottom: 1px solid #166534;
-            overflow: hidden;
-            padding: 20px 0;
-            backdrop-filter: blur(10px);
-            position: relative;
-            z-index: 5;
+        /* Compact Dynamic Country Ticker Styling */
+        .ticker-section-wrapper {
+            padding: 15px;
+            background: #f1f3f4;
         }
-        .country-ticker-wrapper {
-            display: flex;
-            white-space: nowrap;
-            width: max-content;
-            animation: ticker-slide-rtl 30s linear infinite;
-        }
-        .country-ticker-item {
+
+        .ticker-blue-banner {
+            background: linear-gradient(90deg, #0959c0 0%, #1e88e5 100%);
+            border-radius: 12px;
+            padding: 10px 15px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 0 40px;
+            justify-content: space-between;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(9, 89, 192, 0.25);
+            min-height: 90px;
+        }
+
+        .ticker-left-part {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            z-index: 2;
+            max-width: 45%;
+        }
+
+        .ticker-plane-icon {
+            font-size: 24px;
+            transform: rotate(-10deg);
+            color: white;
+            opacity: 0.9;
+        }
+
+        .ticker-info-text h3 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .ticker-info-text h4 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            margin: 2px 0 0;
+            line-height: 1;
+        }
+
+        .ticker-info-text p {
+            font-size: 0.65rem;
+            margin: 4px 0 0;
+            font-weight: 500;
+            opacity: 0.9;
+            white-space: nowrap;
+        }
+
+        .ticker-white-capsule {
+            background: white;
+            border-radius: 15px;
+            padding: 5px 0;
+            flex-grow: 1;
+            margin-left: 15px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            z-index: 2;
+            height: 70px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        /* Gradient mask for smooth entry/exit inside capsule */
+        .ticker-white-capsule::before,
+        .ticker-white-capsule::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 20px;
+            z-index: 3;
+            pointer-events: none;
+        }
+        .ticker-white-capsule::before {
+            left: 0;
+            background: linear-gradient(to right, white, transparent);
+        }
+        .ticker-white-capsule::after {
+            right: 0;
+            background: linear-gradient(to left, white, transparent);
+        }
+
+        .ticker-slide-track {
+            display: flex;
+            animation: ticker-slide-anim 25s linear infinite;
+            white-space: nowrap;
+            width: max-content;
+        }
+
+        .ticker-country-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 12px;
             flex-shrink: 0;
         }
-        .country-ticker-flag {
-            width: 45px;
-            height: 30px;
-            object-fit: cover;
+
+        .ticker-flag-rect {
+            width: 35px;
+            height: 24px;
             border-radius: 4px;
-            box-shadow: 0 3px 10px rgba(23, 37, 29, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.55);
+            object-fit: cover;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 3px;
+            border: 1px solid #f1f5f9;
         }
-        .country-ticker-name {
-            color: #ffffff;
+
+        .ticker-country-label {
+            font-size: 0.55rem;
+            color: #334155;
             font-weight: 700;
-            font-size: 0.95rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-transform: none;
         }
-        @keyframes ticker-slide-rtl {
+
+        @keyframes ticker-slide-anim {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
         }
-        .country-ticker-container:hover .country-ticker-wrapper {
+
+        .ticker-blue-banner:hover .ticker-slide-track {
             animation-play-state: paused;
+        }
+
+        /* NEW Visa Types Grid Styling matched to image */
+        .visa-types-section {
+            padding: 30px 15px;
+            background: #fff;
+        }
+
+        .visa-types-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .visa-header-title-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .visa-header-icon {
+            width: 42px;
+            height: 42px;
+            background: #2563eb;
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+        }
+
+        .visa-header-title-box h3 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .view-all-link {
+            color: #2563eb !important;
+            text-decoration: none !important;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .visa-types-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .visa-type-card {
+            border-radius: 16px;
+            padding: 20px 15px;
+            text-decoration: none !important;
+            position: relative;
+            transition: transform 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-height: 140px;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .visa-type-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .vt-icon-box {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .vt-info h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+
+        .vt-info p {
+            font-size: 0.75rem;
+            margin: 0;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        .vt-arrow {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        /* Background Variants */
+        .bg-vt-1 { background-color: #f0f7ff; color: #2563eb; } /* Blue */
+        .bg-vt-2 { background-color: #f0fdf4; color: #16a34a; } /* Green */
+        .bg-vt-3 { background-color: #f5f3ff; color: #7c3aed; } /* Purple */
+        .bg-vt-4 { background-color: #fffaf0; color: #d97706; } /* Orange */
+        .bg-vt-5 { background-color: #ecfeff; color: #0891b2; } /* Cyan */
+        .bg-vt-6 { background-color: #fff1f2; color: #db2777; } /* Pink */
+
+        .bg-vt-1 .vt-info h4, .bg-vt-1 .vt-info p { color: #1e40af; }
+        .bg-vt-2 .vt-info h4, .bg-vt-2 .vt-info p { color: #166534; }
+        .bg-vt-3 .vt-info h4, .bg-vt-3 .vt-info p { color: #5b21b6; }
+        .bg-vt-4 .vt-info h4, .bg-vt-4 .vt-info p { color: #92400e; }
+        .bg-vt-5 .vt-info h4, .bg-vt-5 .vt-info p { color: #155e75; }
+        .bg-vt-6 .vt-info h4, .bg-vt-6 .vt-info p { color: #9d174d; }
+
+        @media (max-width: 576px) {
+            .ticker-blue-banner {
+                padding: 10px;
+            }
+            .ticker-left-part {
+                gap: 8px;
+            }
+            .ticker-white-capsule {
+                margin-left: 10px;
+                height: 65px;
+            }
+            .ticker-info-text h4 {
+                font-size: 0.95rem;
+            }
+            .visa-header-title-box h3 {
+                font-size: 1.3rem;
+            }
         }
     </style>
 </head>
@@ -119,112 +341,113 @@
 
         <div class="visa-hero-section">
             <div class="hero-overlay-content">
-                <div class="tag-reliable">FAST • SECURE • RELIABLE</div>
-                <h2>Get Your Visa<br><span>For a Better Tomorrow</span></h2>
+                <div class="tag-reliable">Your Dream Destination</div>
+                <h2>Our Priority<br><span>Get Your Visa With<br>Rainbow Travels Kuwait</span></h2>
                 <p>{{ $settings->description ?? 'Apply for your visa online with ease. Track your application status in real-time and step closer to your next adventure.' }}</p>
                 <div class="hero-btn-group">
-                    <a href="{{ route('travel.apply') }}" class="btn-apply" style="margin:0; border-radius: 50px;">Apply for Visa <i class="fas fa-arrow-right ms-2"></i></a>
-                    <a href="{{ route('travel.verify') }}" class="btn-verify" style="margin:0; border-radius: 50px;">Check Visa Status <i class="fas fa-search ms-2"></i></a>
+                    <a href="{{ route('travel.apply') }}" class="btn-apply" style="margin:0; border-radius: 12px;">Apply Visa Now <i class="fas fa-arrow-right ms-2"></i></a>
+                    <a href="{{ route('travel.verify') }}" class="btn-verify" style="margin:0; border-radius: 12px;">Check Status <i class="fas fa-search ms-2"></i></a>
                 </div>
             </div>
         </div>
 
-        <!-- Scrolling Countries Ticker Restored -->
-        <div class="country-ticker-container">
-            <div class="country-ticker-wrapper">
+        <!-- Precisely Matched Compact Dynamic Country Ticker -->
+        <div class="ticker-section-wrapper">
+            <div class="ticker-blue-banner">
+                <div class="ticker-left-part">
+                    <i class="fas fa-plane ticker-plane-icon"></i>
+                    <div class="ticker-info-text">
+                        <h3>Multiple Countries</h3>
+                        <h4>One Trusted Partner</h4>
+                        <p>Your Visa &bull; Our Support &bull; Your Journey</p>
+                    </div>
+                </div>
+                <div class="ticker-white-capsule">
+                    <div class="ticker-slide-track">
+                        @php
+                            $tickerCountries = (isset($countries) && count($countries) > 0) ? $countries : [
+                                (object)['name' => 'UK', 'code' => 'gb'],
+                                (object)['name' => 'Kuwait', 'code' => 'kw'],
+                                (object)['name' => 'Oman', 'code' => 'om'],
+                                (object)['name' => 'Saudi Arabia', 'code' => 'sa'],
+                                (object)['name' => 'Dubai', 'code' => 'ae'],
+                                (object)['name' => 'Qatar', 'code' => 'qa'],
+                                (object)['name' => 'Turkey', 'code' => 'tr'],
+                                (object)['name' => 'USA', 'code' => 'us']
+                            ];
+                        @endphp
+                        {{-- Double the list for seamless loop --}}
+                        @foreach(array_merge($tickerCountries instanceof \Illuminate\Support\Collection ? $tickerCountries->toArray() : $tickerCountries, $tickerCountries instanceof \Illuminate\Support\Collection ? $tickerCountries->toArray() : $tickerCountries) as $c)
+                            @php
+                                $c = (object)$c;
+                                $flagUrl = !empty($c->flag) ? (str_starts_with($c->flag, 'http') ? $c->flag : asset($c->flag)) : 'https://flagcdn.com/w160/'.strtolower($c->code ?? 'pk').'.png';
+                            @endphp
+                            <div class="ticker-country-unit">
+                                <img src="{{ $flagUrl }}" class="ticker-flag-rect" alt="{{ $c->name }}">
+                                <span class="ticker-country-label">{{ $c->name }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW Visa Types Section matched to reference image -->
+        <section class="visa-types-section">
+            <div class="visa-types-header">
+                <div class="visa-header-title-box">
+                    <div class="visa-header-icon">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <h3 id="visa-types">Visa Types</h3>
+                </div>
+                <a href="{{ route('travel.apply') }}" class="view-all-link">View All <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="visa-types-grid">
                 @php
-                    $tickerCountries = (isset($countries) && count($countries) > 0) ? $countries : [
-                        (object)['name' => 'Pakistan', 'code' => 'pk'],
-                        (object)['name' => 'United Arab Emirates', 'code' => 'ae'],
-                        (object)['name' => 'Saudi Arabia', 'code' => 'sa'],
-                        (object)['name' => 'United Kingdom', 'code' => 'gb'],
-                        (object)['name' => 'United States', 'code' => 'us'],
-                        (object)['name' => 'Turkey', 'code' => 'tr'],
-                        (object)['name' => 'Canada', 'code' => 'ca'],
-                        (object)['name' => 'Malaysia', 'code' => 'my']
+                    // Default categories if none exist in database
+                    $displayCategories = (isset($categories) && count($categories) > 0) ? $categories : [
+                        (object)['id' => 1, 'name' => 'Tourist Visa', 'icon' => 'fas fa-plane-departure', 'tagline' => 'Explore the World'],
+                        (object)['id' => 2, 'name' => 'Private Sector Work Visa', 'icon' => 'fas fa-briefcase', 'tagline' => 'Build Your Career'],
+                        (object)['id' => 3, 'name' => 'Government Sector Work Visa', 'icon' => 'fas fa-building', 'tagline' => 'Serve Your Nation'],
+                        (object)['id' => 4, 'name' => 'Domestic Worker Visa', 'icon' => 'fas fa-house-user', 'tagline' => 'Better Tomorrow'],
+                        (object)['id' => 5, 'name' => 'Student Visa', 'icon' => 'fas fa-graduation-cap', 'tagline' => 'Shape Your Future'],
+                        (object)['id' => 6, 'name' => 'Medical Visa', 'icon' => 'fas fa-heartbeat', 'tagline' => 'For Better Health']
                     ];
                 @endphp
 
-                @foreach($tickerCountries as $c)
-                    <div class="country-ticker-item">
-                        <img src="{{ !empty($c->flag) ? (str_starts_with($c->flag, 'http') ? $c->flag : asset($c->flag)) : 'https://flagcdn.com/w160/'.strtolower($c->code ?? 'pk').'.png' }}" class="country-ticker-flag" alt="{{ $c->name }}">
-                        <span class="country-ticker-name">{{ $c->name }}</span>
-                    </div>
+                @foreach($displayCategories as $index => $cat)
+                    @php
+                        $variant = ($index % 6) + 1;
+                        $catIcon = !empty($cat->icon) ? $cat->icon : 'fas fa-passport';
+                        // Use dynamic description as tagline if available
+                        $tagline = !empty($cat->tagline) ? $cat->tagline : (!empty($cat->description) ? \Illuminate\Support\Str::limit($cat->description, 20) : 'Apply Now');
+                    @endphp
+                    <a href="{{ route('travel.apply', ['category' => $cat->id]) }}" class="visa-type-card bg-vt-{{ $variant }}">
+                        <div class="vt-icon-box">
+                            <i class="{{ $catIcon }}"></i>
+                        </div>
+                        <div class="vt-info">
+                            <h4>{{ $cat->name }}</h4>
+                            <p>{{ $tagline }}</p>
+                        </div>
+                        <div class="vt-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </a>
                 @endforeach
-                {{-- Duplicate for seamless loop --}}
-                @foreach($tickerCountries as $c)
-                    <div class="country-ticker-item">
-                        <img src="{{ !empty($c->flag) ? (str_starts_with($c->flag, 'http') ? $c->flag : asset($c->flag)) : 'https://flagcdn.com/w160/'.strtolower($c->code ?? 'pk').'.png' }}" class="country-ticker-flag" alt="{{ $c->name }}">
-                        <span class="country-ticker-name">{{ $c->name }}</span>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-
-        <div class="section-wrapper-global">
-            <div class="section-header-flex">
-                <div>
-                    <h3>Visa Categories</h3>
-                    <p>Choose the type of visa you need. We make the process simple and hassle-free.</p>
-                </div>
             </div>
 
-            <div class="categories-grid-cards">
-                @if(isset($categories) && count($categories) > 0)
-                    @foreach($categories as $index => $cat)
-                        <div class="category-premium-card">
-                            <div class="category-card-img" style="background-image: url('{{ $cat->image ?? 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' }}');"></div>
-                            <div class="category-card-body">
-                                <div class="category-card-icon-title"><i class="{{ $cat->icon ?? 'fas fa-suitcase-rolling' }}"></i><h4>{{ $cat->name }}</h4></div>
-                                <p>{{ $cat->description }}</p>
-                            </div>
-                        </div>
-                    @endforeach
-                @else
-                    {{-- Fallback default categories --}}
-                    <div class="category-premium-card">
-                        <div class="category-card-img" style="background-image: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');"></div>
-                        <div class="category-card-body">
-                            <div class="category-card-icon-title"><i class="fas fa-suitcase-rolling"></i><h4>Tourist Visa</h4></div>
-                            <p>Explore new destinations and create unforgettable lifelong memories with fast processing.</p>
-                        </div>
-                    </div>
-                    <div class="category-premium-card">
-                        <div class="category-card-img" style="background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');"></div>
-                        <div class="category-card-body">
-                            <div class="category-card-icon-title"><i class="fas fa-briefcase"></i><h4>Business Visa</h4></div>
-                            <p>Attend essential international meetings, conferences, and grow your global business network.</p>
-                        </div>
-                    </div>
-                    <div class="category-premium-card">
-                        <div class="category-card-img" style="background-image: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');"></div>
-                        <div class="category-card-body">
-                            <div class="category-card-icon-title"><i class="fas fa-graduation-cap"></i><h4>Student Visa</h4></div>
-                            <p>Study at top-tier universal colleges and successfully establish your bright future path.</p>
-                        </div>
-                    </div>
-                    <div class="category-premium-card">
-                        <div class="category-card-img" style="background-image: url('https://images.unsplash.com/photo-1511895426328-dc8714191300?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80');"></div>
-                        <div class="category-card-body">
-                            <div class="category-card-icon-title"><i class="fas fa-users"></i><h4>Family Visa</h4></div>
-                            <p>Reunite happily with your loved ones and smoothly build a much brighter domestic future together.</p>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            <div class="trusted-partner-banner">
+            <div class="trusted-partner-banner mt-5">
                 <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h4 class="fw-bold mb-2 text-white" style="font-size: 1.5rem;">Your Trusted Visa Partner</h4>
-                        <p class="text-muted mb-0" style="font-size: 0.95rem;">{{ $settings->description ?? 'We help thousands of people every year to get their visas quickly and easily.' }}</p>
-                    </div>
-                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                        <a href="{{ route('travel.about') }}" class="btn-login" style="padding: 12px 30px;">Learn More <i class="fas fa-chevron-right ms-1" style="font-size: 11px;"></i></a>
+                    <div class="col-12">
+                        <h4 class="trusted-banner-title">Your Trusted Visa Partner</h4>
+                        <p class="trusted-banner-description">{{ $settings->description ?? 'We help thousands of people every year to get their visas quickly and easily.' }}</p>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <div class="features-grid-bar">
             <div class="feature-bar-item">

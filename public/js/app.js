@@ -5,7 +5,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelector('.nav-links');
     if (navToggle && navLinks) {
         navToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('show');
+            const isExpanded = navToggle.getAttribute('aria-expanded') === 'true';
+            navLinks.classList.toggle('show', !isExpanded);
+            navToggle.setAttribute('aria-expanded', String(!isExpanded));
+
+            const icon = navToggle.querySelector('i');
+            icon?.classList.toggle('fa-bars', isExpanded);
+            icon?.classList.toggle('fa-times', !isExpanded);
         });
     }
 });

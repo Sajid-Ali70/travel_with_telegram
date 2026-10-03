@@ -291,8 +291,20 @@
                 <div class="success-header">
                     <div class="success-top-label"><i class="fas fa-check"></i></div>
                     <div>
-                        <div class="success-title">{{ $statusText }}</div>
-                        <p class="success-sub">{{ $statusMessage }}</p>
+                        <div class="success-title">
+                            @if($visaRequest->flight_ticket_requested_at)
+                                {{ $visaRequest->ticket_status === 'Booked' ? 'Ticket Booking Confirmed!' : 'Flight Ticket Request Submitted!' }}
+                            @else
+                                {{ $statusText }}
+                            @endif
+                        </div>
+                        <p class="success-sub">
+                            @if($visaRequest->flight_ticket_requested_at)
+                                Your ticket request is {{ strtolower($visaRequest->ticket_status ?? 'Requested') }}. Booking details are shown below.
+                            @else
+                                {{ $statusMessage }}
+                            @endif
+                        </p>
                     </div>
                 </div>
 
@@ -303,8 +315,16 @@
                     <div class="result-alert alert alert-danger">{{ $errors->first() }}</div>
                 @endif
 
+                @if($visaRequest->flight_ticket_requested_at)
                 <div class="summary-box">
-                    <div class="summary-title"><i class="fas fa-id-card me-1"></i> Client Details</div>
+                    <div class="summary-title"><i class="fas fa-ticket-alt me-1"></i> Booking Summary</div>
+                    <div class="summary-row"><span>Booking Reference</span><strong>V{{ str_pad($visaRequest->id, 6, '0', STR_PAD_LEFT) }}</strong></div>
+                    <div class="summary-row"><span>Request submitted</span><strong>{{ \Carbon\Carbon::parse($visaRequest->flight_ticket_requested_at)->format('d M Y, h:i A') }}</strong></div>
+                </div>
+                @endif
+
+                <div class="summary-box">
+                    <div class="summary-title"><i class="fas fa-id-card me-1"></i> {{ $visaRequest->flight_ticket_requested_at ? 'Passenger Info' : 'Client Details' }}</div>
                     <div class="client-details-layout">
                         <div class="summary-grid">
                             <div class="summary-row"><span>Applicant</span><strong>{{ $visaRequest->first_name ?? '' }} {{ $visaRequest->last_name ?? '' }}</strong></div>
@@ -315,7 +335,9 @@
                             <div class="summary-row"><span>Visa Type</span><strong>{{ $visaRequest->visa_type ?? ($visaRequest->visa_category ?? 'N/A') }}</strong></div>
                             <div class="summary-row"><span>Expiry Date</span><strong>{{ $visaRequest->passport_expiry ?? 'N/A' }}</strong></div>
                             <div class="summary-row"><span>Country</span><strong>{{ $visaRequest->destination_country ?? 'N/A' }}</strong></div>
-                            <div class="summary-row"><span>Application Ref</span><strong>V{{ str_pad($visaRequest->id, 6, '0', STR_PAD_LEFT) }}</strong></div>
+                            @unless($visaRequest->flight_ticket_requested_at)
+                                <div class="summary-row"><span>Application Ref</span><strong>V{{ str_pad($visaRequest->id, 6, '0', STR_PAD_LEFT) }}</strong></div>
+                            @endunless
                         </div>
                         @if(!empty($visaRequest->passport_photo))
                             <img src="{{ $visaRequest->passport_photo }}" alt="Applicant passport photo" class="applicant-photo">
@@ -326,38 +348,11 @@
                 </div>
 
                 @if($statusText === 'Visa Approved')
-                <div class="payment-box">
-                    <div class="summary-title"><i class="fas fa-credit-card me-1"></i> Payment Details</div>
-                    <div class="payment-total">Amount Payable: {{ $visaFee !== null ? 'PKR ' . number_format((float) $visaFee, 2) : 'Not set' }}</div>
-                    @forelse($bankAccounts as $bankAccount)
-                        <div class="bank-entry">
-                            <div><strong>Bank Name:</strong> {{ $bankAccount->bank_name }}</div>
-                            <div><strong>Account Holder:</strong> {{ $bankAccount->account_name }}</div>
-                            <div><strong>Account Number:</strong> {{ $bankAccount->account_number }}</div>
-                            @if($bankAccount->iban)<div><strong>IBAN:</strong> {{ $bankAccount->iban }}</div>@endif
-                            @if($bankAccount->branch)<div><strong>Branch:</strong> {{ $bankAccount->branch }}</div>@endif
-                            @if($bankAccount->swift_code)<div><strong>SWIFT / BIC:</strong> {{ $bankAccount->swift_code }}</div>@endif
-                            <div><strong>Currency:</strong> {{ $bankAccount->currency }}</div>
-                        </div>
-                    @empty
-                        <div class="bank-entry">Bank details are not available yet.</div>
-                    @endforelse
-
-                    @if($visaRequest->payment_receipt)
-                        <div class="bank-entry"><strong>Uploaded Receipt:</strong> <a href="{{ $visaRequest->payment_receipt }}" target="_blank" rel="noopener">View payment receipt</a></div>
-                    @endif
-                    <form action="{{ route('travel.apply.payment_receipt', $visaRequest->id) }}" method="POST" enctype="multipart/form-data" class="result-action-form">
-                        @csrf
-                        <input type="hidden" name="email" value="{{ $visaRequest->email }}">
-                        <label for="payment_receipt">Upload Payment Receipt / Screenshot</label>
-                        <input id="payment_receipt" type="file" name="payment_receipt" accept="image/jpeg,image/png,image/webp" required>
-                        <button type="submit" class="action-submit"><i class="fas fa-camera me-2"></i>Upload Payment Receipt / Screenshot</button>
-                    </form>
-                </div>
-
                 <div class="tracking-box">
-                    <div class="summary-title"><i class="fas fa-calendar-alt me-1"></i> Flight Ticket Booking Time Slot</div>
-                    <p class="bank-entry">Please share your preferred dates and time for ticket booking.</p>
+                    <div class="summary-title"><i class="fas fa-calendar-alt me-1"></i> {{ $visaRequest->flight_ticket_requested_at ? 'Flight Details' : 'Flight Ticket Booking Time Slot' }}</div>
+                    @unless($visaRequest->flight_ticket_requested_at)
+                        <p class="bank-entry">Please share your preferred dates and time for ticket booking.</p>
+                    @endunless
                     @if($visaRequest->flight_ticket_requested_at)
                         <div class="bank-entry"><strong>Request submitted:</strong> {{ \Carbon\Carbon::parse($visaRequest->flight_ticket_requested_at)->format('d M Y, h:i A') }}</div>
                         <div class="bank-entry"><strong>Requested dates:</strong> {{ \Carbon\Carbon::parse($visaRequest->preferred_date_start)->format('d M Y') }} - {{ \Carbon\Carbon::parse($visaRequest->preferred_date_end)->format('d M Y') }}</div>
@@ -369,6 +364,7 @@
                             <div class="bank-entry"><strong>Ticket details:</strong><br>{!! nl2br(e($visaRequest->ticket_details)) !!}</div>
                         @endif
                     @endif
+                    @unless($visaRequest->flight_ticket_requested_at)
                     <form action="{{ route('travel.apply.flight_ticket', $visaRequest->id) }}" method="POST" class="result-action-form">
                         @csrf
                         <input type="hidden" name="email" value="{{ $visaRequest->email }}">
@@ -391,13 +387,14 @@
                         </select>
                         <button type="submit" class="action-submit"><i class="fas fa-paper-plane me-2"></i>Submit Flight Ticket Request</button>
                     </form>
+                    @endunless
                 </div>
                 @endif
 
                 <div class="tracking-box">
-                    <div class="summary-title"><i class="fas fa-clock me-1"></i> Application Tracking</div>
+                    <div class="summary-title"><i class="fas fa-clock me-1"></i> {{ $visaRequest->flight_ticket_requested_at ? 'Ticket Tracking' : 'Application Tracking' }}</div>
                     <div class="summary-row"><span>Submitted</span><strong>{{ \Carbon\Carbon::parse($visaRequest->created_at ?? now())->format('d M Y, h:i A') }}</strong></div>
-                    <div class="summary-row"><span>Current Status</span><strong>{{ $statusText }}</strong></div>
+                    <div class="summary-row"><span>{{ $visaRequest->flight_ticket_requested_at ? 'Ticket Status' : 'Current Status' }}</span><strong>{{ $visaRequest->flight_ticket_requested_at ? ($visaRequest->ticket_status ?? 'Requested') : $statusText }}</strong></div>
                 </div>
 
                 <div class="success-actions">

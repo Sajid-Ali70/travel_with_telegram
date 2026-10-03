@@ -19,9 +19,9 @@
     </a>
 
     <!-- Mobile Menu Toggle Button -->
-    <div class="nav-toggle" id="nav-toggle">
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-controls="nav-menu" aria-expanded="false" aria-label="Toggle navigation menu">
         <i class="fas fa-bars"></i>
-    </div>
+    </button>
 
     <div class="nav-links" id="nav-menu">
         <a href="{{ url('/') }}" class="nav-link-item {{ Request::is('/') ? 'active' : '' }}">Home</a>
@@ -31,25 +31,3 @@
         <a href="{{ route('travel.contact') }}" class="nav-link-item {{ Request::is('contact*') ? 'active' : '' }}">Contact</a>
     </div>
 </nav>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const toggle = document.getElementById('nav-toggle');
-        const menu = document.getElementById('nav-menu');
-
-        if (toggle && menu) {
-            toggle.addEventListener('click', () => {
-                menu.classList.toggle('show');
-                // Change icon between bars and times (X)
-                const icon = toggle.querySelector('i');
-                if (menu.classList.contains('show')) {
-                    icon.classList.remove('fa-bars');
-                    icon.classList.add('fa-times');
-                } else {
-                    icon.classList.remove('fa-times');
-                    icon.classList.add('fa-bars');
-                }
-            });
-        }
-    });
-</script>

@@ -259,8 +259,55 @@
                 font-size: 1.5rem;
             }
 
+            .amount-title {
+                flex-wrap: nowrap;
+                gap: 6px;
+                font-size: 0.65rem;
+                letter-spacing: 0.02em;
+            }
+
+            .amount-title span {
+                white-space: nowrap;
+            }
+
             .detail-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .client-details-layout {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .client-photo {
+                order: -1;
+                align-self: center;
+            }
+
+            .client-details-layout .detail-item {
+                display: grid;
+                grid-template-columns: minmax(74px, 30%) minmax(0, 1fr);
+                align-items: center;
+                gap: 8px;
+                padding: 8px 10px;
+            }
+
+            .client-details-layout .detail-label {
+                margin-bottom: 0;
+                white-space: nowrap;
+            }
+
+            .client-details-layout .detail-value {
+                min-width: 0;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .amount-box .detail-item > div {
+                max-width: 100%;
+                overflow-x: auto;
+                white-space: nowrap;
             }
         }
     </style>
@@ -324,10 +371,10 @@
                                 <div class="status-result-header">
                                     <div class="status-badge">
                                         <i class="fas fa-check-circle"></i>
-                                        {{ $statusText }}
+                                        {{ $visaRequest->flight_ticket_requested_at ? 'Ticket Status: ' . ($visaRequest->ticket_status ?? 'Requested') : $statusText }}
                                     </div>
-                                    <div class="status-title">{{ $statusText }}</div>
-                                    <p class="status-subtitle">{{ $statusMessage }}</p>
+                                    <div class="status-title">{{ $visaRequest->flight_ticket_requested_at ? 'Ticket Status: ' . ($visaRequest->ticket_status ?? 'Requested') : $statusText }}</div>
+                                    <p class="status-subtitle">{{ $visaRequest->flight_ticket_requested_at ? 'Your flight ticket request is currently ' . strtolower($visaRequest->ticket_status ?? 'Requested') . '.' : $statusMessage }}</p>
                                 </div>
 
                                 @if(session('result_notice'))
@@ -408,13 +455,16 @@
                                             @if($visaRequest->payment_receipt)
                                                 <div class="mt-2"><strong>Uploaded Receipt:</strong> <a href="{{ $visaRequest->payment_receipt }}" target="_blank" rel="noopener">View payment receipt</a></div>
                                             @endif
-                                            <form action="{{ route('travel.apply.payment_receipt', $visaRequest->id) }}" method="POST" enctype="multipart/form-data" class="result-action-form">
+                                            <form id="verify-payment-receipt-form" action="{{ route('travel.apply.payment_receipt', $visaRequest->id) }}" method="POST" enctype="multipart/form-data" class="result-action-form">
                                                 @csrf
                                                 <input type="hidden" name="email" value="{{ $visaRequest->email }}">
                                                 <input type="hidden" name="return_to" value="verify">
                                                 <label for="verify_payment_receipt">Upload Payment Receipt / Screenshot</label>
-                                                <input id="verify_payment_receipt" type="file" name="payment_receipt" accept="image/jpeg,image/png,image/webp" required>
-                                                <button type="submit" class="action-submit"><i class="fas fa-camera me-2"></i>Upload Payment Receipt / Screenshot</button>
+                                                <input id="verify_payment_receipt" class="visually-hidden" type="file" name="payment_receipt" accept="image/jpeg,image/png,image/webp" required>
+                                                <button id="verify-payment-receipt-picker" type="button" class="action-submit"><i class="fas fa-camera me-2"></i>Upload Payment Receipt / Screenshot</button>
+                                                <div id="verify-payment-receipt-preview" class="mt-2" hidden>
+                                                    <img id="verify-payment-receipt-image" alt="Selected payment receipt preview" style="display:block;max-width:100%;max-height:240px;border:1px solid #dfe7f3;border-radius:7px;">
+                                                </div>
                                             </form>
                                         </div>
                                     </div>
@@ -438,7 +488,6 @@
                                         <form action="{{ route('travel.apply.flight_ticket', $visaRequest->id) }}" method="POST" class="result-action-form">
                                             @csrf
                                             <input type="hidden" name="email" value="{{ $visaRequest->email }}">
-                                            <input type="hidden" name="return_to" value="verify">
                                             <div class="action-grid">
                                                 <div>
                                                     <label for="verify_preferred_date_start">Preferred date from</label>
@@ -489,6 +538,27 @@
     <script>
         const verifyDateStart = document.getElementById('verify_preferred_date_start');
         const verifyDateEnd = document.getElementById('verify_preferred_date_end');
+        const receiptInput = document.getElementById('verify_payment_receipt');
+        const receiptPicker = document.getElementById('verify-payment-receipt-picker');
+        const receiptPreview = document.getElementById('verify-payment-receipt-preview');
+        const receiptImage = document.getElementById('verify-payment-receipt-image');
+
+        receiptPicker?.addEventListener('click', () => receiptInput?.click());
+        receiptInput?.addEventListener('change', () => {
+            const file = receiptInput.files?.[0];
+            if (!file) {
+                receiptPreview.hidden = true;
+                receiptImage.removeAttribute('src');
+                return;
+            }
+
+            receiptImage.src = URL.createObjectURL(file);
+            receiptPreview.hidden = false;
+            receiptPicker.disabled = true;
+            receiptPicker.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading Payment Receipt / Screenshot';
+            receiptInput.form?.requestSubmit();
+        });
+
         verifyDateStart?.addEventListener('change', () => {
             verifyDateEnd.min = verifyDateStart.value || verifyDateEnd.min;
             if (verifyDateEnd.value && verifyDateEnd.value < verifyDateStart.value) {

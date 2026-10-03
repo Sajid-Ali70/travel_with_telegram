@@ -77,12 +77,14 @@ Route::get('/apply', function () {
     $countries = [];
     $nationalities = [];
     $categories = [];
+    $jobs = [];
     try {
         $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
         $nationalities = DB::table('app_nationalities')->orderBy('name', 'asc')->get();
         $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
+        $jobs = DB::table('app_jobs')->where('status', 'Active')->orderByDesc('id')->get();
     } catch (\Exception $e) {}
-    return view('frontend.travel_apply', compact('settings', 'countries', 'nationalities', 'categories'));
+    return view('frontend.travel_apply', compact('settings', 'countries', 'nationalities', 'categories', 'jobs'));
 })->name('travel.apply');
 
 Route::post('/apply', [AdminController::class, 'submitVisaRequest'])->name('travel.apply.post');
@@ -97,6 +99,8 @@ Route::get('/contact', function () {
     return view('frontend.travel_contact', compact('settings'));
 })->name('travel.contact');
 
+Route::get('/jobs', [AdminController::class, 'publicJobs'])->name('jobs.index');
+
 // API for dynamic visa types
 Route::get('/api/visa-types/{category_id}', [AdminController::class, 'getVisaTypesByCategory']);
 
@@ -108,6 +112,12 @@ Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.logi
 Route::middleware(['admin.auth'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::post('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout');
+
+    // Job management pages
+    Route::get('/admin/jobs', [AdminController::class, 'jobsIndex'])->name('admin.jobs.index');
+    Route::get('/admin/jobs/create', [AdminController::class, 'createJob'])->name('admin.jobs.create');
+    Route::get('/admin/jobs/{id}/edit', [AdminController::class, 'editJob'])->name('admin.jobs.edit');
+    Route::put('/admin/jobs/{id}', [AdminController::class, 'updateJob'])->name('admin.jobs.update');
 
     // Play Store Settings API
     Route::post('/admin/settings/update', [AdminController::class, 'updateSettings'])->name('admin.settings.update');

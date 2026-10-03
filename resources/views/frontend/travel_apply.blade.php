@@ -59,10 +59,10 @@
                             <label>NATIONALITY *</label>
                             <div class="input-with-icon">
                                 <i class="fas fa-flag"></i>
-                                <select name="nationality" class="form-select" required style="padding-left: 48px;">
+                                <select id="nationality_select" name="nationality" class="form-select" required style="padding-left: 48px;">
                                     <option value="" selected disabled>Select Nationality</option>
                                     @foreach($nationalities as $nationality)
-                                        <option value="{{ $nationality->name }}" {{ old('nationality') == $nationality->name ? 'selected' : '' }}>{{ $nationality->name }}</option>
+                                        <option value="{{ $nationality->name }}" data-phone-code="{{ $nationality->phone_code ?? '' }}" data-id-length="{{ $nationality->id_number_length ?? '' }}" data-currency="{{ $nationality->currency ?? '' }}" {{ old('nationality') == $nationality->name ? 'selected' : '' }}>{{ $nationality->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -72,8 +72,9 @@
                             <label>National Identity/Aadhaar Card *</label>
                             <div class="input-with-icon">
                                 <i class="far fa-id-card"></i>
-                                <input type="text" name="national_identity" value="{{ old('national_identity') }}" placeholder="National Identity/Aadhaar Card" maxlength="100" required>
+                                <input id="national_identity_input" type="text" name="national_identity" value="{{ old('national_identity') }}" placeholder="National Identity/Aadhaar Card" maxlength="100" required>
                             </div>
+                            <small id="national_identity_hint" class="form-text text-muted d-none mt-1"></small>
                         </div>
 
                         <div class="form-row">
@@ -105,7 +106,7 @@
                                 <label>ACTIVE WHATSAPP NUMBER *</label>
                                 <div class="input-with-icon">
                                     <i class="fas fa-phone-alt"></i>
-                                    <input type="text" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="Active WhatsApp Number" required>
+                                    <input id="mobile_number_input" type="text" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="Active WhatsApp Number" required>
                                 </div>
                             </div>
                         </div>
@@ -168,12 +169,23 @@
 
                         <div class="form-group">
                             <label>SELECT DESTINATION COUNTRY *</label>
+                            <input type="text" class="form-control mb-2 searchable-select-input" data-target="destination_country_select" placeholder="Search country..." aria-label="Search country">
                             <div class="input-with-icon">
                                 <i class="fas fa-globe"></i>
-                                <select name="destination_country" class="form-select" required style="padding-left: 48px;">
+                                <select id="destination_country_select" name="destination_country" class="form-select" required style="padding-left: 48px;">
                                     <option value="" selected disabled>Select Country</option>
                                     @foreach($countries as $country)
-                                        <option value="{{ $country->name }}" {{ old('destination_country') == $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
+                                        @php
+                                            $countryFees = json_decode($country->visa_fee_details ?? '[]', true);
+                                            $countryFees = is_array($countryFees) ? $countryFees : [];
+                                            if (empty($countryFees) && $country->visa_fee !== null) {
+                                                $countryFees[] = [
+                                                    'currency' => $country->currency ?: 'PKR',
+                                                    'fee' => $country->visa_fee,
+                                                ];
+                                            }
+                                        @endphp
+                                        <option value="{{ $country->name }}" data-fees="{{ json_encode($countryFees) }}" {{ old('destination_country') == $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
                                     @endforeach
                                     @if(count($countries) == 0)
                                         <option>United Arab Emirates</option>
@@ -182,10 +194,12 @@
                                     @endif
                                 </select>
                             </div>
+                            <div id="destination_country_fee" class="mt-2 small text-white" aria-live="polite"></div>
                         </div>
 
                         <div class="form-group">
                             <label>VISA CATEGORY *</label>
+                            <input type="text" class="form-control mb-2 searchable-select-input" data-target="visa_category_select" placeholder="Search category..." aria-label="Search visa category">
                             <div class="input-with-icon">
                                 <i class="fas fa-briefcase"></i>
                                 <select id="visa_category_select" name="visa_category" class="visa-type-selector form-select" required style="padding-left: 48px;">
@@ -259,7 +273,7 @@
 
                 <!-- Right Side: Sticky Info Widget Panels -->
                 <div class="sidebar-sticky-panel reveal reveal-up delay-2">
-                    <div class="sidebar-widget-card">
+                    <div class="sidebar-widget-card mt-4">
                         <h4>Need Help?</h4>
                         <p class="text-muted mb-4" style="font-size: 0.85rem; line-height: 1.5;">Our support team is available 24/7 to assist you with your visa application.</p>
 
@@ -292,6 +306,124 @@
             const catSelect = document.getElementById('visa_category_select');
             const typeSelect = document.getElementById('visa_type_select');
             const drivingLicenseField = document.getElementById('drivingLicenseField');
+            const nationalitySelect = document.getElementById('nationality_select');
+            const mobileNumberInput = document.getElementById('mobile_number_input');
+            const nationalIdentityInput = document.getElementById('national_identity_input');
+            const nationalIdentityHint = document.getElementById('national_identity_hint');
+            const destinationCountrySelect = document.getElementById('destination_country_select');
+            const destinationCountryFee = document.getElementById('destination_country_fee');
+
+            function updateDestinationVisaFee() {
+                const selectedOption = destinationCountrySelect.options[destinationCountrySelect.selectedIndex];
+                const nationalityOption = nationalitySelect.options[nationalitySelect.selectedIndex];
+                const currency = nationalityOption ? (nationalityOption.dataset.currency || '').trim().toUpperCase() : '';
+                let fees = [];
+
+                try {
+                    fees = selectedOption ? JSON.parse(selectedOption.dataset.fees || '[]') : [];
+                } catch (error) {
+                    fees = [];
+                }
+
+                destinationCountryFee.replaceChildren();
+                if (!selectedOption || !selectedOption.value) return;
+
+                if (!currency) {
+                    destinationCountryFee.textContent = 'Currency is not configured for this nationality.';
+                    return;
+                }
+
+                const matchingFee = fees.find(entry => (entry.currency || '').trim().toUpperCase() === currency
+                    && Number.isFinite(Number(entry.fee)));
+
+                if (!matchingFee) {
+                    destinationCountryFee.textContent = `Visa fee is not available in ${currency} for this country.`;
+                    return;
+                }
+
+                destinationCountryFee.textContent = `Visa fee: ${currency} ${Number(matchingFee.fee).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+
+            destinationCountrySelect.addEventListener('change', updateDestinationVisaFee);
+            nationalitySelect.addEventListener('change', updateDestinationVisaFee);
+            updateDestinationVisaFee();
+
+            function updateNationalityPhoneCode() {
+                const selectedOption = nationalitySelect.options[nationalitySelect.selectedIndex];
+                const phoneCode = selectedOption ? (selectedOption.dataset.phoneCode || '').trim() : '';
+                const previousCode = mobileNumberInput.dataset.nationalityPhoneCode || '';
+                const currentNumber = mobileNumberInput.value.trim();
+
+                if (previousCode && currentNumber.startsWith(previousCode)) {
+                    mobileNumberInput.value = phoneCode
+                        ? `${phoneCode}${currentNumber.slice(previousCode.length)}`
+                        : currentNumber.slice(previousCode.length).trimStart();
+                } else if (!currentNumber && phoneCode) {
+                    mobileNumberInput.value = `${phoneCode} `;
+                }
+
+                mobileNumberInput.dataset.nationalityPhoneCode = phoneCode;
+            }
+
+            nationalitySelect.addEventListener('change', updateNationalityPhoneCode);
+            updateNationalityPhoneCode();
+
+            function updateNationalIdentityLength() {
+                const selectedOption = nationalitySelect.options[nationalitySelect.selectedIndex];
+                const digitLength = Number.parseInt(selectedOption ? selectedOption.dataset.idLength : '', 10);
+                const hasConfiguredLength = Number.isInteger(digitLength) && digitLength > 0;
+
+                if (hasConfiguredLength) {
+                    nationalIdentityInput.maxLength = digitLength;
+                    nationalIdentityInput.minLength = digitLength;
+                    nationalIdentityInput.pattern = `[0-9]{${digitLength}}`;
+                    nationalIdentityInput.inputMode = 'numeric';
+                    nationalIdentityInput.placeholder = `Enter exactly ${digitLength} digits`;
+                    nationalIdentityInput.title = `Enter exactly ${digitLength} digits`;
+                    nationalIdentityHint.textContent = `Enter exactly ${digitLength} digits.`;
+                    nationalIdentityHint.classList.remove('d-none');
+                    nationalIdentityInput.value = nationalIdentityInput.value.replace(/\D/g, '').slice(0, digitLength);
+                } else {
+                    nationalIdentityInput.maxLength = 100;
+                    nationalIdentityInput.removeAttribute('minlength');
+                    nationalIdentityInput.removeAttribute('pattern');
+                    nationalIdentityInput.removeAttribute('inputmode');
+                    nationalIdentityInput.placeholder = 'National Identity/Aadhaar Card';
+                    nationalIdentityInput.removeAttribute('title');
+                    nationalIdentityHint.textContent = '';
+                    nationalIdentityHint.classList.add('d-none');
+                }
+            }
+
+            nationalitySelect.addEventListener('change', updateNationalIdentityLength);
+            updateNationalIdentityLength();
+            nationalIdentityInput.addEventListener('input', function() {
+                const selectedOption = nationalitySelect.options[nationalitySelect.selectedIndex];
+                const digitLength = Number.parseInt(selectedOption ? selectedOption.dataset.idLength : '', 10);
+
+                if (Number.isInteger(digitLength) && digitLength > 0) {
+                    this.value = this.value.replace(/\D/g, '').slice(0, digitLength);
+                }
+            });
+
+            document.querySelectorAll('.searchable-select-input').forEach(function(input) {
+                input.addEventListener('input', function() {
+                    const targetId = input.dataset.target;
+                    const select = document.getElementById(targetId);
+                    if (!select) return;
+
+                    const searchValue = this.value.trim().toLowerCase();
+                    Array.from(select.options).forEach(function(option) {
+                        if (!option.value) {
+                            option.hidden = false;
+                            return;
+                        }
+
+                        const optionText = option.textContent.toLowerCase();
+                        option.hidden = searchValue !== '' && !optionText.includes(searchValue);
+                    });
+                });
+            });
 
             function isDriverType(value) {
                 const text = (value || '').toLowerCase();

@@ -350,56 +350,7 @@
     </style>
 </head>
 <body>
-    <div class="sidebar" id="sidebar">
-        <div class="brand-section">
-            <img src="{{ $settings->app_icon ?? asset('asset/image/01_app_icon.png') }}" alt="Logo" class="brand-logo-img">
-            <span class="brand-name">{{ $settings->app_name ?? 'VisaBook' }}</span>
-            <div class="admin-badge">Admin</div>
-        </div>
-
-        <nav class="nav flex-column">
-            <a href="/" class="nav-link" target="_blank">
-                <i class="fas fa-external-link-alt"></i> View Site
-            </a>
-            <a class="nav-link" id="nav-dashboard" onclick="showSection('dashboard')">
-                <i class="fas fa-chart-line"></i> Dashboard
-            </a>
-            <a class="nav-link" id="nav-requests" onclick="showSection('requests')">
-                <i class="fas fa-file-signature"></i> Visa Requests
-            </a>
-            <a class="nav-link" id="nav-countries" onclick="showSection('countries')">
-                <i class="fas fa-globe"></i> Countries
-            </a>
-            <a class="nav-link" id="nav-nationalities" onclick="showSection('nationalities')">
-                <i class="fas fa-flag"></i> Nationalities
-            </a>
-            <a class="nav-link" id="nav-airports" onclick="showSection('airports')">
-                <i class="fas fa-plane-departure"></i> Airports
-            </a>
-            <a class="nav-link" id="nav-categories" onclick="showSection('categories')">
-                <i class="fas fa-th-large"></i> Categories
-            </a>
-            <a class="nav-link" id="nav-jobs" onclick="showSection('jobs')">
-                <i class="fas fa-briefcase"></i> Jobs
-            </a>
-            <a class="nav-link" id="nav-bank-accounts" onclick="showSection('bank-accounts')">
-                <i class="fas fa-building-columns"></i> Bank Accounts
-            </a>
-            <a class="nav-link" id="nav-security" onclick="showSection('security')">
-                <i class="fas fa-shield-alt"></i> Security
-            </a>
-            <a class="nav-link" id="nav-playstore" onclick="showSection('playstore')">
-                <i class="fas fa-cog"></i> Settings
-            </a>
-        </nav>
-
-        <form action="{{ route('admin.logout') }}" method="POST" class="mt-auto">
-            @csrf
-            <button type="submit" class="logout-btn">
-                <i class="fas fa-sign-out-alt me-2"></i> Logout
-            </button>
-        </form>
-    </div>
+    @include('admin.partials.sidebar')
 
     <main class="main-content">
         <div class="page-header d-flex align-items-center gap-3 mb-4">
@@ -460,83 +411,13 @@
                 <div class="d-flex gap-3 mt-3">
                     <button class="btn btn-outline-primary" onclick="showSection('requests')">Manage Requests</button>
                     <button class="btn btn-outline-purple" style="color:#a371f7; border-color:#a371f7;" onclick="showSection('categories')">Manage Categories</button>
-                    <button class="btn btn-outline-info" onclick="showSection('jobs')">Manage Jobs</button>
+                    <a class="btn btn-outline-info" href="{{ route('admin.jobs.index') }}">Manage Jobs</a>
                     <button class="btn btn-outline-info" onclick="showSection('playstore')">Edit Settings</button>
                 </div>
             </div>
         </section>
 
         <!-- Section: Jobs -->
-        <section id="jobsSection" class="dashboard-section d-none">
-            <div class="admin-card">
-                <h5 class="section-title">Add New Job</h5>
-                <form id="addJobForm">
-                    @csrf
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Job Title</label>
-                            <input type="text" name="job_title" class="form-control" placeholder="e.g. Hospital Nurse" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Salary</label>
-                            <input type="number" step="0.01" min="0" name="salary" class="form-control" placeholder="e.g. 1200" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Working Hours</label>
-                            <input type="text" name="working_hours" class="form-control" placeholder="e.g. 8 hours/day" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Paid Leave After 1 Year (Days)</label>
-                            <input type="number" min="0" name="paid_leave_days_after_one_year" class="form-control" placeholder="e.g. 12" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Job Description</label>
-                            <textarea name="job_description" class="form-control" rows="4" placeholder="Describe the job responsibilities and requirements..." required></textarea>
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn-primary-custom w-100">Add Job</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <div class="admin-card">
-                <h5 class="section-title">Manage Jobs</h5>
-                <div class="table-responsive mt-3">
-                    <table class="reviews-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Job Title</th>
-                                <th>Salary</th>
-                                <th>Working Hours</th>
-                                <th>Paid Leave (1 Year)</th>
-                                <th>Description</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($jobs as $job)
-                            <tr>
-                                <td>{{ $job->id }}</td>
-                                <td>{{ $job->job_title }}</td>
-                                <td>{{ $job->salary }}</td>
-                                <td>{{ $job->working_hours }}</td>
-                                <td>{{ $job->paid_leave_days_after_one_year }} days</td>
-                                <td>{{ Str::limit($job->job_description, 120) }}</td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteJob({{ $job->id }})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
         <!-- Section: Bank Accounts -->
         <section id="bank-accountsSection" class="dashboard-section d-none">
             <div class="admin-card">
@@ -673,6 +554,14 @@
 
         <!-- Section: Countries -->
         <section id="countriesSection" class="dashboard-section d-none">
+            @php
+                $nationalityCurrencies = $nationalities->pluck('currency')
+                    ->filter(fn ($currency) => !empty(trim($currency ?? '')))
+                    ->map(fn ($currency) => strtoupper(trim($currency)))
+                    ->unique()
+                    ->sort()
+                    ->values();
+            @endphp
             <div class="admin-card">
                 <h5 class="section-title">Add New Country</h5>
                 <form id="addCountryForm" enctype="multipart/form-data">
@@ -683,37 +572,72 @@
                             <input type="text" name="name" class="form-control" placeholder="e.g. United Arab Emirates" required>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Visa Fee</label>
-                            <input type="number" name="visa_fee" class="form-control" step="0.01" min="0" placeholder="e.g. 1200">
-                        </div>
-                        <div class="col-md-3">
                             <label class="form-label">Country Flag</label>
                             <input type="file" name="flag_file" class="form-control" accept="image/*" required>
                         </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn-primary-custom w-100">Add Country</button>
-                        </div>
                     </div>
+
+                    <div class="mt-4">
+                        <label class="form-label">Visa Fee by Currency</label>
+                        <div id="countryCurrencyFeeRows">
+                            <div class="row g-2 currency-fee-row">
+                                <div class="col-md-3">
+                                    <select name="currency[]" class="form-select">
+                                        <option value="">Select</option>
+                                        @forelse($nationalityCurrencies as $currency)
+                                            <option value="{{ $currency }}">{{ $currency }}</option>
+                                        @empty
+                                            <option value="" disabled>No nationality currencies added</option>
+                                        @endforelse
+                                    </select>
+                                </div>
+                                <div class="col-md-7">
+                                    <input type="number" name="fee[]" class="form-control" step="0.01" min="0" placeholder="1200">
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-fee-row w-100">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="addCurrencyFeeRow" class="btn btn-sm btn-outline-primary mt-2">+ Add another currency</button>
+                    </div>
+                    <div id="countryFormError" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                    <button type="submit" id="addCountrySubmit" class="btn-primary-custom mt-3">Add Country</button>
                 </form>
             </div>
             <div class="admin-card">
                 <h5 class="section-title">Manage Countries</h5>
                 <div class="table-responsive mt-3">
                     <table class="reviews-table">
-                        <thead><tr><th>ID</th><th>Flag</th><th>Country Name</th><th>Visa Fee</th><th>Action</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Flag</th><th>Country Name</th><th>Visa Fees</th><th>Action</th></tr></thead>
                         <tbody>
                             @foreach($countries as $country)
+                            @php
+                                $feeDetails = json_decode($country->visa_fee_details ?? '[]', true);
+                                $displayFees = [];
+                                if (!empty($feeDetails) && is_array($feeDetails)) {
+                                    foreach ($feeDetails as $entry) {
+                                        if (!empty($entry['currency']) && isset($entry['fee'])) {
+                                            $displayFees[] = strtoupper($entry['currency']) . ': ' . number_format((float) $entry['fee'], 2);
+                                        }
+                                    }
+                                }
+                                if (empty($displayFees) && $country->visa_fee !== null) {
+                                    $currencyLabel = !empty($country->currency) ? strtoupper($country->currency) : 'PKR';
+                                    $displayFees[] = $currencyLabel . ': ' . number_format((float) $country->visa_fee, 2);
+                                }
+                            @endphp
                             <tr>
                                 <td>{{ $country->id }}</td>
                                 <td>
-                                    @if($country->flag)
+                                    @if(!empty($country->flag))
                                         <img src="{{ $country->flag }}" class="country-flag-sm">
                                     @else
                                         <span class="text-muted">No Flag</span>
                                     @endif
                                 </td>
                                 <td>{{ $country->name }}</td>
-                                <td>{{ $country->visa_fee !== null ? 'PKR ' . number_format((float) $country->visa_fee, 2) : 'N/A' }}</td>
+                                <td>{{ !empty($displayFees) ? implode('<br>', $displayFees) : 'N/A' }}</td>
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteCountry({{ $country->id }})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                             @endforeach
@@ -730,12 +654,24 @@
                 <form id="addNationalityForm">
                     @csrf
                     <div class="row g-3">
-                        <div class="col-md-9">
+                        <div class="col-md-4">
                             <label class="form-label">Nationality Name</label>
                             <input type="text" name="name" class="form-control" placeholder="e.g. Pakistani" required>
                         </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn-primary-custom w-100">Add Nationality</button>
+                        <div class="col-md-2">
+                            <label class="form-label">Currency</label>
+                            <input type="text" name="currency" class="form-control" placeholder="e.g. PKR" maxlength="20">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Phone Code</label>
+                            <input type="text" name="phone_code" class="form-control" placeholder="+92" maxlength="20">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">ID Digits</label>
+                            <input type="number" name="id_number_length" class="form-control" placeholder="13" min="1" max="30">
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn-primary-custom w-100">Add</button>
                         </div>
                     </div>
                 </form>
@@ -744,12 +680,15 @@
                 <h5 class="section-title">Manage Nationalities</h5>
                 <div class="table-responsive mt-3">
                     <table class="reviews-table">
-                        <thead><tr><th>ID</th><th>Nationality</th><th>Action</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Nationality</th><th>Currency</th><th>Phone Code</th><th>ID Digits</th><th>Action</th></tr></thead>
                         <tbody>
                             @foreach($nationalities as $nationality)
                             <tr>
                                 <td>{{ $nationality->id }}</td>
                                 <td>{{ $nationality->name }}</td>
+                                <td>{{ $nationality->currency ?? '—' }}</td>
+                                <td>{{ $nationality->phone_code ?? '—' }}</td>
+                                <td>{{ $nationality->id_number_length ?? '—' }}</td>
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteNationality({{ $nationality->id }})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                             @endforeach
@@ -868,8 +807,10 @@
                                 <td>{{ $cat->id }}</td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <div class="cat-icon-preview"><i class="{{ $cat->icon }}"></i></div>
-                                        @if($cat->image)
+                                        @if(!empty($cat->icon))
+                                            <div class="cat-icon-preview"><i class="{{ $cat->icon }}"></i></div>
+                                        @endif
+                                        @if(!empty($cat->image))
                                             <img src="{{ $cat->image }}" class="cat-image-sm">
                                         @endif
                                     </div>
@@ -1019,7 +960,7 @@
 
         window.onload = function() {
             const activeTab = localStorage.getItem('activeAdminTab') || 'dashboard';
-            showSection(activeTab);
+            showSection(activeTab === 'jobs' ? 'dashboard' : activeTab);
         };
 
         async function updateRequestStatus(id, status) {
@@ -1065,14 +1006,97 @@
             if (res.ok) alert("Settings saved!");
         };
 
+        const currencyFeeRows = document.getElementById('countryCurrencyFeeRows');
+        const addCurrencyFeeRow = document.getElementById('addCurrencyFeeRow');
+        const nationalityCurrencies = @json($nationalityCurrencies);
+
+        function createCurrencyFeeRow() {
+            const row = document.createElement('div');
+            row.className = 'row g-2 currency-fee-row mt-1';
+            row.innerHTML = `
+                <div class="col-md-3">
+                    <select name="currency[]" class="form-select">
+                        <option value="">Select</option>
+                    </select>
+                </div>
+                <div class="col-md-7">
+                    <input type="number" name="fee[]" class="form-control" step="0.01" min="0" placeholder="150">
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-fee-row w-100">Remove</button>
+                </div>
+            `;
+            const currencySelect = row.querySelector('select[name="currency[]"]');
+            if (nationalityCurrencies.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No nationality currencies added';
+                option.disabled = true;
+                currencySelect.appendChild(option);
+            } else {
+                nationalityCurrencies.forEach(currency => {
+                    const option = document.createElement('option');
+                    option.value = currency;
+                    option.textContent = currency;
+                    currencySelect.appendChild(option);
+                });
+            }
+            row.querySelector('.remove-fee-row').addEventListener('click', function() {
+                row.remove();
+            });
+            return row;
+        }
+
+        if (addCurrencyFeeRow) {
+            addCurrencyFeeRow.addEventListener('click', function() {
+                currencyFeeRows.appendChild(createCurrencyFeeRow());
+            });
+        }
+
+        if (currencyFeeRows) {
+            currencyFeeRows.querySelectorAll('.remove-fee-row').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const row = button.closest('.currency-fee-row');
+                    if (row) row.remove();
+                });
+            });
+        }
+
         document.getElementById('addCountryForm').onsubmit = async function(e) {
             e.preventDefault();
-            const res = await fetch("{{ route('admin.countries.add') }}", {
-                method: 'POST',
-                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
-                body: new FormData(this)
-            });
-            if (res.ok) location.reload();
+            const form = this;
+            const errorBox = document.getElementById('countryFormError');
+            const submitButton = document.getElementById('addCountrySubmit');
+            errorBox.classList.add('d-none');
+            errorBox.textContent = '';
+            submitButton.disabled = true;
+            submitButton.textContent = 'Adding...';
+
+            try {
+                const res = await fetch("{{ route('admin.countries.add') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await res.json();
+
+                if (!res.ok) {
+                    const validationMessages = result.errors
+                        ? Object.values(result.errors).flat().join(' ')
+                        : '';
+                    throw new Error(validationMessages || result.message || 'Unable to add country.');
+                }
+
+                location.reload();
+            } catch (error) {
+                errorBox.textContent = error.message || 'Unable to submit the form. Please try again.';
+                errorBox.classList.remove('d-none');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Add Country';
+            }
         };
 
         document.getElementById('addNationalityForm').onsubmit = async function(e) {
@@ -1176,34 +1200,6 @@
                 body: JSON.stringify({ id })
             });
             if (res.ok) location.reload();
-        }
-
-        document.getElementById('addJobForm').onsubmit = async function(e) {
-            e.preventDefault();
-            const res = await fetch("{{ route('admin.jobs.add') }}", {
-                method: 'POST',
-                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'},
-                body: new FormData(this)
-            });
-            if (res.ok) location.reload();
-            else {
-                const data = await res.json();
-                alert(data.message || 'Unable to add job.');
-            }
-        };
-
-        async function deleteJob(id) {
-            if (!confirm("Delete this job?")) return;
-            const res = await fetch("{{ route('admin.jobs.delete') }}", {
-                method: 'POST',
-                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
-                body: JSON.stringify({ id })
-            });
-            if (res.ok) location.reload();
-            else {
-                const data = await res.json();
-                alert(data.message || 'Unable to delete job.');
-            }
         }
 
         document.getElementById('addBankAccountForm').onsubmit = async function(e) {
