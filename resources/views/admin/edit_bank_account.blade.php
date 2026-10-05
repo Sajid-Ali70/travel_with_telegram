@@ -26,7 +26,7 @@
         .form-control { background: #0d1117; border-color: var(--border-color); color: var(--text-main); }
         .form-control:focus { background: #0d1117; border-color: var(--accent-blue); color: var(--text-main); box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .2); }
         .form-control::placeholder { color: #6e7681; }
-        .text-muted { color: var(--text-secondary) !important; }
+        .text-muted { color: #ffffff !important; }
         .btn-light { background: transparent; border-color: var(--border-color); color: var(--text-secondary); }
         .btn-light:hover { background: rgba(255, 255, 255, .05); color: var(--text-main); }
         @media (max-width: 768px) { .sidebar { width: 220px; padding: 15px; } .main-content { margin-left: 220px; padding: 20px 15px; } .admin-badge { display: none; } }

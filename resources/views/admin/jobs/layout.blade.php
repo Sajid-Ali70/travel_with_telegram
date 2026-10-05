@@ -26,7 +26,7 @@
         .form-control, .form-select { background-color: #0d1117; border-color: var(--border-color); color: var(--text-main); }
         .form-control:focus, .form-select:focus { background-color: #0d1117; color: var(--text-main); border-color: var(--accent-blue); box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .2); }
         .form-control::placeholder { color: #6e7681; }
-        .text-muted { color: var(--text-secondary) !important; }
+        .text-muted { color: #ffffff !important; }
         .table { --bs-table-bg: transparent; --bs-table-color: var(--text-main); --bs-table-border-color: var(--border-color); }
         .table th { color: var(--text-secondary); white-space: nowrap; }
         .table td { vertical-align: middle; }

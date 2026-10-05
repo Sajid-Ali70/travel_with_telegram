@@ -661,6 +661,10 @@ input[type="checkbox"] {
     margin-top: auto;
 }
 
+.main-footer-global * {
+    color: #ffffff !important;
+}
+
 .footer-columns-wrapper {
     display: grid;
     grid-template-columns: 1fr;

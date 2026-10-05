@@ -23,6 +23,10 @@
             --accent-purple: #a371f7;
         }
 
+        .text-muted, .form-text {
+            color: #ffffff !important;
+        }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-main);

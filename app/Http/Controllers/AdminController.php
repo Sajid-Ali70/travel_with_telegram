@@ -973,6 +973,7 @@ class AdminController extends Controller
         $settings = getAppSettings();
         $visaRequest = null;
         $visaFee = null;
+        $visaFeeCurrency = null;
         $bankAccounts = collect();
         $statusError = null;
         $statusText = null;

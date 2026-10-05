@@ -27,7 +27,7 @@
         .form-control, .form-select { background: #0d1117; border-color: var(--border-color); color: var(--text-main); }
         .form-control:focus, .form-select:focus { background: #0d1117; border-color: var(--accent-blue); color: var(--text-main); box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .2); }
         .form-control::placeholder { color: #6e7681; }
-        .form-text, .text-muted { color: var(--text-secondary) !important; }
+        .form-text, .text-muted { color: #ffffff !important; }
         .current-photo { max-height: 120px; max-width: 120px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); }
         .btn-light { background: transparent; border-color: var(--border-color); color: var(--text-secondary); }
         .btn-light:hover { background: rgba(255, 255, 255, .05); color: var(--text-main); }
