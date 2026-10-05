@@ -169,23 +169,12 @@
 
                         <div class="form-group">
                             <label>SELECT DESTINATION COUNTRY *</label>
-                            <input type="text" class="form-control mb-2 searchable-select-input" data-target="destination_country_select" placeholder="Search country..." aria-label="Search country">
                             <div class="input-with-icon">
                                 <i class="fas fa-globe"></i>
                                 <select id="destination_country_select" name="destination_country" class="form-select" required style="padding-left: 48px;">
                                     <option value="" selected disabled>Select Country</option>
                                     @foreach($countries as $country)
-                                        @php
-                                            $countryFees = json_decode($country->visa_fee_details ?? '[]', true);
-                                            $countryFees = is_array($countryFees) ? $countryFees : [];
-                                            if (empty($countryFees) && $country->visa_fee !== null) {
-                                                $countryFees[] = [
-                                                    'currency' => $country->currency ?: 'PKR',
-                                                    'fee' => $country->visa_fee,
-                                                ];
-                                            }
-                                        @endphp
-                                        <option value="{{ $country->name }}" data-fees="{{ json_encode($countryFees) }}" {{ old('destination_country') == $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
+                                        <option value="{{ $country->name }}" {{ old('destination_country') == $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
                                     @endforeach
                                     @if(count($countries) == 0)
                                         <option>United Arab Emirates</option>
@@ -194,12 +183,10 @@
                                     @endif
                                 </select>
                             </div>
-                            <div id="destination_country_fee" class="mt-2 small text-white" aria-live="polite"></div>
                         </div>
 
                         <div class="form-group">
                             <label>VISA CATEGORY *</label>
-                            <input type="text" class="form-control mb-2 searchable-select-input" data-target="visa_category_select" placeholder="Search category..." aria-label="Search visa category">
                             <div class="input-with-icon">
                                 <i class="fas fa-briefcase"></i>
                                 <select id="visa_category_select" name="visa_category" class="visa-type-selector form-select" required style="padding-left: 48px;">
@@ -233,6 +220,11 @@
                                     <option value="" selected disabled>Select Work Type / Subcategory</option>
                                 </select>
                             </div>
+                        </div>
+
+                        <div id="availableJobsSection" class="form-group d-none" aria-live="polite">
+                            <label>AVAILABLE JOBS</label>
+                            <div id="availableJobsList"></div>
                         </div>
 
                         <div id="drivingLicenseField" class="form-group d-none">
@@ -311,42 +303,94 @@
             const nationalIdentityInput = document.getElementById('national_identity_input');
             const nationalIdentityHint = document.getElementById('national_identity_hint');
             const destinationCountrySelect = document.getElementById('destination_country_select');
-            const destinationCountryFee = document.getElementById('destination_country_fee');
+            const availableJobsSection = document.getElementById('availableJobsSection');
+            const availableJobsList = document.getElementById('availableJobsList');
+            const availableJobs = @json($jobs);
+            const selectedJobIds = new Set();
 
-            function updateDestinationVisaFee() {
-                const selectedOption = destinationCountrySelect.options[destinationCountrySelect.selectedIndex];
-                const nationalityOption = nationalitySelect.options[nationalitySelect.selectedIndex];
-                const currency = nationalityOption ? (nationalityOption.dataset.currency || '').trim().toUpperCase() : '';
-                let fees = [];
+            function renderAvailableJobs() {
+                const selectedCountry = destinationCountrySelect.value.trim().toLowerCase();
+                const selectedCategory = catSelect.value.trim().toLowerCase();
+                const selectedType = typeSelect.value.trim().toLowerCase();
+                const categoryTypes = Array.from(typeSelect.options)
+                    .map(option => option.value.trim().toLowerCase())
+                    .filter(Boolean);
 
-                try {
-                    fees = selectedOption ? JSON.parse(selectedOption.dataset.fees || '[]') : [];
-                } catch (error) {
-                    fees = [];
-                }
-
-                destinationCountryFee.replaceChildren();
-                if (!selectedOption || !selectedOption.value) return;
-
-                if (!currency) {
-                    destinationCountryFee.textContent = 'Currency is not configured for this nationality.';
+                availableJobsList.replaceChildren();
+                if (!selectedCountry || !selectedCategory) {
+                    selectedJobIds.clear();
+                    availableJobsSection.classList.add('d-none');
                     return;
                 }
 
-                const matchingFee = fees.find(entry => (entry.currency || '').trim().toUpperCase() === currency
-                    && Number.isFinite(Number(entry.fee)));
+                availableJobsSection.classList.remove('d-none');
+                const matchingJobs = availableJobs.filter(job => {
+                    const jobCountry = (job.country_location || '').trim().toLowerCase();
+                    const jobCategory = (job.category_visa_type || '').trim().toLowerCase();
+                    const belongsToCategory = jobCategory === selectedCategory || categoryTypes.includes(jobCategory);
 
-                if (!matchingFee) {
-                    destinationCountryFee.textContent = `Visa fee is not available in ${currency} for this country.`;
+                    return jobCountry === selectedCountry
+                        && belongsToCategory
+                        && (!selectedType || jobCategory === selectedType);
+                });
+                const visibleJobIds = new Set(matchingJobs.map(job => String(job.id)));
+                selectedJobIds.forEach(jobId => {
+                    if (!visibleJobIds.has(jobId)) selectedJobIds.delete(jobId);
+                });
+
+                if (matchingJobs.length === 0) {
+                    const emptyMessage = document.createElement('p');
+                    emptyMessage.className = 'small text-muted mb-0';
+                    emptyMessage.textContent = 'No job available right now';
+                    availableJobsList.appendChild(emptyMessage);
                     return;
                 }
 
-                destinationCountryFee.textContent = `Visa fee: ${currency} ${Number(matchingFee.fee).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                matchingJobs.forEach(job => {
+                    const item = document.createElement('article');
+                    item.className = 'border rounded p-3 mb-2';
+
+                    const title = document.createElement('h6');
+                    title.className = 'mb-1 text-white';
+                    title.textContent = job.job_title || 'Job Opening';
+
+                    const details = document.createElement('p');
+                    details.className = 'small text-muted mb-2';
+                    const salary = job.salary !== null && job.salary !== ''
+                        ? `${Number(job.salary).toLocaleString()} ${job.salary_currency || ''}${job.salary_period ? ` / ${job.salary_period}` : ''}`
+                        : '';
+                    const vacancies = job.number_of_vacancies ? `${job.number_of_vacancies} vacancies` : '';
+                    details.textContent = [salary, vacancies].filter(Boolean).join(' | ');
+
+                    const description = document.createElement('p');
+                    description.className = 'small mb-0';
+                    description.textContent = job.job_description || '';
+
+                    const applyLabel = document.createElement('label');
+                    applyLabel.className = 'form-check d-flex align-items-center gap-2 mt-3 mb-0';
+                    const applyCheckbox = document.createElement('input');
+                    applyCheckbox.type = 'checkbox';
+                    applyCheckbox.name = 'selected_job_ids[]';
+                    applyCheckbox.value = job.id;
+                    applyCheckbox.className = 'form-check-input m-0';
+                    applyCheckbox.checked = selectedJobIds.has(String(job.id));
+                    applyCheckbox.style.accentColor = 'var(--btn-primary)';
+                    applyCheckbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            selectedJobIds.add(String(job.id));
+                        } else {
+                            selectedJobIds.delete(String(job.id));
+                        }
+                    });
+                    const applyText = document.createElement('span');
+                    applyText.className = 'small text-white';
+                    applyText.textContent = 'Apply for this job';
+                    applyLabel.append(applyCheckbox, applyText);
+
+                    item.append(title, details, description, applyLabel);
+                    availableJobsList.appendChild(item);
+                });
             }
-
-            destinationCountrySelect.addEventListener('change', updateDestinationVisaFee);
-            nationalitySelect.addEventListener('change', updateDestinationVisaFee);
-            updateDestinationVisaFee();
 
             function updateNationalityPhoneCode() {
                 const selectedOption = nationalitySelect.options[nationalitySelect.selectedIndex];
@@ -406,25 +450,6 @@
                 }
             });
 
-            document.querySelectorAll('.searchable-select-input').forEach(function(input) {
-                input.addEventListener('input', function() {
-                    const targetId = input.dataset.target;
-                    const select = document.getElementById(targetId);
-                    if (!select) return;
-
-                    const searchValue = this.value.trim().toLowerCase();
-                    Array.from(select.options).forEach(function(option) {
-                        if (!option.value) {
-                            option.hidden = false;
-                            return;
-                        }
-
-                        const optionText = option.textContent.toLowerCase();
-                        option.hidden = searchValue !== '' && !optionText.includes(searchValue);
-                    });
-                });
-            });
-
             function isDriverType(value) {
                 const text = (value || '').toLowerCase();
                 return text.includes('driver') || text.includes('chauffeur');
@@ -444,6 +469,7 @@
                 if (!catId) {
                     typeSelect.innerHTML = '<option value="" selected disabled>Select Visa Type</option>';
                     toggleDrivingLicenseField();
+                    renderAvailableJobs();
                     return;
                 }
 
@@ -477,9 +503,12 @@
                 }
 
                 toggleDrivingLicenseField();
+                renderAvailableJobs();
             }
 
             typeSelect.addEventListener('change', toggleDrivingLicenseField);
+            typeSelect.addEventListener('change', renderAvailableJobs);
+            destinationCountrySelect.addEventListener('change', renderAvailableJobs);
 
             catSelect.addEventListener('change', function() {
                 const selectedOption = this.options[this.selectedIndex];

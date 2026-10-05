@@ -588,6 +588,11 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     border-color: var(--btn-primary);
 }
 
+input[type="radio"],
+input[type="checkbox"] {
+    border: 1px solid #000 !important;
+}
+
 .form-row {
     display: grid;
     grid-template-columns: 1fr;

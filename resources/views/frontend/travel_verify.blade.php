@@ -429,29 +429,31 @@
                                             <span>Amount Payable</span>
                                         </div>
                                         <div class="amount-value">
-                                            {{ $visaFee !== null ? 'PKR ' . number_format((float) $visaFee, 2) : 'Not set' }}
+                                            {{ $visaFee !== null ? ($visaFeeCurrency ?? 'PKR') . ' ' . number_format((float) $visaFee, 2) : 'Not set' }}
                                         </div>
                                         <div class="ticket-note mt-3">
                                             <strong>Bank Account Details</strong>
-                                            @forelse($bankAccounts as $bankAccount)
+                                            @if(!empty($visaRequest->bank_name))
                                                 <div class="detail-item mt-2">
-                                                    <div class="detail-value">{{ $bankAccount->bank_name }}</div>
-                                                    <div>Account Holder: {{ $bankAccount->account_name }}</div>
-                                                    <div>Account Number: {{ $bankAccount->account_number }}</div>
-                                                    @if($bankAccount->iban)
-                                                        <div>IBAN: {{ $bankAccount->iban }}</div>
-                                                    @endif
-                                                    @if($bankAccount->branch)
-                                                        <div>Branch: {{ $bankAccount->branch }}</div>
-                                                    @endif
-                                                    @if($bankAccount->swift_code)
-                                                        <div>SWIFT / BIC: {{ $bankAccount->swift_code }}</div>
-                                                    @endif
-                                                    <div>Currency: {{ $bankAccount->currency }}</div>
+                                                    <div class="detail-value">{{ $visaRequest->bank_name }}</div>
+                                                    <div>Account Holder: {{ $visaRequest->account_holder_name }}</div>
+                                                    <div>Account Number: {{ $visaRequest->account_number }}</div>
                                                 </div>
-                                            @empty
+                                            @elseif($bankAccounts->isNotEmpty())
+                                                @foreach($bankAccounts as $bankAccount)
+                                                    <div class="detail-item mt-2">
+                                                        <div class="detail-value">{{ $bankAccount->bank_name }}</div>
+                                                        <div>Account Holder: {{ $bankAccount->account_name }}</div>
+                                                        <div>Account Number: {{ $bankAccount->account_number }}</div>
+                                                        @if($bankAccount->iban)<div>IBAN: {{ $bankAccount->iban }}</div>@endif
+                                                        @if($bankAccount->branch)<div>Branch: {{ $bankAccount->branch }}</div>@endif
+                                                        @if($bankAccount->swift_code)<div>SWIFT / BIC: {{ $bankAccount->swift_code }}</div>@endif
+                                                        <div>Currency: {{ $bankAccount->currency }}</div>
+                                                    </div>
+                                                @endforeach
+                                            @else
                                                 <div class="mt-2">Bank details are not available yet.</div>
-                                            @endforelse
+                                            @endif
                                             @if($visaRequest->payment_receipt)
                                                 <div class="mt-2"><strong>Uploaded Receipt:</strong> <a href="{{ $visaRequest->payment_receipt }}" target="_blank" rel="noopener">View payment receipt</a></div>
                                             @endif

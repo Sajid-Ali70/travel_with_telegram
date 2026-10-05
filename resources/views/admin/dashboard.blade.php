@@ -523,7 +523,10 @@
                                 </td>
                                 <td>
                                     {{ $req->destination_country }}<br>
-                                    <small class="">{{ $req->visa_category }} - {{ $req->visa_type }}</small>
+                                    <small>{{ $req->visa_category }} - {{ $req->visa_type }}</small>
+                                    @if(!empty($req->selected_job_titles))
+                                        <br><small class="text-info">Applied jobs: {{ $req->selected_job_titles }}</small>
+                                    @endif
                                 </td>
                                 <td>
                                     {{ $req->passport_number }}<br>
@@ -554,14 +557,6 @@
 
         <!-- Section: Countries -->
         <section id="countriesSection" class="dashboard-section d-none">
-            @php
-                $nationalityCurrencies = $nationalities->pluck('currency')
-                    ->filter(fn ($currency) => !empty(trim($currency ?? '')))
-                    ->map(fn ($currency) => strtoupper(trim($currency)))
-                    ->unique()
-                    ->sort()
-                    ->values();
-            @endphp
             <div class="admin-card">
                 <h5 class="section-title">Add New Country</h5>
                 <form id="addCountryForm" enctype="multipart/form-data">
@@ -577,30 +572,6 @@
                         </div>
                     </div>
 
-                    <div class="mt-4">
-                        <label class="form-label">Visa Fee by Currency</label>
-                        <div id="countryCurrencyFeeRows">
-                            <div class="row g-2 currency-fee-row">
-                                <div class="col-md-3">
-                                    <select name="currency[]" class="form-select">
-                                        <option value="">Select</option>
-                                        @forelse($nationalityCurrencies as $currency)
-                                            <option value="{{ $currency }}">{{ $currency }}</option>
-                                        @empty
-                                            <option value="" disabled>No nationality currencies added</option>
-                                        @endforelse
-                                    </select>
-                                </div>
-                                <div class="col-md-7">
-                                    <input type="number" name="fee[]" class="form-control" step="0.01" min="0" placeholder="1200">
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-sm btn-outline-danger remove-fee-row w-100">Remove</button>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="button" id="addCurrencyFeeRow" class="btn btn-sm btn-outline-primary mt-2">+ Add another currency</button>
-                    </div>
                     <div id="countryFormError" class="alert alert-danger mt-3 d-none" role="alert"></div>
                     <button type="submit" id="addCountrySubmit" class="btn-primary-custom mt-3">Add Country</button>
                 </form>
@@ -609,23 +580,22 @@
                 <h5 class="section-title">Manage Countries</h5>
                 <div class="table-responsive mt-3">
                     <table class="reviews-table">
-                        <thead><tr><th>ID</th><th>Flag</th><th>Country Name</th><th>Visa Fees</th><th>Action</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Flag</th><th>Country Name</th><th>Currencies</th><th>Action</th></tr></thead>
                         <tbody>
                             @foreach($countries as $country)
                             @php
-                                $feeDetails = json_decode($country->visa_fee_details ?? '[]', true);
-                                $displayFees = [];
-                                if (!empty($feeDetails) && is_array($feeDetails)) {
-                                    foreach ($feeDetails as $entry) {
-                                        if (!empty($entry['currency']) && isset($entry['fee'])) {
-                                            $displayFees[] = strtoupper($entry['currency']) . ': ' . number_format((float) $entry['fee'], 2);
-                                        }
+                                $displayCurrencies = json_decode($country->currencies ?? '[]', true);
+                                $displayCurrencies = is_array($displayCurrencies) ? $displayCurrencies : [];
+                                if (empty($displayCurrencies) && !empty($country->visa_fee_details)) {
+                                    $legacyFees = json_decode($country->visa_fee_details, true);
+                                    if (is_array($legacyFees)) {
+                                        $displayCurrencies = array_column($legacyFees, 'currency');
                                     }
                                 }
-                                if (empty($displayFees) && $country->visa_fee !== null) {
-                                    $currencyLabel = !empty($country->currency) ? strtoupper($country->currency) : 'PKR';
-                                    $displayFees[] = $currencyLabel . ': ' . number_format((float) $country->visa_fee, 2);
+                                if (empty($displayCurrencies) && !empty($country->currency)) {
+                                    $displayCurrencies = [$country->currency];
                                 }
+                                $displayCurrencies = array_values(array_unique(array_filter(array_map('strtoupper', $displayCurrencies))));
                             @endphp
                             <tr>
                                 <td>{{ $country->id }}</td>
@@ -637,7 +607,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $country->name }}</td>
-                                <td>{{ !empty($displayFees) ? implode('<br>', $displayFees) : 'N/A' }}</td>
+                                <td>{{ !empty($displayCurrencies) ? implode(', ', $displayCurrencies) : 'N/A' }}</td>
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteCountry({{ $country->id }})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                             @endforeach
@@ -1006,62 +976,6 @@
             if (res.ok) alert("Settings saved!");
         };
 
-        const currencyFeeRows = document.getElementById('countryCurrencyFeeRows');
-        const addCurrencyFeeRow = document.getElementById('addCurrencyFeeRow');
-        const nationalityCurrencies = @json($nationalityCurrencies);
-
-        function createCurrencyFeeRow() {
-            const row = document.createElement('div');
-            row.className = 'row g-2 currency-fee-row mt-1';
-            row.innerHTML = `
-                <div class="col-md-3">
-                    <select name="currency[]" class="form-select">
-                        <option value="">Select</option>
-                    </select>
-                </div>
-                <div class="col-md-7">
-                    <input type="number" name="fee[]" class="form-control" step="0.01" min="0" placeholder="150">
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-sm btn-outline-danger remove-fee-row w-100">Remove</button>
-                </div>
-            `;
-            const currencySelect = row.querySelector('select[name="currency[]"]');
-            if (nationalityCurrencies.length === 0) {
-                const option = document.createElement('option');
-                option.value = '';
-                option.textContent = 'No nationality currencies added';
-                option.disabled = true;
-                currencySelect.appendChild(option);
-            } else {
-                nationalityCurrencies.forEach(currency => {
-                    const option = document.createElement('option');
-                    option.value = currency;
-                    option.textContent = currency;
-                    currencySelect.appendChild(option);
-                });
-            }
-            row.querySelector('.remove-fee-row').addEventListener('click', function() {
-                row.remove();
-            });
-            return row;
-        }
-
-        if (addCurrencyFeeRow) {
-            addCurrencyFeeRow.addEventListener('click', function() {
-                currencyFeeRows.appendChild(createCurrencyFeeRow());
-            });
-        }
-
-        if (currencyFeeRows) {
-            currencyFeeRows.querySelectorAll('.remove-fee-row').forEach(function(button) {
-                button.addEventListener('click', function() {
-                    const row = button.closest('.currency-fee-row');
-                    if (row) row.remove();
-                });
-            });
-        }
-
         document.getElementById('addCountryForm').onsubmit = async function(e) {
             e.preventDefault();
             const form = this;
@@ -1155,10 +1069,11 @@
             e.preventDefault();
             const res = await fetch("{{ route('admin.categories.add') }}", {
                 method: 'POST',
-                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'},
                 body: new FormData(this)
             });
             if (res.ok) location.reload();
+            else alert((await res.json()).message || 'Unable to add category.');
         };
 
         async function deleteCategory(id) {

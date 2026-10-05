@@ -65,6 +65,7 @@ class AdminController extends Controller
                     $table->decimal('visa_fee', 12, 2)->nullable();
                     $table->string('currency', 20)->nullable();
                     $table->text('visa_fee_details')->nullable();
+                    $table->text('currencies')->nullable();
                     $table->string('flag')->nullable();
                     $table->timestamps();
                 });
@@ -73,6 +74,7 @@ class AdminController extends Controller
                     'visa_fee' => "ALTER TABLE `app_countries` ADD `visa_fee` DECIMAL(12,2) NULL DEFAULT NULL AFTER `name` ",
                     'currency' => "ALTER TABLE `app_countries` ADD `currency` VARCHAR(20) NULL DEFAULT NULL AFTER `visa_fee` ",
                     'visa_fee_details' => "ALTER TABLE `app_countries` ADD `visa_fee_details` TEXT NULL DEFAULT NULL AFTER `currency` ",
+                    'currencies' => "ALTER TABLE `app_countries` ADD `currencies` TEXT NULL DEFAULT NULL ",
                     'flag' => "ALTER TABLE `app_countries` ADD `flag` VARCHAR(255) NULL DEFAULT NULL AFTER `visa_fee_details` ",
                     'created_at' => "ALTER TABLE `app_countries` ADD `created_at` TIMESTAMP NULL DEFAULT NULL ",
                     'updated_at' => "ALTER TABLE `app_countries` ADD `updated_at` TIMESTAMP NULL DEFAULT NULL "
@@ -115,6 +117,19 @@ class AdminController extends Controller
                     $table->text('description')->nullable();
                     $table->timestamps();
                 });
+            } else {
+                $categoryColumns = [
+                    'icon' => "ALTER TABLE `app_categories` ADD `icon` VARCHAR(255) NULL DEFAULT NULL ",
+                    'image' => "ALTER TABLE `app_categories` ADD `image` VARCHAR(255) NULL DEFAULT NULL ",
+                    'description' => "ALTER TABLE `app_categories` ADD `description` TEXT NULL DEFAULT NULL ",
+                    'created_at' => "ALTER TABLE `app_categories` ADD `created_at` TIMESTAMP NULL DEFAULT NULL ",
+                    'updated_at' => "ALTER TABLE `app_categories` ADD `updated_at` TIMESTAMP NULL DEFAULT NULL ",
+                ];
+                foreach ($categoryColumns as $column => $sql) {
+                    if (!Schema::hasColumn('app_categories', $column)) {
+                        DB::statement($sql);
+                    }
+                }
             }
 
             if (!Schema::hasTable('app_visa_types')) {
@@ -198,8 +213,14 @@ class AdminController extends Controller
                     $table->string('destination_country')->nullable();
                     $table->string('visa_category')->nullable();
                     $table->string('visa_type')->nullable();
+                    $table->text('selected_job_ids')->nullable();
                     $table->string('driving_license_available')->nullable();
                     $table->string('status')->default('Visa Application Submitted');
+                    $table->decimal('visa_fee', 12, 2)->nullable();
+                    $table->string('visa_fee_currency', 20)->nullable();
+                    $table->string('bank_name')->nullable();
+                    $table->string('account_number', 100)->nullable();
+                    $table->string('account_holder_name')->nullable();
                     $table->string('payment_receipt')->nullable();
                     $table->timestamp('payment_receipt_uploaded_at')->nullable();
                     $table->date('preferred_date_start')->nullable();
@@ -228,7 +249,13 @@ class AdminController extends Controller
                     'destination_country' => "ALTER TABLE `app_visa_requests` ADD `destination_country` VARCHAR(255) NULL DEFAULT NULL ",
                     'visa_category' => "ALTER TABLE `app_visa_requests` ADD `visa_category` VARCHAR(255) NULL DEFAULT NULL ",
                     'visa_type' => "ALTER TABLE `app_visa_requests` ADD `visa_type` VARCHAR(255) NULL DEFAULT NULL ",
+                    'selected_job_ids' => "ALTER TABLE `app_visa_requests` ADD `selected_job_ids` TEXT NULL DEFAULT NULL ",
                     'driving_license_available' => "ALTER TABLE `app_visa_requests` ADD `driving_license_available` VARCHAR(10) NULL DEFAULT NULL ",
+                    'visa_fee' => "ALTER TABLE `app_visa_requests` ADD `visa_fee` DECIMAL(12,2) NULL DEFAULT NULL ",
+                    'visa_fee_currency' => "ALTER TABLE `app_visa_requests` ADD `visa_fee_currency` VARCHAR(20) NULL DEFAULT NULL ",
+                    'bank_name' => "ALTER TABLE `app_visa_requests` ADD `bank_name` VARCHAR(255) NULL DEFAULT NULL ",
+                    'account_number' => "ALTER TABLE `app_visa_requests` ADD `account_number` VARCHAR(100) NULL DEFAULT NULL ",
+                    'account_holder_name' => "ALTER TABLE `app_visa_requests` ADD `account_holder_name` VARCHAR(255) NULL DEFAULT NULL ",
                     'payment_receipt' => "ALTER TABLE `app_visa_requests` ADD `payment_receipt` VARCHAR(255) NULL DEFAULT NULL ",
                     'payment_receipt_uploaded_at' => "ALTER TABLE `app_visa_requests` ADD `payment_receipt_uploaded_at` TIMESTAMP NULL DEFAULT NULL ",
                     'preferred_date_start' => "ALTER TABLE `app_visa_requests` ADD `preferred_date_start` DATE NULL DEFAULT NULL ",
@@ -342,6 +369,14 @@ class AdminController extends Controller
             }
 
             $visa_requests = DB::table('app_visa_requests')->orderBy('id', 'desc')->get();
+            $jobsById = $jobs->keyBy('id');
+            foreach ($visa_requests as $visaRequest) {
+                $selectedJobIds = json_decode($visaRequest->selected_job_ids ?? '[]', true);
+                $visaRequest->selected_job_titles = collect(is_array($selectedJobIds) ? $selectedJobIds : [])
+                    ->map(fn ($jobId) => $jobsById->get($jobId)->job_title ?? null)
+                    ->filter()
+                    ->implode(', ');
+            }
 
             $stats['total_countries'] = DB::table('app_countries')->count();
             $stats['total_categories'] = DB::table('app_categories')->count();
@@ -679,6 +714,13 @@ class AdminController extends Controller
         $settings = DB::table('app_settings')->where('id', 1)->first();
         $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
         $nationalities = DB::table('app_nationalities')->orderBy('name', 'asc')->get();
+        $nationalityCurrency = DB::table('app_nationalities')->where('name', $visaRequest->nationality)->value('currency') ?? '';
+        $visaCurrencies = $nationalities->pluck('currency')
+            ->filter(fn ($currency) => !empty(trim($currency ?? '')))
+            ->map(fn ($currency) => strtoupper(trim($currency)))
+            ->unique()
+            ->sort()
+            ->values();
         $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
         $flightAirports = $this->getFlightAirports();
         $ticketStatuses = self::TICKET_STATUSES;
@@ -686,7 +728,7 @@ class AdminController extends Controller
             $category->types = DB::table('app_visa_types')->where('category_id', $category->id)->get();
         }
 
-        return view('admin.edit_request', compact('visaRequest', 'settings', 'countries', 'nationalities', 'categories', 'flightAirports', 'ticketStatuses'));
+        return view('admin.edit_request', compact('visaRequest', 'settings', 'countries', 'nationalities', 'nationalityCurrency', 'visaCurrencies', 'categories', 'flightAirports', 'ticketStatuses'));
     }
 
     public function updateRequest(Request $request, $id)
@@ -711,6 +753,11 @@ class AdminController extends Controller
             'ticket_status' => 'nullable|in:' . implode(',', self::TICKET_STATUSES),
             'ticket_details' => 'nullable|string|max:10000',
             'status' => 'required|in:' . implode(',', array_merge(self::VISA_STATUSES, self::LEGACY_VISA_STATUSES)),
+            'visa_fee' => 'required_if:status,Visa Approved|nullable|numeric|min:0',
+            'visa_fee_currency' => 'required_if:status,Visa Approved|nullable|string|max:20',
+            'bank_name' => 'required_if:status,Visa Approved|nullable|string|max:255',
+            'account_number' => 'required_if:status,Visa Approved|nullable|string|max:100',
+            'account_holder_name' => 'required_if:status,Visa Approved|nullable|string|max:255',
             'passport_photo_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
@@ -754,6 +801,8 @@ class AdminController extends Controller
         $validated = $request->validate([
             'nationality' => 'required|string|max:255|exists:app_nationalities,name',
             'national_identity' => 'required|string|max:100',
+            'selected_job_ids' => 'nullable|array',
+            'selected_job_ids.*' => 'required|integer|exists:app_jobs,id',
             'driving_license_available' => 'nullable|in:yes,no',
         ]);
 
@@ -767,6 +816,29 @@ class AdminController extends Controller
         }
 
         $data = $request->except(['_token', 'passport_photo_file']);
+        $selectedJobIds = collect($validated['selected_job_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $data['selected_job_ids'] = null;
+
+        if ($selectedJobIds) {
+            $allowedJobCategories = array_values(array_filter([
+                trim((string) ($data['visa_type'] ?? '')),
+                trim((string) ($data['visa_category'] ?? '')),
+            ]));
+            $matchingJobIds = DB::table('app_jobs')
+                ->whereIn('id', $selectedJobIds)
+                ->where('status', 'Active')
+                ->whereRaw('LOWER(country_location) = ?', [mb_strtolower(trim((string) ($data['destination_country'] ?? '')))])
+                ->whereIn('category_visa_type', $allowedJobCategories)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            if (count($matchingJobIds) !== count($selectedJobIds)) {
+                return back()->withErrors(['selected_job_ids' => 'One or more selected jobs are no longer available for this country and visa type.'])->withInput();
+            }
+
+            $data['selected_job_ids'] = json_encode($selectedJobIds);
+        }
 
         if (is_string($data['visa_type'] ?? null) && preg_match('/driver/i', $data['visa_type'])) {
             $request->validate(['driving_license_available' => 'required|in:yes,no']);
@@ -803,15 +875,17 @@ class AdminController extends Controller
             abort(404);
         }
 
-        $visaFee = DB::table('app_countries')
+        $countryPayment = DB::table('app_countries')
             ->where('name', $visaRequest->destination_country)
-            ->value('visa_fee');
+            ->first(['visa_fee', 'currency']);
+        $visaFee = $visaRequest->visa_fee ?? $countryPayment->visa_fee ?? null;
+        $visaFeeCurrency = $visaRequest->visa_fee_currency ?? $countryPayment->currency ?? 'PKR';
         $bankAccounts = DB::table('app_bank_accounts')->orderBy('bank_name')->get();
         $statusText = $this->visaStatusTitle($visaRequest->status);
         $statusMessage = $this->visaStatusMessage($visaRequest->status);
         $flightAirports = $this->getFlightAirports();
 
-        return view('frontend.travel_success', compact('settings', 'visaRequest', 'visaFee', 'bankAccounts', 'statusText', 'statusMessage', 'flightAirports'));
+        return view('frontend.travel_success', compact('settings', 'visaRequest', 'visaFee', 'visaFeeCurrency', 'bankAccounts', 'statusText', 'statusMessage', 'flightAirports'));
     }
 
     public function uploadPaymentReceipt(Request $request, $id)
@@ -928,16 +1002,18 @@ class AdminController extends Controller
         }
 
         if ($visaRequest) {
-            $visaFee = DB::table('app_countries')
+            $countryPayment = DB::table('app_countries')
                 ->where('name', $visaRequest->destination_country)
-                ->value('visa_fee');
+                ->first(['visa_fee', 'currency']);
+            $visaFee = $visaRequest->visa_fee ?? $countryPayment->visa_fee ?? null;
+            $visaFeeCurrency = $visaRequest->visa_fee_currency ?? $countryPayment->currency ?? 'PKR';
             $bankAccounts = DB::table('app_bank_accounts')->orderBy('bank_name')->get();
             $statusText = $this->visaStatusTitle($visaRequest->status);
             $statusMessage = $this->visaStatusMessage($visaRequest->status);
         }
 
         $flightAirports = $this->getFlightAirports();
-        return view('frontend.travel_verify', compact('settings', 'visaRequest', 'visaFee', 'bankAccounts', 'statusError', 'statusText', 'statusMessage', 'flightAirports'));
+        return view('frontend.travel_verify', compact('settings', 'visaRequest', 'visaFee', 'visaFeeCurrency', 'bankAccounts', 'statusError', 'statusText', 'statusMessage', 'flightAirports'));
     }
 
     private function isVisaApproved($visaRequest): bool
@@ -1112,47 +1188,16 @@ class AdminController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'visa_fee' => 'nullable|numeric|min:0',
             'currency' => 'nullable|array',
             'currency.*' => 'nullable|string|max:20',
-            'fee' => 'nullable|array',
-            'fee.*' => 'nullable|numeric|min:0',
         ]);
 
-        $currencyEntries = [];
-        $currencies = $request->input('currency', []);
-        $fees = $request->input('fee', []);
-
-        foreach ($currencies as $index => $currency) {
-            $currencyCode = trim((string) $currency);
-            $feeValue = $fees[$index] ?? null;
-
-            if ($currencyCode === '' && ($feeValue === null || $feeValue === '')) {
-                continue;
-            }
-
-            $cleanCurrency = strtoupper($currencyCode !== '' ? $currencyCode : 'PKR');
-            $cleanFee = $feeValue !== null && $feeValue !== '' ? (float) $feeValue : null;
-
-            if ($cleanFee === null) {
-                continue;
-            }
-
-            $currencyEntries[] = [
-                'currency' => $cleanCurrency,
-                'fee' => round($cleanFee, 2),
-            ];
-        }
-
-        if (empty($currencyEntries) && $request->filled('visa_fee')) {
-            $currencyEntries[] = [
-                'currency' => strtoupper(trim((string) $request->input('currency_primary', 'PKR'))),
-                'fee' => round((float) $request->visa_fee, 2),
-            ];
-        }
-
-        $primaryCurrency = $currencyEntries[0]['currency'] ?? strtoupper(trim((string) $request->input('currency_primary', 'PKR')));
-        $primaryFee = $currencyEntries[0]['fee'] ?? ($request->visa_fee !== null && $request->visa_fee !== '' ? (float) $request->visa_fee : null);
+        $currencies = collect($request->input('currency', []))
+            ->map(fn ($currency) => strtoupper(trim($currency)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
         $flagUrl = null;
         if ($request->hasFile('flag_file')) {
@@ -1165,9 +1210,10 @@ class AdminController extends Controller
         try {
             DB::table('app_countries')->insert([
                 'name' => $request->name,
-                'visa_fee' => $primaryFee,
-                'currency' => $primaryCurrency,
-                'visa_fee_details' => !empty($currencyEntries) ? json_encode($currencyEntries) : null,
+                'visa_fee' => null,
+                'currency' => $currencies[0] ?? null,
+                'visa_fee_details' => null,
+                'currencies' => json_encode($currencies),
                 'flag' => $flagUrl,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -1258,6 +1304,7 @@ class AdminController extends Controller
 
     public function addCategory(Request $request)
     {
+        $this->autoManageSettingsColumns();
         $request->validate(['name' => 'required']);
         $imageUrl = null;
         if ($request->hasFile('image_file')) {
@@ -1278,6 +1325,7 @@ class AdminController extends Controller
             ]);
             return response()->json(['message' => 'Category added']);
         } catch (\Exception $e) {
+            Log::error('Failed to add category: ' . $e->getMessage());
             return response()->json(['message' => 'Database error'], 500);
         }
     }

@@ -348,6 +348,24 @@
                 </div>
 
                 @if($statusText === 'Visa Approved')
+                <div class="summary-box">
+                    <div class="summary-title"><i class="fas fa-money-bill-wave me-1"></i> Payment Details</div>
+                    <div class="summary-row"><span>Visa Fee</span><strong>{{ $visaFee !== null ? ($visaFeeCurrency ?? 'PKR') . ' ' . number_format((float) $visaFee, 2) : 'Not set' }}</strong></div>
+                    @if(!empty($visaRequest->bank_name))
+                        <div class="summary-row"><span>Bank Name</span><strong>{{ $visaRequest->bank_name }}</strong></div>
+                        <div class="summary-row"><span>Account Holder</span><strong>{{ $visaRequest->account_holder_name }}</strong></div>
+                        <div class="summary-row"><span>Account Number</span><strong>{{ $visaRequest->account_number }}</strong></div>
+                    @elseif($bankAccounts->isNotEmpty())
+                        @foreach($bankAccounts as $bankAccount)
+                            <div class="summary-row"><span>Bank Name</span><strong>{{ $bankAccount->bank_name }}</strong></div>
+                            <div class="summary-row"><span>Account Holder</span><strong>{{ $bankAccount->account_name }}</strong></div>
+                            <div class="summary-row"><span>Account Number</span><strong>{{ $bankAccount->account_number }}</strong></div>
+                        @endforeach
+                    @endif
+                </div>
+                @endif
+
+                @if($statusText === 'Visa Approved')
                 <div class="tracking-box">
                     <div class="summary-title"><i class="fas fa-calendar-alt me-1"></i> {{ $visaRequest->flight_ticket_requested_at ? 'Flight Details' : 'Flight Ticket Booking Time Slot' }}</div>
                     @unless($visaRequest->flight_ticket_requested_at)

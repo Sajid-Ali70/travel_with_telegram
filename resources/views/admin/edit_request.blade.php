@@ -99,13 +99,13 @@
                     @endforeach
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Country</label>
+                    <label class="form-label">Nationality</label>
                     <select name="nationality" class="form-select">
-                        <option value="">Select country</option>
-                        @foreach($countries as $country)
-                            <option value="{{ $country->name }}" {{ old('nationality', $visaRequest->nationality) === $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
+                        <option value="">Select nationality</option>
+                        @foreach($nationalities as $nationality)
+                            <option value="{{ $nationality->name }}" {{ old('nationality', $visaRequest->nationality) === $nationality->name ? 'selected' : '' }}>{{ $nationality->name }}</option>
                         @endforeach
-                        @if($visaRequest->nationality && (!$countries->count() || !$countries->contains('name', $visaRequest->nationality)))
+                        @if($visaRequest->nationality && !$nationalities->contains('name', $visaRequest->nationality))
                             <option value="{{ $visaRequest->nationality }}" selected>{{ $visaRequest->nationality }}</option>
                         @endif
                     </select>
@@ -182,7 +182,7 @@
                             default => $selectedStatus,
                         };
                     @endphp
-                    <select name="status" class="form-select" required>
+                    <select name="status" id="request_status" class="form-select" required>
                         @foreach(['Visa Application Submitted', 'Documents Verification', 'Verification of Documents Successful', 'Visa Approved', 'Fee Payment', 'Payment Verified', 'Visa Issued', 'Flight Ticket Booked'] as $statusOption)
                             <option value="{{ $statusOption }}" {{ $selectedStatus === $statusOption ? 'selected' : '' }}>{{ $statusOption }}</option>
                         @endforeach
@@ -190,6 +190,41 @@
                             <option value="rejected" selected>Application Rejected (existing status)</option>
                         @endif
                     </select>
+                </div>
+            </div>
+
+            <div id="approvedPaymentFields" class="row g-3 mt-1 {{ $selectedStatus === 'Visa Approved' ? '' : 'd-none' }}">
+                <div class="col-md-4">
+                    <label class="form-label" for="visa_fee">Visa Fee <span class="text-danger">*</span></label>
+                    <input id="visa_fee" type="number" name="visa_fee" class="form-control" min="0" step="0.01" value="{{ old('visa_fee', $visaRequest->visa_fee ?? '') }}" {{ $selectedStatus === 'Visa Approved' ? 'required' : '' }}>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="visa_fee_currency">Currency <span class="text-danger">*</span></label>
+                    @php
+                        $selectedVisaCurrency = strtoupper(old('visa_fee_currency', $visaRequest->visa_fee_currency ?? $nationalityCurrency));
+                        $availableVisaCurrencies = $visaCurrencies->when(
+                            $selectedVisaCurrency !== '' && !$visaCurrencies->contains($selectedVisaCurrency),
+                            fn ($currencies) => $currencies->push($selectedVisaCurrency)->sort()->values()
+                        );
+                    @endphp
+                    <select id="visa_fee_currency" name="visa_fee_currency" class="form-select" {{ $selectedStatus === 'Visa Approved' ? 'required' : '' }}>
+                        <option value="">Select currency</option>
+                        @foreach($availableVisaCurrencies as $currency)
+                            <option value="{{ $currency }}" {{ $selectedVisaCurrency === $currency ? 'selected' : '' }}>{{ $currency }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="bank_name">Bank Name <span class="text-danger">*</span></label>
+                    <input id="bank_name" type="text" name="bank_name" class="form-control" maxlength="255" value="{{ old('bank_name', $visaRequest->bank_name ?? '') }}" {{ $selectedStatus === 'Visa Approved' ? 'required' : '' }}>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="account_number">Account Number <span class="text-danger">*</span></label>
+                    <input id="account_number" type="text" name="account_number" class="form-control" maxlength="100" value="{{ old('account_number', $visaRequest->account_number ?? '') }}" {{ $selectedStatus === 'Visa Approved' ? 'required' : '' }}>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="account_holder_name">Account Holder Name <span class="text-danger">*</span></label>
+                    <input id="account_holder_name" type="text" name="account_holder_name" class="form-control" maxlength="255" value="{{ old('account_holder_name', $visaRequest->account_holder_name ?? '') }}" {{ $selectedStatus === 'Visa Approved' ? 'required' : '' }}>
                 </div>
             </div>
 
@@ -250,5 +285,20 @@
         </form>
         </div>
     </main>
+    <script>
+        const requestStatus = document.getElementById('request_status');
+        const approvedPaymentFields = document.getElementById('approvedPaymentFields');
+
+        function toggleApprovedPaymentFields() {
+            const isApproved = requestStatus.value === 'Visa Approved';
+            approvedPaymentFields.classList.toggle('d-none', !isApproved);
+            approvedPaymentFields.querySelectorAll('input, select').forEach(field => {
+                field.required = isApproved;
+            });
+        }
+
+        requestStatus.addEventListener('change', toggleApprovedPaymentFields);
+        toggleApprovedPaymentFields();
+    </script>
 </body>
 </html>
