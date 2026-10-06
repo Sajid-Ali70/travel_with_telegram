@@ -181,16 +181,32 @@ class AdminController extends Controller
                     $table->id();
                     $table->string('type', 20);
                     $table->string('name', 255);
+                    $table->unsignedBigInteger('category_id')->nullable();
+                    $table->unsignedBigInteger('subcategory_id')->nullable();
+                    $table->unsignedBigInteger('profession_id')->nullable();
                     $table->timestamps();
                 });
+            } else {
+                $catalogColumns = [
+                    'category_id' => "ALTER TABLE `app_profession_job_titles` ADD `category_id` BIGINT UNSIGNED NULL DEFAULT NULL ",
+                    'subcategory_id' => "ALTER TABLE `app_profession_job_titles` ADD `subcategory_id` BIGINT UNSIGNED NULL DEFAULT NULL ",
+                    'profession_id' => "ALTER TABLE `app_profession_job_titles` ADD `profession_id` BIGINT UNSIGNED NULL DEFAULT NULL ",
+                ];
+                foreach ($catalogColumns as $column => $sql) {
+                    if (!Schema::hasColumn('app_profession_job_titles', $column)) {
+                        DB::statement($sql);
+                    }
+                }
             }
 
             if (!Schema::hasTable('app_jobs')) {
                 Schema::create('app_jobs', function (Blueprint $table) {
                     $table->id();
                     $table->string('job_title');
+                    $table->string('category')->nullable();
                     $table->string('category_visa_type')->nullable();
                     $table->string('country_location')->nullable();
+                    $table->string('profession')->nullable();
                     $table->unsignedInteger('number_of_vacancies')->default(1);
                     $table->text('job_description');
                     $table->text('requirements')->nullable();
@@ -212,8 +228,10 @@ class AdminController extends Controller
             } else {
                 $jobColumns = [
                     'job_title' => "ALTER TABLE `app_jobs` ADD `job_title` VARCHAR(255) NULL DEFAULT NULL AFTER `id` ",
+                    'category' => "ALTER TABLE `app_jobs` ADD `category` VARCHAR(255) NULL DEFAULT NULL ",
                     'category_visa_type' => "ALTER TABLE `app_jobs` ADD `category_visa_type` VARCHAR(255) NULL DEFAULT NULL ",
                     'country_location' => "ALTER TABLE `app_jobs` ADD `country_location` VARCHAR(255) NULL DEFAULT NULL ",
+                    'profession' => "ALTER TABLE `app_jobs` ADD `profession` VARCHAR(255) NULL DEFAULT NULL ",
                     'number_of_vacancies' => "ALTER TABLE `app_jobs` ADD `number_of_vacancies` INT UNSIGNED NOT NULL DEFAULT 1 ",
                     'job_description' => "ALTER TABLE `app_jobs` ADD `job_description` TEXT NULL DEFAULT NULL ",
                     'requirements' => "ALTER TABLE `app_jobs` ADD `requirements` TEXT NULL DEFAULT NULL ",
@@ -615,8 +633,30 @@ class AdminController extends Controller
             ->orderBy('app_categories.name')
             ->orderBy('app_visa_types.name')
             ->get(['app_visa_types.id', 'app_visa_types.name', 'app_categories.name as category_name']);
-        $professions = DB::table('app_profession_job_titles')->where('type', 'profession')->orderBy('name')->get();
-        $jobTitles = DB::table('app_profession_job_titles')->where('type', 'job_title')->orderBy('name')->get();
+        $professions = DB::table('app_profession_job_titles')
+            ->leftJoin('app_categories', 'app_categories.id', '=', 'app_profession_job_titles.category_id')
+            ->leftJoin('app_visa_types', 'app_visa_types.id', '=', 'app_profession_job_titles.subcategory_id')
+            ->where('app_profession_job_titles.type', 'profession')
+            ->orderBy('app_profession_job_titles.name')
+            ->get([
+                'app_profession_job_titles.id',
+                'app_profession_job_titles.name',
+                'app_categories.name as category_name',
+                'app_visa_types.name as subcategory_name',
+            ]);
+        $jobTitles = DB::table('app_profession_job_titles')
+            ->leftJoin('app_categories', 'app_categories.id', '=', 'app_profession_job_titles.category_id')
+            ->leftJoin('app_visa_types', 'app_visa_types.id', '=', 'app_profession_job_titles.subcategory_id')
+            ->leftJoin('app_profession_job_titles as professions', 'professions.id', '=', 'app_profession_job_titles.profession_id')
+            ->where('app_profession_job_titles.type', 'job_title')
+            ->orderBy('app_profession_job_titles.name')
+            ->get([
+                'app_profession_job_titles.id',
+                'app_profession_job_titles.name',
+                'app_categories.name as category_name',
+                'app_visa_types.name as subcategory_name',
+                'professions.name as profession_name',
+            ]);
 
         return view('admin.catalog.index', compact('settings', 'countries', 'nationalities', 'categories', 'subcategories', 'professions', 'jobTitles'));
     }
@@ -626,9 +666,11 @@ class AdminController extends Controller
         abort_unless(in_array($type, ['category', 'subcategory', 'nationality', 'country', 'profession', 'job_title'], true), 404);
         $this->autoManageSettingsColumns();
         $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'VisaBook', 'app_icon' => ''];
-        $categories = $type === 'subcategory' ? DB::table('app_categories')->orderBy('name')->get() : collect();
+        $hierarchy = $this->catalogHierarchyData();
+        $categories = $hierarchy['categories'];
+        $professions = $hierarchy['professions'];
 
-        return view('admin.catalog.create', compact('settings', 'type', 'categories'));
+        return view('admin.catalog.create', compact('settings', 'type', 'categories', 'professions'));
 
     }
 
@@ -653,7 +695,9 @@ class AdminController extends Controller
         }
 
         $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'VisaBook', 'app_icon' => ''];
-        $categories = $type === 'subcategory' ? DB::table('app_categories')->orderBy('name')->get() : collect();
+        $hierarchy = $this->catalogHierarchyData();
+        $categories = $hierarchy['categories'];
+        $professions = $hierarchy['professions'];
         $airports = $type === 'nationality'
             ? DB::table('app_airports')->where('country', $item->name)->orderBy('name')->get()
             : collect();
@@ -666,7 +710,7 @@ class AdminController extends Controller
             }
         }
 
-        return view('admin.catalog.edit', compact('settings', 'type', 'id', 'item', 'categories', 'airports', 'primaryAirport', 'currencies'));
+        return view('admin.catalog.edit', compact('settings', 'type', 'id', 'item', 'categories', 'professions', 'airports', 'primaryAirport', 'currencies'));
     }
 
     public function updateCatalogItem(Request $request, string $type, int $id)
@@ -690,12 +734,39 @@ class AdminController extends Controller
         }
 
         if (in_array($type, ['profession', 'job_title'], true)) {
-            $data = $request->validate(['name' => 'required|string|max:255']);
+            $data = $this->validateProfessionJobTitleData($request, $type);
             $name = trim($data['name']);
-            if (DB::table('app_profession_job_titles')->where('type', $type)->where('id', '<>', $id)->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->exists()) {
+            $duplicate = DB::table('app_profession_job_titles')
+                ->where('type', $type)
+                ->where('id', '<>', $id)
+                ->where('category_id', $data['category_id'])
+                ->where('subcategory_id', $data['subcategory_id'])
+                ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)]);
+            if ($type === 'job_title') {
+                $duplicate->where('profession_id', $data['profession_id']);
+            }
+            if ($duplicate->exists()) {
                 return back()->withInput()->withErrors(['name' => 'This option already exists.']);
             }
-            DB::table('app_profession_job_titles')->where('id', $id)->where('type', $type)->update(['name' => $name, 'updated_at' => now()]);
+            DB::transaction(function () use ($id, $type, $name, $data) {
+                DB::table('app_profession_job_titles')->where('id', $id)->where('type', $type)->update([
+                    'name' => $name,
+                    'category_id' => $data['category_id'],
+                    'subcategory_id' => $data['subcategory_id'],
+                    'profession_id' => $data['profession_id'] ?? null,
+                    'updated_at' => now(),
+                ]);
+                if ($type === 'profession') {
+                    DB::table('app_profession_job_titles')
+                        ->where('type', 'job_title')
+                        ->where('profession_id', $id)
+                        ->update([
+                            'category_id' => $data['category_id'],
+                            'subcategory_id' => $data['subcategory_id'],
+                            'updated_at' => now(),
+                        ]);
+                }
+            });
         } elseif ($type === 'subcategory') {
             $data = $request->validate([
                 'category_id' => 'required|integer|exists:app_categories,id',
@@ -815,12 +886,28 @@ class AdminController extends Controller
                 'updated_at' => now(),
             ]);
         } elseif (in_array($type, ['profession', 'job_title'], true)) {
-            $data = $request->validate(['name' => 'required|string|max:255']);
+            $data = $this->validateProfessionJobTitleData($request, $type);
             $name = trim($data['name']);
-            if (DB::table('app_profession_job_titles')->where('type', $type)->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->exists()) {
+            $duplicate = DB::table('app_profession_job_titles')
+                ->where('type', $type)
+                ->where('category_id', $data['category_id'])
+                ->where('subcategory_id', $data['subcategory_id'])
+                ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)]);
+            if ($type === 'job_title') {
+                $duplicate->where('profession_id', $data['profession_id']);
+            }
+            if ($duplicate->exists()) {
                 return back()->withInput()->withErrors(['name' => 'This option already exists.']);
             }
-            DB::table('app_profession_job_titles')->insert(['type' => $type, 'name' => $name, 'created_at' => now(), 'updated_at' => now()]);
+            DB::table('app_profession_job_titles')->insert([
+                'type' => $type,
+                'name' => $name,
+                'category_id' => $data['category_id'],
+                'subcategory_id' => $data['subcategory_id'],
+                'profession_id' => $data['profession_id'] ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         } elseif ($type === 'category') {
             $data = $request->validate([
                 'name' => 'required|string|max:255',
@@ -908,9 +995,46 @@ class AdminController extends Controller
         if (!$query->exists()) {
             abort(404);
         }
-        $query->delete();
-        if ($type === 'category') {
-            DB::table('app_visa_types')->where('category_id', $id)->delete();
+        if (in_array($type, ['category', 'subcategory'], true)) {
+            DB::transaction(function () use ($type, $id, $query) {
+                $professionQuery = DB::table('app_profession_job_titles')->where('type', 'profession');
+                if ($type === 'category') {
+                    $professionQuery->where('category_id', $id);
+                } else {
+                    $professionQuery->where('subcategory_id', $id);
+                }
+                $professionIds = $professionQuery->pluck('id');
+
+                DB::table('app_profession_job_titles')
+                    ->where('type', 'job_title')
+                    ->where(function ($jobTitles) use ($type, $id, $professionIds) {
+                        if ($type === 'category') {
+                            $jobTitles->where('category_id', $id);
+                        } else {
+                            $jobTitles->where('subcategory_id', $id);
+                        }
+                        $jobTitles->orWhereIn('profession_id', $professionIds);
+                    })
+                    ->delete();
+                DB::table('app_profession_job_titles')
+                    ->where('type', 'profession')
+                    ->whereIn('id', $professionIds)
+                    ->delete();
+                if ($type === 'category') {
+                    DB::table('app_visa_types')->where('category_id', $id)->delete();
+                }
+                $query->delete();
+            });
+        } elseif ($type === 'profession') {
+            DB::transaction(function () use ($id, $query) {
+                DB::table('app_profession_job_titles')
+                    ->where('type', 'job_title')
+                    ->where('profession_id', $id)
+                    ->delete();
+                $query->delete();
+            });
+        } else {
+            $query->delete();
         }
 
         return redirect()->route('admin.catalog.index')->with('success', ucfirst(str_replace('_', ' ', $type)) . ' deleted successfully.');
@@ -920,10 +1044,24 @@ class AdminController extends Controller
     {
         $this->autoManageSettingsColumns();
         $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'VisaBook', 'app_icon' => ''];
-        $professions = DB::table('app_profession_job_titles')->where('type', 'profession')->orderBy('name')->get();
-        $jobTitles = DB::table('app_profession_job_titles')->where('type', 'job_title')->orderBy('name')->get();
+        $hierarchy = $this->catalogHierarchyData();
+        $professions = $hierarchy['professions'];
+        $jobTitles = DB::table('app_profession_job_titles')
+            ->leftJoin('app_categories', 'app_categories.id', '=', 'app_profession_job_titles.category_id')
+            ->leftJoin('app_visa_types', 'app_visa_types.id', '=', 'app_profession_job_titles.subcategory_id')
+            ->leftJoin('app_profession_job_titles as professions', 'professions.id', '=', 'app_profession_job_titles.profession_id')
+            ->where('app_profession_job_titles.type', 'job_title')
+            ->orderBy('app_profession_job_titles.name')
+            ->get([
+                'app_profession_job_titles.id',
+                'app_profession_job_titles.name',
+                'app_categories.name as category_name',
+                'app_visa_types.name as subcategory_name',
+                'professions.name as profession_name',
+            ]);
+        $categories = $hierarchy['categories'];
 
-        return view('admin.profession_job_titles', compact('settings', 'professions', 'jobTitles'));
+        return view('admin.profession_job_titles', compact('settings', 'categories', 'professions', 'jobTitles'));
     }
 
     public function addProfessionJobTitle(Request $request)
@@ -931,17 +1069,27 @@ class AdminController extends Controller
         $this->autoManageSettingsColumns();
         $validated = $request->validate([
             'type' => 'required|in:profession,job_title',
-            'name' => 'required|string|max:255',
         ]);
-        $name = trim($validated['name']);
-
-        if (DB::table('app_profession_job_titles')->where('type', $validated['type'])->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->exists()) {
+        $data = $this->validateProfessionJobTitleData($request, $validated['type']);
+        $name = trim($data['name']);
+        $duplicate = DB::table('app_profession_job_titles')
+            ->where('type', $validated['type'])
+            ->where('category_id', $data['category_id'])
+            ->where('subcategory_id', $data['subcategory_id'])
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)]);
+        if ($validated['type'] === 'job_title') {
+            $duplicate->where('profession_id', $data['profession_id']);
+        }
+        if ($duplicate->exists()) {
             return back()->withInput()->withErrors(['name' => 'This option already exists.']);
         }
 
         DB::table('app_profession_job_titles')->insert([
             'type' => $validated['type'],
             'name' => $name,
+            'category_id' => $data['category_id'],
+            'subcategory_id' => $data['subcategory_id'],
+            'profession_id' => $data['profession_id'] ?? null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -957,7 +1105,15 @@ class AdminController extends Controller
             abort(404);
         }
 
-        DB::table('app_profession_job_titles')->where('id', $id)->delete();
+        DB::transaction(function () use ($id, $option) {
+            if ($option->type === 'profession') {
+                DB::table('app_profession_job_titles')
+                    ->where('type', 'job_title')
+                    ->where('profession_id', $id)
+                    ->delete();
+            }
+            DB::table('app_profession_job_titles')->where('id', $id)->delete();
+        });
 
         return redirect()->route('admin.profession_job_titles.index')->with('success', ucfirst(str_replace('_', ' ', $option->type)) . ' deleted successfully.');
     }
@@ -986,7 +1142,7 @@ class AdminController extends Controller
     public function updateJob(Request $request, $id)
     {
         $this->autoManageSettingsColumns();
-        $validated = $this->validateJobData($request);
+        $validated = $this->validateJobData($request, $id);
         $job = DB::table('app_jobs')->where('id', $id)->first();
         if (!$job) {
             abort(404);
@@ -1003,25 +1159,86 @@ class AdminController extends Controller
         }
     }
 
+    private function catalogHierarchyData(): array
+    {
+        $categories = DB::table('app_categories')->orderBy('name')->get();
+        foreach ($categories as $category) {
+            $category->types = DB::table('app_visa_types')
+                ->where('category_id', $category->id)
+                ->orderBy('name')
+                ->get();
+        }
+
+        $professions = DB::table('app_profession_job_titles')
+            ->where('type', 'profession')
+            ->orderBy('name')
+            ->get();
+
+        return compact('categories', 'professions');
+    }
+
+    private function validateProfessionJobTitleData(Request $request, string $type): array
+    {
+        $rules = [
+            'category_id' => 'required|integer|exists:app_categories,id',
+            'subcategory_id' => 'required|integer|exists:app_visa_types,id',
+            'name' => 'required|string|max:255',
+        ];
+        if ($type === 'job_title') {
+            $rules['profession_id'] = 'required|integer|exists:app_profession_job_titles,id';
+        }
+
+        $data = $request->validate($rules);
+        $subcategory = DB::table('app_visa_types')
+            ->where('id', $data['subcategory_id'])
+            ->where('category_id', $data['category_id'])
+            ->first();
+        if (!$subcategory) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'subcategory_id' => 'Select a subcategory from the selected category.',
+            ]);
+        }
+
+        if ($type === 'job_title') {
+            $profession = DB::table('app_profession_job_titles')
+                ->where('id', $data['profession_id'])
+                ->where('type', 'profession')
+                ->where('category_id', $data['category_id'])
+                ->where('subcategory_id', $data['subcategory_id'])
+                ->first();
+            if (!$profession) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'profession_id' => 'Select a profession from the selected category and subcategory.',
+                ]);
+            }
+        }
+
+        return $data;
+    }
+
     private function jobAdminPageData(): array
     {
         $this->autoManageSettingsColumns();
         $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'VisaBook', 'app_icon' => ''];
         $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
         $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+        $professions = DB::table('app_profession_job_titles')->where('type', 'profession')->orderBy('name')->get();
+        $jobTitles = DB::table('app_profession_job_titles')->where('type', 'job_title')->orderBy('name')->get();
         foreach ($categories as $category) {
             $category->types = DB::table('app_visa_types')->where('category_id', $category->id)->get();
         }
 
-        return compact('settings', 'categories', 'countries');
+        return compact('settings', 'categories', 'countries', 'professions', 'jobTitles');
     }
 
-    private function validateJobData(Request $request): array
+    private function validateJobData(Request $request, $jobId = null): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'job_title' => 'required|string|max:255',
-            'category_visa_type' => 'required|string|max:255',
+            'category_id' => 'required|integer|exists:app_categories,id',
+            'subcategory_id' => 'required|integer|exists:app_visa_types,id',
             'country_location' => 'required|string|max:255',
+            'profession' => 'required|string|max:255',
             'number_of_vacancies' => 'required|integer|min:1|max:100000',
             'job_description' => 'required|string',
             'requirements' => 'required|string',
@@ -1040,14 +1257,68 @@ class AdminController extends Controller
             'paid_leave_days_after_one_year' => 'nullable|integer|min:0',
             'status' => 'required|in:Active,Inactive'
         ]);
+
+        $category = DB::table('app_categories')->where('id', $validated['category_id'])->first();
+        $subcategory = DB::table('app_visa_types')
+            ->where('id', $validated['subcategory_id'])
+            ->where('category_id', $validated['category_id'])
+            ->first();
+        $errors = [];
+        if (!$category) {
+            $errors['category_id'] = 'Select a valid category.';
+        }
+        if (!$subcategory) {
+            $errors['subcategory_id'] = 'Select a subcategory from the selected category.';
+        }
+
+        $professionOption = DB::table('app_profession_job_titles')
+            ->where('type', 'profession')
+            ->where('name', $validated['profession'])
+            ->where('category_id', $validated['category_id'])
+            ->where('subcategory_id', $validated['subcategory_id'])
+            ->first();
+        $jobTitleExists = DB::table('app_profession_job_titles')
+            ->where('type', 'job_title')
+            ->where('name', $validated['job_title'])
+            ->where('category_id', $validated['category_id'])
+            ->where('subcategory_id', $validated['subcategory_id'])
+            ->where('profession_id', $professionOption->id ?? 0)
+            ->exists();
+        $professionExists = $professionOption !== null;
+
+        if ($jobId !== null) {
+            $existingJob = DB::table('app_jobs')->where('id', $jobId)->first();
+            $sameSavedContext = $existingJob
+                && ($existingJob->category === $category->name || $existingJob->category === null)
+                && $existingJob->category_visa_type === $subcategory->name;
+            $professionExists = $professionExists || ($sameSavedContext && $existingJob->profession === $validated['profession']);
+            $jobTitleExists = $jobTitleExists || ($sameSavedContext && $existingJob->job_title === $validated['job_title']);
+        }
+
+        if (!$professionExists) {
+            $errors['profession'] = 'Select a profession from the available options.';
+        }
+        if (!$jobTitleExists) {
+            $errors['job_title'] = 'Select a job title from the available options.';
+        }
+        if ($errors) {
+            throw \Illuminate\Validation\ValidationException::withMessages($errors);
+        }
+
+        $validated['category'] = $category->name;
+        $validated['category_visa_type'] = $subcategory->name;
+
+        return $validated;
     }
 
     private function jobDataFromValidated(Request $request, array $validated): array
     {
         return [
             'job_title' => trim($validated['job_title']),
+            'category' => trim($validated['category']),
             'category_visa_type' => trim($validated['category_visa_type']),
             'country_location' => trim($validated['country_location']),
+            'profession' => trim($validated['profession']),
             'number_of_vacancies' => (int) $validated['number_of_vacancies'],
             'job_description' => trim($validated['job_description']),
             'requirements' => trim($validated['requirements']),

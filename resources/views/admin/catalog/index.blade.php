@@ -37,6 +37,10 @@
                                 <thead><tr><th>Name</th><th>Currency</th><th>ID Digits</th><th>Phone Code</th><th>Phone Digits</th><th>Airports</th><th class="text-end">Actions</th></tr></thead>
                             @elseif($catalog['type'] === 'subcategory')
                                 <thead><tr><th>Subcategory</th><th>Category</th><th class="text-end">Actions</th></tr></thead>
+                            @elseif($catalog['type'] === 'profession')
+                                <thead><tr><th>Profession</th><th>Category</th><th>Subcategory</th><th class="text-end">Actions</th></tr></thead>
+                            @elseif($catalog['type'] === 'job_title')
+                                <thead><tr><th>Job Title</th><th>Category</th><th>Subcategory</th><th>Profession</th><th class="text-end">Actions</th></tr></thead>
                             @else
                                 <thead><tr><th>Name</th><th class="text-end">Actions</th></tr></thead>
                             @endif
@@ -59,6 +63,15 @@
                                         @elseif($catalog['type'] === 'subcategory')
                                             <td>{{ $item->name }}</td>
                                             <td>{{ $item->category_name }}</td>
+                                        @elseif($catalog['type'] === 'profession')
+                                            <td>{{ $item->name }}</td>
+                                            <td>{{ $item->category_name ?? '—' }}</td>
+                                            <td>{{ $item->subcategory_name ?? '—' }}</td>
+                                        @elseif($catalog['type'] === 'job_title')
+                                            <td>{{ $item->name }}</td>
+                                            <td>{{ $item->category_name ?? '—' }}</td>
+                                            <td>{{ $item->subcategory_name ?? '—' }}</td>
+                                            <td>{{ $item->profession_name ?? '—' }}</td>
                                         @else
                                             <td>{{ $item->name }}</td>
                                         @endif
@@ -71,7 +84,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="{{ $catalog['type'] === 'nationality' ? 7 : ($catalog['type'] === 'subcategory' ? 3 : 2) }}" class="text-center text-secondary py-3">No {{ strtolower($catalog['title']) }} added.</td></tr>
+                                    <tr><td colspan="{{ $catalog['type'] === 'nationality' ? 7 : ($catalog['type'] === 'job_title' ? 5 : (in_array($catalog['type'], ['subcategory', 'profession']) ? 4 : 2)) }}" class="text-center text-secondary py-3">No {{ strtolower($catalog['title']) }} added.</td></tr>
                                 @endforelse
                             </tbody>
                         </table></div>

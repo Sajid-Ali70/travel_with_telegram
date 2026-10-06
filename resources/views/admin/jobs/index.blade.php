@@ -38,8 +38,15 @@
                     @forelse($jobs as $job)
                         @php($jobWorkingDays = json_decode($job->working_days ?? '[]', true) ?: [])
                         <tr>
-                            <td><strong>{{ $job->job_title }}</strong><div class="small text-muted">#{{ $job->id }}</div></td>
-                            <td>{{ $job->category_visa_type ?? '—' }}</td>
+                            <td>
+                                <strong>{{ $job->job_title }}</strong>
+                                @if(!empty($job->profession))<div class="small text-muted">{{ $job->profession }}</div>@endif
+                                <div class="small text-muted">#{{ $job->id }}</div>
+                            </td>
+                            <td>
+                                {{ $job->category ?? '—' }}
+                                @if(!empty($job->category_visa_type))<div class="small text-muted">Subcategory: {{ $job->category_visa_type }}</div>@endif
+                            </td>
                             <td>{{ $job->country_location ?? '—' }}</td>
                             <td>{{ $job->number_of_vacancies ?? 1 }}</td>
                             <td>{{ number_format((float) ($job->salary ?? 0), 2) }} {{ $job->salary_currency ?? 'SAR' }} / {{ $job->salary_period ?? 'month' }}</td>

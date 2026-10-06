@@ -47,25 +47,66 @@
                     <div class="col-lg-6">
                         <section class="admin-card h-100">
                             <h2 class="h5 mb-3">{{ $group['title'] }}</h2>
-                            <form action="{{ route('admin.profession_job_titles.add') }}" method="POST" class="row g-2 mb-4">
+                            <form action="{{ route('admin.profession_job_titles.add') }}" method="POST" class="row g-2 mb-4 hierarchy-form" data-type="{{ $type }}">
                                 @csrf
                                 <input type="hidden" name="type" value="{{ $type }}">
+                                <div class="col-12">
+                                    <label class="form-label" for="{{ $type }}_category_id">Category</label>
+                                    <select id="{{ $type }}_category_id" name="category_id" class="form-select" required>
+                                        <option value="">Select category</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="{{ $type }}_subcategory_id">Subcategory</label>
+                                    <select id="{{ $type }}_subcategory_id" name="subcategory_id" class="form-select" required>
+                                        <option value="">Select subcategory</option>
+                                        @foreach($categories as $category)
+                                            @foreach($category->types as $subcategory)
+                                                <option value="{{ $subcategory->id }}" data-category-id="{{ $category->id }}" {{ old('subcategory_id') == $subcategory->id ? 'selected' : '' }}>{{ $subcategory->name }}</option>
+                                            @endforeach
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @if($type === 'job_title')
+                                    <div class="col-12">
+                                        <label class="form-label" for="{{ $type }}_profession_id">Profession</label>
+                                        <select id="{{ $type }}_profession_id" name="profession_id" class="form-select" required>
+                                            <option value="">Select profession</option>
+                                            @foreach($professions as $profession)
+                                                <option value="{{ $profession->id }}" data-category-id="{{ $profession->category_id }}" data-subcategory-id="{{ $profession->subcategory_id }}" {{ old('profession_id') == $profession->id ? 'selected' : '' }}>{{ $profession->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
                                 <div class="col">
-                                    <label class="visually-hidden" for="{{ $type }}_name">Add {{ strtolower($group['title']) }}</label>
-                                    <input id="{{ $type }}_name" type="text" name="name" class="form-control" maxlength="255" placeholder="Enter a {{ $type === 'profession' ? 'profession' : 'job title' }}" required>
+                                    <label class="form-label" for="{{ $type }}_name">{{ $type === 'profession' ? 'Profession' : 'Job Title' }}</label>
+                                    <input id="{{ $type }}_name" type="text" name="name" class="form-control" maxlength="255" placeholder="Enter a {{ $type === 'profession' ? 'profession' : 'job title' }}" value="{{ old('name') }}" required>
                                 </div>
                                 <div class="col-auto">
+                                    <label class="form-label d-block">&nbsp;</label>
                                     <button type="submit" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Add</button>
                                 </div>
                             </form>
 
                             <div class="table-responsive">
                                 <table class="table align-middle">
-                                    <thead><tr><th>{{ $group['title'] }}</th><th class="text-end">Action</th></tr></thead>
+                                    @if($type === 'profession')
+                                        <thead><tr><th>Profession</th><th>Category</th><th>Subcategory</th><th class="text-end">Action</th></tr></thead>
+                                    @else
+                                        <thead><tr><th>Job Title</th><th>Category</th><th>Subcategory</th><th>Profession</th><th class="text-end">Action</th></tr></thead>
+                                    @endif
                                     <tbody>
                                         @forelse($group['options'] as $option)
                                             <tr>
                                                 <td>{{ $option->name }}</td>
+                                                <td>{{ $option->category_name ?? '—' }}</td>
+                                                <td>{{ $option->subcategory_name ?? '—' }}</td>
+                                                @if($type === 'job_title')
+                                                    <td>{{ $option->profession_name ?? '—' }}</td>
+                                                @endif
                                                 <td class="text-end">
                                                     <form action="{{ route('admin.profession_job_titles.delete', $option->id) }}" method="POST" onsubmit="return confirm('Delete this option? Existing visa requests will keep their saved value.')">
                                                         @csrf
@@ -75,7 +116,7 @@
                                                 </td>
                                             </tr>
                                         @empty
-                                            <tr><td colspan="2" class="text-center text-secondary">No options added yet.</td></tr>
+                                            <tr><td colspan="{{ $type === 'profession' ? 4 : 5 }}" class="text-center text-secondary">No options added yet.</td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>
@@ -86,5 +127,44 @@
             </div>
         </div>
     </main>
+    <script>
+        document.querySelectorAll('.hierarchy-form').forEach((form) => {
+            const categorySelect = form.querySelector('[name="category_id"]');
+            const subcategorySelect = form.querySelector('[name="subcategory_id"]');
+            const professionSelect = form.querySelector('[name="profession_id"]');
+
+            function filterOptions(select, filters, resetSelection) {
+                let selectedOptionIsAvailable = false;
+                Array.from(select.options).forEach((option) => {
+                    const available = filters.every(([attribute, value]) => !value || option.dataset[attribute] === value);
+                    option.hidden = !available && option.value !== '';
+                    if (option.selected && available) selectedOptionIsAvailable = true;
+                });
+                if (resetSelection || !selectedOptionIsAvailable) select.value = '';
+                select.disabled = filters.some(([, value]) => !value);
+            }
+
+            function updateSubcategories(resetSelection) {
+                filterOptions(subcategorySelect, [['categoryId', categorySelect.value]], resetSelection);
+                if (professionSelect) {
+                    filterOptions(professionSelect, [
+                        ['categoryId', categorySelect.value],
+                        ['subcategoryId', subcategorySelect.value],
+                    ], resetSelection);
+                }
+            }
+
+            categorySelect.addEventListener('change', () => updateSubcategories(true));
+            subcategorySelect.addEventListener('change', () => {
+                if (professionSelect) {
+                    filterOptions(professionSelect, [
+                        ['categoryId', categorySelect.value],
+                        ['subcategoryId', subcategorySelect.value],
+                    ], true);
+                }
+            });
+            updateSubcategories(false);
+        });
+    </script>
 </body>
 </html>

@@ -4,9 +4,24 @@
     $isEditing = $job !== null;
     $categoryValue = old('category_visa_type', $job->category_visa_type ?? '');
     $countryValue = old('country_location', $job->country_location ?? '');
-    $categoryOptions = $categories->flatMap(function ($category) {
-        return $category->types->isNotEmpty() ? $category->types->pluck('name') : collect([$category->name]);
-    })->all();
+    $selectedCategory = $categories->firstWhere('name', $job->category ?? '');
+    if (!$selectedCategory && $isEditing) {
+        $selectedCategory = $categories->first(function ($category) use ($categoryValue) {
+            return $category->types->contains('name', $categoryValue);
+        });
+    }
+    $categoryIdValue = old('category_id', $selectedCategory->id ?? '');
+    $subcategoryIdValue = old('subcategory_id', $selectedCategory
+        ? ($selectedCategory->types->firstWhere('name', $categoryValue)->id ?? '')
+        : '');
+    $professionValue = old('profession', $job->profession ?? '');
+    $jobTitleValue = old('job_title', $job->job_title ?? '');
+    $matchingProfessions = $professions->where('category_id', $categoryIdValue)->where('subcategory_id', $subcategoryIdValue);
+    $matchingProfession = $matchingProfessions->firstWhere('name', $professionValue);
+    $matchingJobTitles = $jobTitles
+        ->where('category_id', $categoryIdValue)
+        ->where('subcategory_id', $subcategoryIdValue)
+        ->where('profession_id', $matchingProfession->id ?? 0);
     $workingDaysValue = old('working_days', $selectedWorkingDays);
 @endphp
 
@@ -34,32 +49,6 @@
         <div class="row g-3">
             <div class="col-12"><h2 class="h5 mb-0">1. Job Basic Details</h2></div>
             <div class="col-md-6">
-                <label for="job_title" class="form-label">Job Title</label>
-                <input id="job_title" type="text" name="job_title" class="form-control" value="{{ old('job_title', $job->job_title ?? '') }}" placeholder="e.g. Hospital Nurse" maxlength="255" required>
-            </div>
-            <div class="col-md-6">
-                <label for="category_visa_type" class="form-label">Category / Visa Type</label>
-                @if($categories->isNotEmpty())
-                    <select id="category_visa_type" name="category_visa_type" class="form-select" required>
-                        <option value="">Select category / visa type</option>
-                        @if($categoryValue && !in_array($categoryValue, $categoryOptions, true))<option value="{{ $categoryValue }}" selected>{{ $categoryValue }}</option>@endif
-                        @foreach($categories as $category)
-                            @if($category->types->isNotEmpty())
-                                <optgroup label="{{ $category->name }}">
-                                    @foreach($category->types as $visaType)
-                                        <option value="{{ $visaType->name }}" {{ $categoryValue === $visaType->name ? 'selected' : '' }}>{{ $visaType->name }}</option>
-                                    @endforeach
-                                </optgroup>
-                            @else
-                                <option value="{{ $category->name }}" {{ $categoryValue === $category->name ? 'selected' : '' }}>{{ $category->name }}</option>
-                            @endif
-                        @endforeach
-                    </select>
-                @else
-                    <input id="category_visa_type" type="text" name="category_visa_type" class="form-control" value="{{ $categoryValue }}" placeholder="e.g. Work Visa" required>
-                @endif
-            </div>
-            <div class="col-md-6">
                 <label for="country_location" class="form-label">Country / Location</label>
                 @if(isset($countries) && $countries->isNotEmpty())
                     <select id="country_location" name="country_location" class="form-select" required>
@@ -74,6 +63,50 @@
                 @else
                     <input id="country_location" type="text" name="country_location" class="form-control" value="{{ $countryValue }}" placeholder="e.g. Saudi Arabia" maxlength="255" required>
                 @endif
+            </div>
+            <div class="col-md-6">
+                <label for="category_id" class="form-label">Category</label>
+                <select id="category_id" name="category_id" class="form-select" required>
+                    <option value="">Select category</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ (string) $categoryIdValue === (string) $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="subcategory_id" class="form-label">Subcategory</label>
+                <select id="subcategory_id" name="subcategory_id" class="form-select" required>
+                    <option value="">Select subcategory</option>
+                    @foreach($categories as $category)
+                        @foreach($category->types as $subcategory)
+                            <option value="{{ $subcategory->id }}" data-category-id="{{ $category->id }}" {{ (string) $subcategoryIdValue === (string) $subcategory->id ? 'selected' : '' }}>{{ $subcategory->name }}</option>
+                        @endforeach
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="profession" class="form-label">Profession</label>
+                <select id="profession" name="profession" class="form-select" required>
+                    <option value="">Select profession</option>
+                    @if($professionValue && !$matchingProfessions->contains('name', $professionValue))
+                        <option value="{{ $professionValue }}" selected>{{ $professionValue }} (current)</option>
+                    @endif
+                    @foreach($professions as $profession)
+                        <option value="{{ $profession->name }}" data-profession-id="{{ $profession->id }}" data-category-id="{{ $profession->category_id }}" data-subcategory-id="{{ $profession->subcategory_id }}" {{ $professionValue === $profession->name ? 'selected' : '' }}>{{ $profession->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="job_title" class="form-label">Job Title</label>
+                <select id="job_title" name="job_title" class="form-select" required>
+                    <option value="">Select job title</option>
+                    @if($jobTitleValue && !$matchingJobTitles->contains('name', $jobTitleValue))
+                        <option value="{{ $jobTitleValue }}" selected>{{ $jobTitleValue }} (current)</option>
+                    @endif
+                    @foreach($jobTitles as $jobTitle)
+                        <option value="{{ $jobTitle->name }}" data-category-id="{{ $jobTitle->category_id }}" data-subcategory-id="{{ $jobTitle->subcategory_id }}" data-profession-id="{{ $jobTitle->profession_id }}" {{ $jobTitleValue === $jobTitle->name ? 'selected' : '' }}>{{ $jobTitle->name }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="col-md-6">
                 <label for="number_of_vacancies" class="form-label">Number of Vacancies</label>
@@ -176,4 +209,69 @@
             <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>{{ $isEditing ? 'Save Changes' : 'Save Posting' }}</button>
         </div>
     </form>
+    <script>
+        const categorySelect = document.getElementById('category_id');
+        const subcategorySelect = document.getElementById('subcategory_id');
+        const professionSelect = document.getElementById('profession');
+        const jobTitleSelect = document.getElementById('job_title');
+
+        function filterSubcategories(resetSelection) {
+            const selectedCategory = categorySelect.value;
+            let selectedOptionIsAvailable = false;
+
+            Array.from(subcategorySelect.options).forEach((option) => {
+                if (!option.dataset.categoryId) {
+                    option.hidden = false;
+                    return;
+                }
+
+                const isAvailable = option.dataset.categoryId === selectedCategory;
+                option.hidden = !isAvailable;
+                if (option.selected && isAvailable) {
+                    selectedOptionIsAvailable = true;
+                }
+            });
+
+            if (resetSelection || !selectedOptionIsAvailable) {
+                subcategorySelect.value = '';
+            }
+            subcategorySelect.disabled = !selectedCategory;
+        }
+
+        function filterContextOptions(select, selectedCategory, selectedSubcategory, selectedProfessionId, resetSelection) {
+            let selectedOptionIsAvailable = false;
+            Array.from(select.options).forEach((option) => {
+                if (!option.dataset.categoryId) {
+                    option.hidden = false;
+                    return;
+                }
+
+                const isAvailable = option.dataset.categoryId === selectedCategory
+                    && option.dataset.subcategoryId === selectedSubcategory
+                    && (!selectedProfessionId || option.dataset.professionId === selectedProfessionId);
+                option.hidden = !isAvailable;
+                if (option.selected && isAvailable) selectedOptionIsAvailable = true;
+            });
+            if (resetSelection || !selectedOptionIsAvailable) select.value = '';
+            select.disabled = !selectedCategory || !selectedSubcategory || (select === jobTitleSelect && !selectedProfessionId);
+        }
+
+        function updateJobCatalogOptions(resetSelection) {
+            filterSubcategories(resetSelection);
+            filterContextOptions(professionSelect, categorySelect.value, subcategorySelect.value, '', resetSelection);
+            const filteredProfession = professionSelect.selectedOptions[0];
+            filterContextOptions(jobTitleSelect, categorySelect.value, subcategorySelect.value, filteredProfession ? filteredProfession.dataset.professionId : '', resetSelection);
+        }
+
+        categorySelect.addEventListener('change', () => updateJobCatalogOptions(true));
+        subcategorySelect.addEventListener('change', () => {
+            filterContextOptions(professionSelect, categorySelect.value, subcategorySelect.value, '', true);
+            filterContextOptions(jobTitleSelect, categorySelect.value, subcategorySelect.value, '', true);
+        });
+        professionSelect.addEventListener('change', () => {
+            const selectedProfession = professionSelect.selectedOptions[0];
+            filterContextOptions(jobTitleSelect, categorySelect.value, subcategorySelect.value, selectedProfession ? selectedProfession.dataset.professionId : '', true);
+        });
+        updateJobCatalogOptions(false);
+    </script>
 @endsection

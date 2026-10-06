@@ -21,6 +21,11 @@
         <form action="{{ route('admin.catalog.update', [$type, $id]) }}" method="POST" enctype="multipart/form-data" class="form-card">
             @csrf @method('PUT')
             @if(in_array($type, ['profession', 'job_title']))
+                <div class="mb-3"><label for="category_id" class="form-label">Category</label><select id="category_id" name="category_id" class="form-select" required><option value="">Select category</option>@foreach($categories as $category)<option value="{{ $category->id }}" {{ old('category_id', $item->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>@endforeach</select></div>
+                <div class="mb-3"><label for="subcategory_id" class="form-label">Subcategory</label><select id="subcategory_id" name="subcategory_id" class="form-select" required><option value="">Select subcategory</option>@foreach($categories as $category)@foreach($category->types as $subcategory)<option value="{{ $subcategory->id }}" data-category-id="{{ $category->id }}" {{ old('subcategory_id', $item->subcategory_id) == $subcategory->id ? 'selected' : '' }}>{{ $subcategory->name }}</option>@endforeach @endforeach</select></div>
+                @if($type === 'job_title')
+                    <div class="mb-3"><label for="profession_id" class="form-label">Profession</label><select id="profession_id" name="profession_id" class="form-select" required><option value="">Select profession</option>@foreach($professions as $profession)<option value="{{ $profession->id }}" data-category-id="{{ $profession->category_id }}" data-subcategory-id="{{ $profession->subcategory_id }}" {{ old('profession_id', $item->profession_id) == $profession->id ? 'selected' : '' }}>{{ $profession->name }}</option>@endforeach</select></div>
+                @endif
                 <div class="mb-3"><label for="name" class="form-label">{{ $type === 'profession' ? 'Profession' : 'Job Title' }}</label><input id="name" type="text" name="name" class="form-control" maxlength="255" value="{{ old('name', $item->name) }}" required autofocus></div>
             @elseif($type === 'subcategory')
                 <div class="mb-3"><label for="category_id" class="form-label">Parent Category</label><select id="category_id" name="category_id" class="form-select" required><option value="">Select category</option>@foreach($categories as $category)<option value="{{ $category->id }}" {{ old('category_id', $item->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>@endforeach</select></div>
@@ -45,4 +50,38 @@
             <div class="d-flex justify-content-end gap-2 mt-4"><a href="{{ route('admin.catalog.index') }}" class="btn btn-outline-light">Cancel</a><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Changes</button></div>
         </form>
     </div></main>
+    @if(in_array($type, ['profession', 'job_title']))
+        <script>
+            const categorySelect = document.getElementById('category_id');
+            const subcategorySelect = document.getElementById('subcategory_id');
+            const professionSelect = document.getElementById('profession_id');
+
+            function filterDependentOptions(select, filters, resetSelection) {
+                let selectedOptionIsAvailable = false;
+                Array.from(select.options).forEach((option) => {
+                    const available = filters.every(([attribute, value]) => !value || option.dataset[attribute] === value);
+                    option.hidden = !available && option.value !== '';
+                    if (option.selected && available) selectedOptionIsAvailable = true;
+                });
+                if (resetSelection || !selectedOptionIsAvailable) select.value = '';
+                select.disabled = filters.some(([, value]) => !value);
+            }
+
+            function updateCatalogSelectors(resetSelection) {
+                const categoryId = categorySelect.value;
+                filterDependentOptions(subcategorySelect, [['categoryId', categoryId]], resetSelection);
+                @if($type === 'job_title')
+                    filterDependentOptions(professionSelect, [['categoryId', categoryId], ['subcategoryId', subcategorySelect.value]], resetSelection);
+                @endif
+            }
+
+            categorySelect.addEventListener('change', () => updateCatalogSelectors(true));
+            subcategorySelect.addEventListener('change', () => {
+                @if($type === 'job_title')
+                    filterDependentOptions(professionSelect, [['categoryId', categorySelect.value], ['subcategoryId', subcategorySelect.value]], true);
+                @endif
+            });
+            updateCatalogSelectors(false);
+        </script>
+    @endif
 </body></html>
