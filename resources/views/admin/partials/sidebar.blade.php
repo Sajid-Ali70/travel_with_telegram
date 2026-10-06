@@ -15,6 +15,9 @@
         <a href="{{ route('admin.dashboard') }}" id="nav-requests" class="nav-link admin-nav-link" onclick="localStorage.setItem('activeAdminTab', 'requests')">
             <i class="fas fa-file-signature"></i> Visa Requests
         </a>
+        <a href="{{ route('admin.dashboard') }}" id="nav-tickets" class="nav-link admin-nav-link" onclick="localStorage.setItem('activeAdminTab', 'tickets')">
+            <i class="fas fa-ticket-alt"></i> Ticket Requests
+        </a>
         <a href="{{ route('admin.dashboard') }}" id="nav-countries" class="nav-link admin-nav-link" onclick="localStorage.setItem('activeAdminTab', 'countries')">
             <i class="fas fa-globe"></i> Countries
         </a>
@@ -32,9 +35,6 @@
         </a>
         <a href="{{ route('admin.jobs.create') }}" class="nav-link admin-nav-link {{ request()->routeIs('admin.jobs.create') ? 'active' : '' }}">
             <i class="fas fa-plus"></i> Add Job
-        </a>
-        <a href="{{ route('admin.dashboard') }}" id="nav-bank-accounts" class="nav-link admin-nav-link" onclick="localStorage.setItem('activeAdminTab', 'bank-accounts')">
-            <i class="fas fa-building-columns"></i> Bank Accounts
         </a>
         <a href="{{ route('admin.dashboard') }}" id="nav-security" class="nav-link admin-nav-link" onclick="localStorage.setItem('activeAdminTab', 'security')">
             <i class="fas fa-shield-alt"></i> Security

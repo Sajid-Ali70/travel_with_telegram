@@ -422,7 +422,7 @@
                                         </div>
                                     </div>
 
-                                    @if($statusText === 'Visa Approved')
+                                    @if($statusText === 'Visa Approved from Embassy')
                                     <div class="amount-box">
                                         <div class="amount-title">
                                             <span>Payment Details</span>

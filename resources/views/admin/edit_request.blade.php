@@ -177,26 +177,36 @@
                         $selectedStatus = match ($selectedStatus) {
                             'pending' => 'Visa Application Submitted',
                             'processing' => 'Documents Verification',
-                            'approved' => 'Visa Approved',
-                            'rejected' => 'Application Rejected',
+                            'Verification of Documents Successful' => 'Documents Verification Completed, Request Submitted to Embassy',
+                            'Visa Approved', 'approved', 'Fee Payment', 'Payment Verified', 'Visa Issued', 'Flight Ticket Booked' => 'Visa Approved from Embassy',
+                            'Visa Rejected - Document Verification Failed', 'Application Rejected', 'rejected' => 'Visa Rejected due to Documents Verification Failed',
+                            'Visa Rejected - Fee Not Paid' => 'Visa Rejected due to Non Payment of Fee',
                             default => $selectedStatus,
                         };
                     @endphp
                     <select name="status" id="request_status" class="form-select" required>
-                        @foreach(['Visa Application Submitted', 'Documents Verification', 'Verification of Documents Successful', 'Visa Approved', 'Fee Payment', 'Payment Verified', 'Visa Issued', 'Flight Ticket Booked'] as $statusOption)
+                        @foreach(['Visa Application Submitted', 'Documents Verification', 'Documents Verification Completed, Request Submitted to Embassy', 'Visa Approved from Embassy', 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected due to Non Payment of Fee'] as $statusOption)
                             <option value="{{ $statusOption }}" {{ $selectedStatus === $statusOption ? 'selected' : '' }}>{{ $statusOption }}</option>
                         @endforeach
-                        @if($selectedStatus === 'Application Rejected')
-                            <option value="rejected" selected>Application Rejected (existing status)</option>
-                        @endif
                     </select>
                 </div>
             </div>
 
-            <div id="approvedPaymentFields" class="row g-3 mt-1 {{ $selectedStatus === 'Visa Approved' ? '' : 'd-none' }}">
+            <div id="verificationAgentFields" class="row g-3 mt-1 {{ $selectedStatus === 'Documents Verification' ? '' : 'd-none' }}">
+                <div class="col-md-6">
+                    <label class="form-label" for="agent_name">Agent Name <span class="text-danger">*</span></label>
+                    <input id="agent_name" type="text" name="agent_name" class="form-control" maxlength="255" value="{{ old('agent_name', $visaRequest->agent_name ?? '') }}" {{ $selectedStatus === 'Documents Verification' ? 'required' : '' }}>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="agent_contact_number">Agent Contact Number <span class="text-danger">*</span></label>
+                    <input id="agent_contact_number" type="text" name="agent_contact_number" class="form-control" maxlength="50" value="{{ old('agent_contact_number', $visaRequest->agent_contact_number ?? '') }}" {{ $selectedStatus === 'Documents Verification' ? 'required' : '' }}>
+                </div>
+            </div>
+
+            <div id="approvedPaymentFields" class="row g-3 mt-1 {{ $selectedStatus === 'Visa Approved from Embassy' ? '' : 'd-none' }}">
                 <div class="col-md-4">
                     <label class="form-label" for="visa_fee">Visa Fee <span class="text-danger">*</span></label>
-                    <input id="visa_fee" type="number" name="visa_fee" class="form-control" min="0" step="0.01" value="{{ old('visa_fee', $visaRequest->visa_fee ?? '') }}" {{ $selectedStatus === 'Visa Approved' ? 'required' : '' }}>
+                    <input id="visa_fee" type="number" name="visa_fee" class="form-control" min="0" step="0.01" value="{{ old('visa_fee', $visaRequest->visa_fee ?? '') }}" {{ $selectedStatus === 'Visa Approved from Embassy' ? 'required' : '' }}>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label" for="visa_fee_currency">Currency <span class="text-danger">*</span></label>
@@ -207,7 +217,7 @@
                             fn ($currencies) => $currencies->push($selectedVisaCurrency)->sort()->values()
                         );
                     @endphp
-                    <select id="visa_fee_currency" name="visa_fee_currency" class="form-select" {{ $selectedStatus === 'Visa Approved' ? 'required' : '' }}>
+                    <select id="visa_fee_currency" name="visa_fee_currency" class="form-select" {{ $selectedStatus === 'Visa Approved from Embassy' ? 'required' : '' }}>
                         <option value="">Select currency</option>
                         @foreach($availableVisaCurrencies as $currency)
                             <option value="{{ $currency }}" {{ $selectedVisaCurrency === $currency ? 'selected' : '' }}>{{ $currency }}</option>
@@ -216,19 +226,19 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label" for="bank_name">Bank Name <span class="text-danger">*</span></label>
-                    <input id="bank_name" type="text" name="bank_name" class="form-control" maxlength="255" value="{{ old('bank_name', $visaRequest->bank_name ?? '') }}" {{ $selectedStatus === 'Visa Approved' ? 'required' : '' }}>
+                    <input id="bank_name" type="text" name="bank_name" class="form-control" maxlength="255" value="{{ old('bank_name', $visaRequest->bank_name ?? '') }}" {{ $selectedStatus === 'Visa Approved from Embassy' ? 'required' : '' }}>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label" for="account_number">Account Number <span class="text-danger">*</span></label>
-                    <input id="account_number" type="text" name="account_number" class="form-control" maxlength="100" value="{{ old('account_number', $visaRequest->account_number ?? '') }}" {{ $selectedStatus === 'Visa Approved' ? 'required' : '' }}>
+                    <input id="account_number" type="text" name="account_number" class="form-control" maxlength="100" value="{{ old('account_number', $visaRequest->account_number ?? '') }}" {{ $selectedStatus === 'Visa Approved from Embassy' ? 'required' : '' }}>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="account_holder_name">Account Holder Name <span class="text-danger">*</span></label>
-                    <input id="account_holder_name" type="text" name="account_holder_name" class="form-control" maxlength="255" value="{{ old('account_holder_name', $visaRequest->account_holder_name ?? '') }}" {{ $selectedStatus === 'Visa Approved' ? 'required' : '' }}>
+                    <input id="account_holder_name" type="text" name="account_holder_name" class="form-control" maxlength="255" value="{{ old('account_holder_name', $visaRequest->account_holder_name ?? '') }}" {{ $selectedStatus === 'Visa Approved from Embassy' ? 'required' : '' }}>
                 </div>
             </div>
 
-            <h2 class="section-title">Payment and Flight Requests</h2>
+            <h2 class="section-title">Payment Receipt</h2>
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Payment Receipt</label>
@@ -239,44 +249,7 @@
                         <div class="form-text">No payment receipt uploaded.</div>
                     @endif
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="preferred_airport">Preferred Airport</label>
-                    <select name="preferred_airport" id="preferred_airport" class="form-select">
-                        <option value="">Not selected</option>
-                        @foreach($flightAirports as $airportCode => $airportName)
-                            <option value="{{ $airportCode }}" {{ old('preferred_airport', $visaRequest->preferred_airport) === $airportCode ? 'selected' : '' }}>{{ $airportName }}</option>
-                        @endforeach
-                    </select>
-                    @error('preferred_airport')
-                        <div class="text-danger small">{{ $message }}</div>
-                    @enderror
-                    @if($visaRequest->flight_ticket_requested_at)
-                        <div class="form-text">Dates: {{ \Carbon\Carbon::parse($visaRequest->preferred_date_start)->format('d M Y') }} - {{ \Carbon\Carbon::parse($visaRequest->preferred_date_end)->format('d M Y') }}</div>
-                        <div class="form-text">Requested {{ \Carbon\Carbon::parse($visaRequest->flight_ticket_requested_at)->format('d M Y, h:i A') }}</div>
-                    @else
-                        <div class="form-text">No flight ticket request submitted yet.</div>
-                    @endif
-                </div>
             </div>
-            <div class="row g-3 mt-1">
-                <div class="col-md-4">
-                    <label class="form-label" for="ticket_status">Ticket Status</label>
-                    <select name="ticket_status" id="ticket_status" class="form-select">
-                        <option value="">Not set</option>
-                        @foreach($ticketStatuses as $ticketStatus)
-                            <option value="{{ $ticketStatus }}" {{ old('ticket_status', $visaRequest->ticket_status) === $ticketStatus ? 'selected' : '' }}>{{ $ticketStatus }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-8">
-                    <label class="form-label" for="ticket_details">Ticket Details</label>
-                    <textarea name="ticket_details" id="ticket_details" class="form-control" rows="4" maxlength="10000" placeholder="Airline, flight number, route, departure time, ticket number...">{{ old('ticket_details', $visaRequest->ticket_details) }}</textarea>
-                    <div class="form-text">Changing the ticket status sends an update email to the applicant.</div>
-                </div>
-            </div>
-            @if($visaRequest->ticket_status_updated_at)
-                <div class="form-text mt-2">Ticket status updated {{ \Carbon\Carbon::parse($visaRequest->ticket_status_updated_at)->format('d M Y, h:i A') }}</div>
-            @endif
 
             <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
                 <a href="{{ route('admin.dashboard') }}" class="btn btn-light">Cancel</a>
@@ -287,17 +260,30 @@
     </main>
     <script>
         const requestStatus = document.getElementById('request_status');
+        const verificationAgentFields = document.getElementById('verificationAgentFields');
         const approvedPaymentFields = document.getElementById('approvedPaymentFields');
 
+        function toggleVerificationAgentFields() {
+            const isVerification = requestStatus.value === 'Documents Verification';
+            verificationAgentFields.classList.toggle('d-none', !isVerification);
+            verificationAgentFields.querySelectorAll('input').forEach(field => {
+                field.required = isVerification;
+            });
+        }
+
         function toggleApprovedPaymentFields() {
-            const isApproved = requestStatus.value === 'Visa Approved';
+            const isApproved = requestStatus.value === 'Visa Approved from Embassy';
             approvedPaymentFields.classList.toggle('d-none', !isApproved);
             approvedPaymentFields.querySelectorAll('input, select').forEach(field => {
                 field.required = isApproved;
             });
         }
 
-        requestStatus.addEventListener('change', toggleApprovedPaymentFields);
+        requestStatus.addEventListener('change', () => {
+            toggleVerificationAgentFields();
+            toggleApprovedPaymentFields();
+        });
+        toggleVerificationAgentFields();
         toggleApprovedPaymentFields();
     </script>
 </body>

@@ -156,8 +156,9 @@ Route::middleware(['admin.auth'])->group(function () {
     // Requests Management
     Route::post('/admin/requests/delete', [AdminController::class, 'deleteRequest'])->name('admin.requests.delete');
     Route::get('/admin/requests/{id}/edit', [AdminController::class, 'editRequest'])->name('admin.requests.edit');
-    Route::post('/admin/requests/{id}', [AdminController::class, 'updateRequest'])->name('admin.requests.update');
     Route::post('/admin/requests/update-status', [AdminController::class, 'updateRequestStatus'])->name('admin.requests.update_status');
+    Route::post('/admin/requests/{id}', [AdminController::class, 'updateRequest'])->whereNumber('id')->name('admin.requests.update');
+    Route::post('/admin/ticket-requests/update-status', [AdminController::class, 'updateTicketRequestStatus'])->name('admin.ticket_requests.update_status');
 
     // Security API
     Route::post('/admin/password/update', [AdminController::class, 'updatePassword'])->name('admin.password.update');

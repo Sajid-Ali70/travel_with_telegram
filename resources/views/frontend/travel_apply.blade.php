@@ -367,25 +367,72 @@
                     description.textContent = job.job_description || '';
 
                     const applyLabel = document.createElement('label');
-                    applyLabel.className = 'form-check d-flex align-items-center gap-2 mt-3 mb-0';
+                    applyLabel.className = 'd-inline-flex mt-3 mb-0';
+                    applyLabel.style.cursor = 'pointer';
+
                     const applyCheckbox = document.createElement('input');
                     applyCheckbox.type = 'checkbox';
                     applyCheckbox.name = 'selected_job_ids[]';
                     applyCheckbox.value = job.id;
-                    applyCheckbox.className = 'form-check-input m-0';
                     applyCheckbox.checked = selectedJobIds.has(String(job.id));
-                    applyCheckbox.style.accentColor = 'var(--btn-primary)';
+                    applyCheckbox.style.display = 'none';
                     applyCheckbox.addEventListener('change', function() {
                         if (this.checked) {
                             selectedJobIds.add(String(job.id));
+                            applyButton.style.backgroundColor = '#16a34a';
+                            applyButton.style.borderColor = '#16a34a';
+                            applyButton.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.18)';
+                            radioIndicator.style.backgroundColor = '#ffffff';
+                            radioIndicator.style.borderColor = '#ffffff';
+                            radioIndicator.innerHTML = '<span style="display:block;width:7px;height:7px;border-radius:50%;background:#16a34a;"></span>';
                         } else {
                             selectedJobIds.delete(String(job.id));
+                            applyButton.style.backgroundColor = '#2563eb';
+                            applyButton.style.borderColor = '#2563eb';
+                            applyButton.style.boxShadow = '0 8px 18px rgba(37, 99, 235, 0.25)';
+                            radioIndicator.style.backgroundColor = 'transparent';
+                            radioIndicator.style.borderColor = '#ffffff';
+                            radioIndicator.innerHTML = '';
                         }
                     });
-                    const applyText = document.createElement('span');
-                    applyText.className = 'small text-white';
-                    applyText.textContent = 'Apply for this job';
-                    applyLabel.append(applyCheckbox, applyText);
+
+                    const applyButton = document.createElement('span');
+                    applyButton.className = 'btn btn-sm px-3 py-2';
+                    applyButton.style.backgroundColor = applyCheckbox.checked ? '#16a34a' : '#2563eb';
+                    applyButton.style.border = '1px solid #2563eb';
+                    applyButton.style.color = '#ffffff';
+                    applyButton.style.borderRadius = '8px';
+                    applyButton.style.fontWeight = '600';
+                    applyButton.style.boxShadow = applyCheckbox.checked ? '0 0 0 3px rgba(22, 163, 74, 0.18)' : '0 8px 18px rgba(37, 99, 235, 0.25)';
+                    applyButton.style.transition = 'all 0.2s ease';
+                    applyButton.style.display = 'inline-flex';
+                    applyButton.style.alignItems = 'center';
+                    applyButton.style.gap = '8px';
+                    applyButton.addEventListener('click', function() {
+                        applyCheckbox.checked = !applyCheckbox.checked;
+                        applyCheckbox.dispatchEvent(new Event('change'));
+                    });
+
+                    const radioIndicator = document.createElement('span');
+                    radioIndicator.style.width = '18px';
+                    radioIndicator.style.height = '18px';
+                    radioIndicator.style.borderRadius = '50%';
+                    radioIndicator.style.border = '2px solid #ffffff';
+                    radioIndicator.style.display = 'inline-flex';
+                    radioIndicator.style.alignItems = 'center';
+                    radioIndicator.style.justifyContent = 'center';
+                    radioIndicator.style.background = applyCheckbox.checked ? '#ffffff' : 'transparent';
+                    radioIndicator.style.boxShadow = '0 0 0 2px rgba(255,255,255,0.18)';
+                    radioIndicator.style.marginRight = '8px';
+                    radioIndicator.innerHTML = applyCheckbox.checked ? '<span style="display:block;width:7px;height:7px;border-radius:50%;background:#16a34a;"></span>' : '';
+                    radioIndicator.style.position = 'relative';
+                    radioIndicator.style.zIndex = '1';
+
+                    const buttonText = document.createElement('span');
+                    buttonText.textContent = 'Apply for this job';
+
+                    applyButton.append(radioIndicator, buttonText);
+                    applyLabel.append(applyButton);
 
                     item.append(title, details, description, applyLabel);
                     availableJobsList.appendChild(item);

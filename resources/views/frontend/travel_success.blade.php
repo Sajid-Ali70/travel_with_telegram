@@ -347,7 +347,7 @@
                     </div>
                 </div>
 
-                @if($statusText === 'Visa Approved')
+                @if($statusText === 'Visa Approved from Embassy')
                 <div class="summary-box">
                     <div class="summary-title"><i class="fas fa-money-bill-wave me-1"></i> Payment Details</div>
                     <div class="summary-row"><span>Visa Fee</span><strong>{{ $visaFee !== null ? ($visaFeeCurrency ?? 'PKR') . ' ' . number_format((float) $visaFee, 2) : 'Not set' }}</strong></div>
@@ -365,7 +365,7 @@
                 </div>
                 @endif
 
-                @if($statusText === 'Visa Approved')
+                @if($statusText === 'Visa Approved from Embassy')
                 <div class="tracking-box">
                     <div class="summary-title"><i class="fas fa-calendar-alt me-1"></i> {{ $visaRequest->flight_ticket_requested_at ? 'Flight Details' : 'Flight Ticket Booking Time Slot' }}</div>
                     @unless($visaRequest->flight_ticket_requested_at)

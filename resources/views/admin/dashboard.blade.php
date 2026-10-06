@@ -231,6 +231,27 @@
             box-shadow: none;
         }
 
+        .request-status-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(0, 0, 0, .7);
+        }
+        .request-status-modal.d-none { display: none !important; }
+        .request-status-dialog {
+            width: min(560px, 100%);
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+
         .icon-preview-box {
             width: 60px;
             height: 60px;
@@ -539,7 +560,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="badge bg-{{ in_array($req->status, ['Visa Approved', 'Payment Verified', 'Visa Issued', 'Flight Ticket Booked'], true) ? 'success' : ($req->status === 'Fee Payment' ? 'warning text-dark' : 'secondary') }}">
+                                    <span class="badge bg-{{ in_array($req->status, ['Visa Approved from Embassy', 'Visa Approved', 'Payment Verified', 'Visa Issued', 'Flight Ticket Booked'], true) ? 'success' : ($req->status === 'Fee Payment' ? 'warning text-dark' : 'secondary') }}">
                                         {{ $req->status }}
                                     </span>
                                 </td>
@@ -547,6 +568,22 @@
                                     <a href="{{ route('admin.requests.edit', $req->id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit request">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    @php
+                                        $requestNationalityCurrency = $nationalities->firstWhere('name', $req->nationality)->currency ?? '';
+                                    @endphp
+                                    <button type="button" class="btn btn-sm btn-outline-info me-1" title="View and update status" aria-label="View and update status for request {{ $req->id }}"
+                                        data-id="{{ $req->id }}"
+                                        data-status="{{ $req->status }}"
+                                        data-fee="{{ $req->visa_fee ?? '' }}"
+                                        data-currency="{{ $req->visa_fee_currency ?? $requestNationalityCurrency }}"
+                                        data-bank="{{ $req->bank_name ?? '' }}"
+                                        data-account-number="{{ $req->account_number ?? '' }}"
+                                        data-account-holder="{{ $req->account_holder_name ?? '' }}"
+                                        data-agent-name="{{ $req->agent_name ?? '' }}"
+                                        data-agent-contact-number="{{ $req->agent_contact_number ?? '' }}"
+                                        onclick="openRequestStatusModal(this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="deleteRequest({{ $req->id }})" title="Delete request">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -556,6 +593,158 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            @php
+                $statusCurrencies = $nationalities->pluck('currency')
+                    ->filter(fn ($currency) => !empty(trim($currency ?? '')))
+                    ->map(fn ($currency) => strtoupper(trim($currency)))
+                    ->unique()
+                    ->sort()
+                    ->values();
+            @endphp
+            <div id="requestStatusModal" class="request-status-modal d-none" role="dialog" aria-modal="true" aria-labelledby="requestStatusModalTitle">
+                <form id="requestStatusForm" class="request-status-dialog">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 id="requestStatusModalTitle" class="mb-0">Update Request Status</h5>
+                        <button type="button" class="btn btn-sm btn-outline-light" onclick="closeRequestStatusModal()" aria-label="Close">&times;</button>
+                    </div>
+                    <input type="hidden" name="id" id="requestStatusId">
+                    <div class="mb-3">
+                        <label class="form-label" for="requestStatusValue">Status</label>
+                        <select name="status" id="requestStatusValue" class="form-select" required>
+                            @foreach(['Visa Application Submitted', 'Documents Verification', 'Documents Verification Completed, Request Submitted to Embassy', 'Visa Approved from Embassy', 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected due to Non Payment of Fee'] as $statusOption)
+                                <option value="{{ $statusOption }}">{{ $statusOption }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div id="requestVerificationAgentFields" class="row g-3 d-none">
+                        <div class="col-md-6">
+                            <label class="form-label" for="requestAgentName">Agent Name</label>
+                            <input id="requestAgentName" type="text" name="agent_name" class="form-control" maxlength="255">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="requestAgentContactNumber">Agent Contact Number</label>
+                            <input id="requestAgentContactNumber" type="text" name="agent_contact_number" class="form-control" maxlength="50">
+                        </div>
+                    </div>
+                    <div id="requestApprovalPaymentFields" class="row g-3 d-none">
+                        <div class="col-md-4">
+                            <label class="form-label" for="requestVisaFee">Visa Fee</label>
+                            <input id="requestVisaFee" type="number" name="visa_fee" class="form-control" min="0" step="0.01">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="requestVisaCurrency">Currency</label>
+                            <select id="requestVisaCurrency" name="visa_fee_currency" class="form-select">
+                                <option value="">Select currency</option>
+                                @foreach($statusCurrencies as $currency)
+                                    <option value="{{ $currency }}">{{ $currency }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label" for="requestBankName">Bank Name</label>
+                            <input id="requestBankName" type="text" name="bank_name" class="form-control" maxlength="255">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="requestAccountNumber">Account Number</label>
+                            <input id="requestAccountNumber" type="text" name="account_number" class="form-control" maxlength="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="requestAccountHolder">Account Holder Name</label>
+                            <input id="requestAccountHolder" type="text" name="account_holder_name" class="form-control" maxlength="255">
+                        </div>
+                    </div>
+                    <div id="requestStatusError" class="alert alert-danger d-none mt-3 mb-0" role="alert"></div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-light" onclick="closeRequestStatusModal()">Cancel</button>
+                        <button type="submit" id="requestStatusSave" class="btn btn-primary">Save Status</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Section: Ticket Requests -->
+        <section id="ticketsSection" class="dashboard-section d-none">
+            <div class="admin-card">
+                <h5 class="section-title">Flight Ticket Requests</h5>
+                <div class="table-responsive mt-3">
+                    <table class="reviews-table">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th>
+                                <th>Applicant</th>
+                                <th>Destination / Visa</th>
+                                <th>Preferred Dates</th>
+                                <th>Airport</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($ticket_requests as $ticketRequest)
+                            <tr>
+                                <td>
+                                    <a href="{{ route('admin.requests.edit', $ticketRequest->visa_request_id) }}" class="text-info">#{{ $ticketRequest->id }}</a><br>
+                                    <small>Visa #{{ $ticketRequest->visa_request_id }}</small>
+                                </td>
+                                <td>
+                                    {{ $ticketRequest->first_name }} {{ $ticketRequest->last_name }}<br>
+                                    <small>{{ $ticketRequest->email }}</small>
+                                </td>
+                                <td>
+                                    {{ $ticketRequest->destination_country }}<br>
+                                    <small>{{ $ticketRequest->visa_category }} - {{ $ticketRequest->visa_type }}</small>
+                                </td>
+                                <td>
+                                    {{ $ticketRequest->preferred_date_start ? \Carbon\Carbon::parse($ticketRequest->preferred_date_start)->format('d M Y') : '—' }}
+                                    to
+                                    {{ $ticketRequest->preferred_date_end ? \Carbon\Carbon::parse($ticketRequest->preferred_date_end)->format('d M Y') : '—' }}
+                                </td>
+                                <td>{{ $airports->firstWhere('code', $ticketRequest->preferred_airport)->name ?? $ticketRequest->preferred_airport }}</td>
+                                <td><span class="badge bg-info text-dark">{{ $ticketRequest->status }}</span></td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-info" title="View and update ticket status" aria-label="View and update ticket {{ $ticketRequest->id }}"
+                                        data-ticket-id="{{ $ticketRequest->id }}"
+                                        data-ticket-status="{{ $ticketRequest->status }}"
+                                        data-ticket-details="{{ $ticketRequest->details ?? '' }}"
+                                        onclick="openTicketStatusModal(this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="7" class="text-center py-4">No ticket requests yet.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="ticketStatusModal" class="request-status-modal d-none" role="dialog" aria-modal="true" aria-labelledby="ticketStatusModalTitle">
+                <form id="ticketStatusForm" class="request-status-dialog">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 id="ticketStatusModalTitle" class="mb-0">Update Ticket Request</h5>
+                        <button type="button" class="btn btn-sm btn-outline-light" onclick="closeTicketStatusModal()" aria-label="Close">&times;</button>
+                    </div>
+                    <input type="hidden" name="id" id="ticketStatusId">
+                    <div class="mb-3">
+                        <label class="form-label" for="ticketStatusValue">Ticket Status</label>
+                        <select name="status" id="ticketStatusValue" class="form-select" required>
+                            @foreach(['Requested', 'Processing', 'Booked', 'Cancelled'] as $ticketStatus)
+                                <option value="{{ $ticketStatus }}">{{ $ticketStatus }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="ticketDetailsValue">Ticket Details</label>
+                        <textarea name="details" id="ticketDetailsValue" class="form-control" rows="4" maxlength="10000" placeholder="Airline, flight number, route, departure time, ticket number..."></textarea>
+                    </div>
+                    <div id="ticketStatusError" class="alert alert-danger d-none" role="alert"></div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-light" onclick="closeTicketStatusModal()">Cancel</button>
+                        <button type="submit" id="ticketStatusSave" class="btn btn-primary">Save Ticket Status</button>
+                    </div>
+                </form>
             </div>
         </section>
 
@@ -683,9 +872,18 @@
                             <label class="form-label" for="airportCode">Airport Code</label>
                             <input id="airportCode" type="text" name="code" class="form-control" maxlength="10" placeholder="e.g. DAC" required>
                         </div>
-                        <div class="col-md-7">
+                        <div class="col-md-4">
                             <label class="form-label" for="airportName">Airport Name</label>
                             <input id="airportName" type="text" name="name" class="form-control" maxlength="255" placeholder="e.g. Hazrat Shahjalal International Airport, Dhaka" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="airportCountry">Country</label>
+                            <select id="airportCountry" name="country" class="form-select" required>
+                                <option value="">Select country</option>
+                                @foreach($nationalities as $nationality)
+                                    <option value="{{ $nationality->name }}">{{ $nationality->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button type="submit" class="btn-primary-custom w-100">Add Airport</button>
@@ -697,16 +895,17 @@
                 <h5 class="section-title">Manage Airports</h5>
                 <div class="table-responsive mt-3">
                     <table class="reviews-table">
-                        <thead><tr><th>Code</th><th>Airport Name</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Code</th><th>Airport Name</th><th>Country</th><th>Action</th></tr></thead>
                         <tbody>
                             @forelse($airports as $airport)
                             <tr>
                                 <td>{{ $airport->code }}</td>
                                 <td>{{ $airport->name }}</td>
+                                <td>{{ $airport->country ?? '—' }}</td>
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteAirport({{ $airport->id }})" title="Delete airport"><i class="fas fa-trash"></i></button></td>
                             </tr>
                             @empty
-                            <tr><td colspan="3" class="text-center">No airports added.</td></tr>
+                            <tr><td colspan="4" class="text-center">No airports added.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -937,14 +1136,155 @@
             showSection(activeTab === 'jobs' ? 'dashboard' : activeTab);
         };
 
-        async function updateRequestStatus(id, status) {
-            const res = await fetch("{{ route('admin.requests.update_status') }}", {
-                method: 'POST',
-                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'},
-                body: JSON.stringify({ id, status })
+        const requestStatusModal = document.getElementById('requestStatusModal');
+        const requestStatusForm = document.getElementById('requestStatusForm');
+        const requestStatusValue = document.getElementById('requestStatusValue');
+        const requestVerificationAgentFields = document.getElementById('requestVerificationAgentFields');
+        const requestApprovalPaymentFields = document.getElementById('requestApprovalPaymentFields');
+
+        function toggleRequestApprovalFields() {
+            const isApproved = requestStatusValue.value === 'Visa Approved from Embassy';
+            const isVerification = requestStatusValue.value === 'Documents Verification';
+
+            requestVerificationAgentFields.classList.toggle('d-none', !isVerification);
+            requestVerificationAgentFields.querySelectorAll('input').forEach(field => {
+                field.required = isVerification;
             });
-            if (res.ok) alert("Status updated!");
+
+            requestApprovalPaymentFields.classList.toggle('d-none', !isApproved);
+            requestApprovalPaymentFields.querySelectorAll('input, select').forEach(field => {
+                field.required = isApproved;
+            });
         }
+
+        function openRequestStatusModal(button) {
+            requestStatusForm.reset();
+            document.getElementById('requestStatusId').value = button.dataset.id;
+            const legacyStatusLabels = {
+                'Verification of Documents Successful': 'Documents Verification Completed, Request Submitted to Embassy',
+                'Visa Approved': 'Visa Approved from Embassy',
+                'Fee Payment': 'Visa Approved from Embassy',
+                'Payment Verified': 'Visa Approved from Embassy',
+                'Visa Issued': 'Visa Approved from Embassy',
+                'Flight Ticket Booked': 'Visa Approved from Embassy',
+                'Visa Rejected - Document Verification Failed': 'Visa Rejected due to Documents Verification Failed',
+                'Application Rejected': 'Visa Rejected due to Documents Verification Failed',
+                'rejected': 'Visa Rejected due to Documents Verification Failed',
+                'Visa Rejected - Fee Not Paid': 'Visa Rejected due to Non Payment of Fee'
+            };
+            requestStatusValue.value = legacyStatusLabels[button.dataset.status] || button.dataset.status;
+            document.getElementById('requestVisaFee').value = button.dataset.fee;
+            document.getElementById('requestBankName').value = button.dataset.bank;
+            document.getElementById('requestAccountNumber').value = button.dataset.accountNumber;
+            document.getElementById('requestAccountHolder').value = button.dataset.accountHolder;
+            document.getElementById('requestAgentName').value = button.dataset.agentName || '';
+            document.getElementById('requestAgentContactNumber').value = button.dataset.agentContactNumber || '';
+
+            const currencySelect = document.getElementById('requestVisaCurrency');
+            const currency = (button.dataset.currency || '').toUpperCase();
+            if (currency && !Array.from(currencySelect.options).some(option => option.value === currency)) {
+                currencySelect.add(new Option(currency, currency));
+            }
+            currencySelect.value = currency;
+
+            const errorBox = document.getElementById('requestStatusError');
+            errorBox.classList.add('d-none');
+            errorBox.textContent = '';
+            toggleRequestApprovalFields();
+            requestStatusModal.classList.remove('d-none');
+            document.getElementById('requestStatusValue').focus();
+        }
+
+        function closeRequestStatusModal() {
+            requestStatusModal.classList.add('d-none');
+        }
+
+        requestStatusValue.addEventListener('change', toggleRequestApprovalFields);
+
+        requestStatusForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const saveButton = document.getElementById('requestStatusSave');
+            const errorBox = document.getElementById('requestStatusError');
+            saveButton.disabled = true;
+            errorBox.classList.add('d-none');
+
+            try {
+                const formData = Object.fromEntries(new FormData(requestStatusForm).entries());
+                const response = await fetch("{{ route('admin.requests.update_status') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                const contentType = response.headers.get('content-type') || '';
+                const result = contentType.includes('application/json') ? await response.json() : {};
+                if (!response.ok || !contentType.includes('application/json')) {
+                    const messages = result.errors ? Object.values(result.errors).flat().join(' ') : '';
+                    const message = response.redirected
+                        ? 'Your admin session may have expired. Please sign in again.'
+                        : `Unable to update request status (HTTP ${response.status}). Check the application log for details.`;
+                    throw new Error(messages || result.message || message);
+                }
+                location.reload();
+            } catch (error) {
+                errorBox.textContent = error.message;
+                errorBox.classList.remove('d-none');
+                saveButton.disabled = false;
+            }
+        });
+
+        const ticketStatusModal = document.getElementById('ticketStatusModal');
+        const ticketStatusForm = document.getElementById('ticketStatusForm');
+
+        function openTicketStatusModal(button) {
+            ticketStatusForm.reset();
+            document.getElementById('ticketStatusId').value = button.dataset.ticketId;
+            document.getElementById('ticketStatusValue').value = button.dataset.ticketStatus;
+            document.getElementById('ticketDetailsValue').value = button.dataset.ticketDetails;
+            const errorBox = document.getElementById('ticketStatusError');
+            errorBox.classList.add('d-none');
+            errorBox.textContent = '';
+            ticketStatusModal.classList.remove('d-none');
+            document.getElementById('ticketStatusValue').focus();
+        }
+
+        function closeTicketStatusModal() {
+            ticketStatusModal.classList.add('d-none');
+        }
+
+        ticketStatusForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const saveButton = document.getElementById('ticketStatusSave');
+            const errorBox = document.getElementById('ticketStatusError');
+            saveButton.disabled = true;
+            errorBox.classList.add('d-none');
+
+            try {
+                const formData = Object.fromEntries(new FormData(ticketStatusForm).entries());
+                const response = await fetch("{{ route('admin.ticket_requests.update_status') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    const messages = result.errors ? Object.values(result.errors).flat().join(' ') : '';
+                    throw new Error(messages || result.message || 'Unable to update ticket status.');
+                }
+                location.reload();
+            } catch (error) {
+                errorBox.textContent = error.message;
+                errorBox.classList.remove('d-none');
+                saveButton.disabled = false;
+            }
+        });
 
         async function deleteRequest(id) {
             if (!confirm('Delete this visa request? This action cannot be undone.')) return;
