@@ -318,7 +318,7 @@
                 @if($visaRequest->flight_ticket_requested_at)
                 <div class="summary-box">
                     <div class="summary-title"><i class="fas fa-ticket-alt me-1"></i> Booking Summary</div>
-                    <div class="summary-row"><span>Booking Reference</span><strong>V{{ str_pad($visaRequest->id, 6, '0', STR_PAD_LEFT) }}</strong></div>
+                    <div class="summary-row"><span>Booking Reference</span><strong>{{ \App\Http\Controllers\AdminController::formatVisaReference($visaRequest->id) }}</strong></div>
                     <div class="summary-row"><span>Request submitted</span><strong>{{ \Carbon\Carbon::parse($visaRequest->flight_ticket_requested_at)->format('d M Y, h:i A') }}</strong></div>
                 </div>
                 @endif
@@ -336,7 +336,7 @@
                             <div class="summary-row"><span>Expiry Date</span><strong>{{ $visaRequest->passport_expiry ?? 'N/A' }}</strong></div>
                             <div class="summary-row"><span>Country</span><strong>{{ $visaRequest->destination_country ?? 'N/A' }}</strong></div>
                             @unless($visaRequest->flight_ticket_requested_at)
-                                <div class="summary-row"><span>Application Ref</span><strong>V{{ str_pad($visaRequest->id, 6, '0', STR_PAD_LEFT) }}</strong></div>
+                                <div class="summary-row"><span>Application Ref</span><strong>{{ \App\Http\Controllers\AdminController::formatVisaReference($visaRequest->id) }}</strong></div>
                             @endunless
                         </div>
                         @if(!empty($visaRequest->passport_photo))

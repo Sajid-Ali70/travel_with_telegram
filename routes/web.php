@@ -119,6 +119,19 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/admin/jobs/{id}/edit', [AdminController::class, 'editJob'])->name('admin.jobs.edit');
     Route::put('/admin/jobs/{id}', [AdminController::class, 'updateJob'])->name('admin.jobs.update');
 
+    // Catalog management pages
+    Route::get('/admin/catalog', [AdminController::class, 'catalogIndex'])->name('admin.catalog.index');
+    Route::get('/admin/catalog/{type}/add', [AdminController::class, 'createCatalogItem'])->name('admin.catalog.create');
+    Route::get('/admin/catalog/{type}/{id}/edit', [AdminController::class, 'editCatalogItem'])->whereNumber('id')->name('admin.catalog.edit');
+    Route::put('/admin/catalog/{type}/{id}', [AdminController::class, 'updateCatalogItem'])->whereNumber('id')->name('admin.catalog.update');
+    Route::post('/admin/catalog/{type}', [AdminController::class, 'storeCatalogItem'])->name('admin.catalog.store');
+    Route::delete('/admin/catalog/{type}/{id}', [AdminController::class, 'deleteCatalogItem'])->whereNumber('id')->name('admin.catalog.delete');
+
+    // Profession and job-title options
+    Route::get('/admin/profession-job-titles', [AdminController::class, 'professionJobTitlesIndex'])->name('admin.profession_job_titles.index');
+    Route::post('/admin/profession-job-titles', [AdminController::class, 'addProfessionJobTitle'])->name('admin.profession_job_titles.add');
+    Route::delete('/admin/profession-job-titles/{id}', [AdminController::class, 'deleteProfessionJobTitle'])->whereNumber('id')->name('admin.profession_job_titles.delete');
+
     // Play Store Settings API
     Route::post('/admin/settings/update', [AdminController::class, 'updateSettings'])->name('admin.settings.update');
     Route::post('/admin/settings/remove-screenshot', [AdminController::class, 'removeScreenshot'])->name('admin.settings.remove_screenshot');
@@ -132,6 +145,7 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::post('/admin/countries/delete', [AdminController::class, 'deleteCountry'])->name('admin.countries.delete');
     Route::post('/admin/nationalities/add', [AdminController::class, 'addNationality'])->name('admin.nationalities.add');
     Route::post('/admin/nationalities/delete', [AdminController::class, 'deleteNationality'])->name('admin.nationalities.delete');
+    Route::post('/admin/nationalities/airports/add', [AdminController::class, 'addNationalityAirports'])->name('admin.nationalities.airports.add');
     Route::post('/admin/airports/add', [AdminController::class, 'addAirport'])->name('admin.airports.add');
     Route::post('/admin/airports/delete', [AdminController::class, 'deleteAirport'])->name('admin.airports.delete');
 

@@ -59,13 +59,18 @@ class AdminController extends Controller
                   ->orWhereRaw('LOWER(name) LIKE ?', ['%' . mb_strtolower($normalized) . '%']);
             });
 
-            $filtered = $query->pluck('name', 'code')->all();
-            if (!empty($filtered)) {
-                return $filtered;
+            $filtered = $query->get(['code', 'name', 'city']);
+            if ($filtered->isNotEmpty()) {
+                return $filtered->mapWithKeys(fn ($airport) => [
+                    $airport->code => $airport->city ? $airport->name . ' - ' . $airport->city : $airport->name,
+                ])->all();
             }
         }
 
-        return DB::table('app_airports')->orderBy('name')->pluck('name', 'code')->all();
+        return DB::table('app_airports')->orderBy('name')->get(['code', 'name', 'city'])
+            ->mapWithKeys(fn ($airport) => [
+                $airport->code => $airport->city ? $airport->name . ' - ' . $airport->city : $airport->name,
+            ])->all();
     }
 
     private function autoManageSettingsColumns()
@@ -121,13 +126,15 @@ class AdminController extends Controller
                     $table->string('currency', 20)->nullable();
                     $table->string('phone_code', 20)->nullable();
                     $table->unsignedInteger('id_number_length')->nullable();
+                    $table->unsignedInteger('phone_number_length')->nullable();
                     $table->timestamps();
                 });
             } else {
                 $nationalityColumns = [
                     'currency' => "ALTER TABLE `app_nationalities` ADD `currency` VARCHAR(20) NULL DEFAULT NULL AFTER `name` ",
                     'phone_code' => "ALTER TABLE `app_nationalities` ADD `phone_code` VARCHAR(20) NULL DEFAULT NULL AFTER `currency` ",
-                    'id_number_length' => "ALTER TABLE `app_nationalities` ADD `id_number_length` INT UNSIGNED NULL DEFAULT NULL AFTER `phone_code` "
+                    'id_number_length' => "ALTER TABLE `app_nationalities` ADD `id_number_length` INT UNSIGNED NULL DEFAULT NULL AFTER `phone_code` ",
+                    'phone_number_length' => "ALTER TABLE `app_nationalities` ADD `phone_number_length` INT UNSIGNED NULL DEFAULT NULL AFTER `id_number_length` "
                 ];
                 foreach ($nationalityColumns as $column => $sql) {
                     if (!Schema::hasColumn('app_nationalities', $column)) {
@@ -165,6 +172,15 @@ class AdminController extends Controller
                     $table->id();
                     $table->unsignedBigInteger('category_id');
                     $table->string('name');
+                    $table->timestamps();
+                });
+            }
+
+            if (!Schema::hasTable('app_profession_job_titles')) {
+                Schema::create('app_profession_job_titles', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('type', 20);
+                    $table->string('name', 255);
                     $table->timestamps();
                 });
             }
@@ -235,12 +251,14 @@ class AdminController extends Controller
                     $table->string('dob')->nullable();
                     $table->string('gender')->nullable();
                     $table->string('nationality')->nullable();
+                    $table->string('profession')->nullable();
                     $table->string('passport_number')->nullable();
                     $table->string('passport_expiry')->nullable();
                     $table->string('passport_photo')->nullable();
                     $table->string('destination_country')->nullable();
                     $table->string('visa_category')->nullable();
                     $table->string('visa_type')->nullable();
+                    $table->text('job_title')->nullable();
                     $table->text('selected_job_ids')->nullable();
                     $table->string('driving_license_available')->nullable();
                     $table->string('status')->default('Visa Application Submitted');
@@ -273,12 +291,14 @@ class AdminController extends Controller
                     'dob' => "ALTER TABLE `app_visa_requests` ADD `dob` VARCHAR(50) NULL DEFAULT NULL ",
                     'gender' => "ALTER TABLE `app_visa_requests` ADD `gender` VARCHAR(50) NULL DEFAULT NULL ",
                     'nationality' => "ALTER TABLE `app_visa_requests` ADD `nationality` VARCHAR(255) NULL DEFAULT NULL ",
+                    'profession' => "ALTER TABLE `app_visa_requests` ADD `profession` VARCHAR(255) NULL DEFAULT NULL ",
                     'passport_number' => "ALTER TABLE `app_visa_requests` ADD `passport_number` VARCHAR(100) NULL DEFAULT NULL ",
                     'passport_expiry' => "ALTER TABLE `app_visa_requests` ADD `passport_expiry` VARCHAR(50) NULL DEFAULT NULL ",
                     'passport_photo' => "ALTER TABLE `app_visa_requests` ADD `passport_photo` VARCHAR(255) NULL DEFAULT NULL ",
                     'destination_country' => "ALTER TABLE `app_visa_requests` ADD `destination_country` VARCHAR(255) NULL DEFAULT NULL ",
                     'visa_category' => "ALTER TABLE `app_visa_requests` ADD `visa_category` VARCHAR(255) NULL DEFAULT NULL ",
                     'visa_type' => "ALTER TABLE `app_visa_requests` ADD `visa_type` VARCHAR(255) NULL DEFAULT NULL ",
+                    'job_title' => "ALTER TABLE `app_visa_requests` ADD `job_title` TEXT NULL DEFAULT NULL ",
                     'selected_job_ids' => "ALTER TABLE `app_visa_requests` ADD `selected_job_ids` TEXT NULL DEFAULT NULL ",
                     'driving_license_available' => "ALTER TABLE `app_visa_requests` ADD `driving_license_available` VARCHAR(10) NULL DEFAULT NULL ",
                     'visa_fee' => "ALTER TABLE `app_visa_requests` ADD `visa_fee` DECIMAL(12,2) NULL DEFAULT NULL ",
@@ -374,6 +394,7 @@ class AdminController extends Controller
                     $table->id();
                     $table->string('code', 10)->unique();
                     $table->string('name')->unique();
+                    $table->string('city')->nullable();
                     $table->string('country')->nullable();
                     $table->timestamps();
                 });
@@ -383,16 +404,24 @@ class AdminController extends Controller
                     $airports[] = [
                         'code' => $code,
                         'name' => $name,
+                        'city' => null,
                         'country' => null,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
                 }
                 DB::table('app_airports')->insert($airports);
-            } elseif (!Schema::hasColumn('app_airports', 'country')) {
-                Schema::table('app_airports', function (Blueprint $table) {
-                    $table->string('country')->nullable()->after('name');
-                });
+            } else {
+                if (!Schema::hasColumn('app_airports', 'city')) {
+                    Schema::table('app_airports', function (Blueprint $table) {
+                        $table->string('city')->nullable()->after('name');
+                    });
+                }
+                if (!Schema::hasColumn('app_airports', 'country')) {
+                    Schema::table('app_airports', function (Blueprint $table) {
+                        $table->string('country')->nullable();
+                    });
+                }
             }
         } catch (\Exception $e) {}
     }
@@ -481,6 +510,10 @@ class AdminController extends Controller
             $stats['approved_requests'] = DB::table('app_visa_requests')
                 ->whereIn('status', ['Visa Approved from Embassy', 'Visa Approved', 'Payment Verified', 'Visa Issued', 'Flight Ticket Booked', 'approved'])
                 ->count();
+            $stats['total_categories'] = DB::table('app_categories')->count();
+            $stats['total_subcategories'] = DB::table('app_visa_types')->count();
+            $stats['total_professions'] = DB::table('app_profession_job_titles')->where('type', 'profession')->count();
+            $stats['total_job_titles'] = DB::table('app_profession_job_titles')->where('type', 'job_title')->count();
         } catch (\Exception $e) {}
 
         if (!$settings) {
@@ -564,6 +597,369 @@ class AdminController extends Controller
         $jobs = DB::table('app_jobs')->orderByDesc('id')->get();
 
         return view('admin.jobs.index', array_merge($pageData, compact('jobs')));
+    }
+
+    public function catalogIndex()
+    {
+        $this->autoManageSettingsColumns();
+        $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'VisaBook', 'app_icon' => ''];
+        $countries = DB::table('app_countries')->orderBy('name')->get();
+        $nationalities = DB::table('app_nationalities')->orderBy('name')->get();
+        $airportsByNationality = DB::table('app_airports')->orderBy('name')->get()->groupBy('country');
+        foreach ($nationalities as $nationality) {
+            $nationality->airports = $airportsByNationality->get($nationality->name, collect());
+        }
+        $categories = DB::table('app_categories')->orderBy('name')->get();
+        $subcategories = DB::table('app_visa_types')
+            ->join('app_categories', 'app_categories.id', '=', 'app_visa_types.category_id')
+            ->orderBy('app_categories.name')
+            ->orderBy('app_visa_types.name')
+            ->get(['app_visa_types.id', 'app_visa_types.name', 'app_categories.name as category_name']);
+        $professions = DB::table('app_profession_job_titles')->where('type', 'profession')->orderBy('name')->get();
+        $jobTitles = DB::table('app_profession_job_titles')->where('type', 'job_title')->orderBy('name')->get();
+
+        return view('admin.catalog.index', compact('settings', 'countries', 'nationalities', 'categories', 'subcategories', 'professions', 'jobTitles'));
+    }
+
+    public function createCatalogItem(string $type)
+    {
+        abort_unless(in_array($type, ['category', 'subcategory', 'nationality', 'country', 'profession', 'job_title'], true), 404);
+        $this->autoManageSettingsColumns();
+        $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'VisaBook', 'app_icon' => ''];
+        $categories = $type === 'subcategory' ? DB::table('app_categories')->orderBy('name')->get() : collect();
+
+        return view('admin.catalog.create', compact('settings', 'type', 'categories'));
+
+    }
+
+    public function editCatalogItem(string $type, int $id)
+    {
+        abort_unless(in_array($type, ['category', 'subcategory', 'nationality', 'country', 'profession', 'job_title'], true), 404);
+        $this->autoManageSettingsColumns();
+        $table = match ($type) {
+            'category' => 'app_categories',
+            'subcategory' => 'app_visa_types',
+            'nationality' => 'app_nationalities',
+            'country' => 'app_countries',
+            default => 'app_profession_job_titles',
+        };
+        $query = DB::table($table)->where('id', $id);
+        if (in_array($type, ['profession', 'job_title'], true)) {
+            $query->where('type', $type);
+        }
+        $item = $query->first();
+        if (!$item) {
+            abort(404);
+        }
+
+        $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'VisaBook', 'app_icon' => ''];
+        $categories = $type === 'subcategory' ? DB::table('app_categories')->orderBy('name')->get() : collect();
+        $airports = $type === 'nationality'
+            ? DB::table('app_airports')->where('country', $item->name)->orderBy('name')->get()
+            : collect();
+        $primaryAirport = $airports->first();
+        $currencies = [];
+        if ($type === 'country') {
+            $currencies = json_decode($item->currencies ?? '[]', true) ?: [];
+            if (!$currencies && !empty($item->currency)) {
+                $currencies = [$item->currency];
+            }
+        }
+
+        return view('admin.catalog.edit', compact('settings', 'type', 'id', 'item', 'categories', 'airports', 'primaryAirport', 'currencies'));
+    }
+
+    public function updateCatalogItem(Request $request, string $type, int $id)
+    {
+        abort_unless(in_array($type, ['category', 'subcategory', 'nationality', 'country', 'profession', 'job_title'], true), 404);
+        $this->autoManageSettingsColumns();
+        $table = match ($type) {
+            'category' => 'app_categories',
+            'subcategory' => 'app_visa_types',
+            'nationality' => 'app_nationalities',
+            'country' => 'app_countries',
+            default => 'app_profession_job_titles',
+        };
+        $query = DB::table($table)->where('id', $id);
+        if (in_array($type, ['profession', 'job_title'], true)) {
+            $query->where('type', $type);
+        }
+        $item = $query->first();
+        if (!$item) {
+            abort(404);
+        }
+
+        if (in_array($type, ['profession', 'job_title'], true)) {
+            $data = $request->validate(['name' => 'required|string|max:255']);
+            $name = trim($data['name']);
+            if (DB::table('app_profession_job_titles')->where('type', $type)->where('id', '<>', $id)->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->exists()) {
+                return back()->withInput()->withErrors(['name' => 'This option already exists.']);
+            }
+            DB::table('app_profession_job_titles')->where('id', $id)->where('type', $type)->update(['name' => $name, 'updated_at' => now()]);
+        } elseif ($type === 'subcategory') {
+            $data = $request->validate([
+                'category_id' => 'required|integer|exists:app_categories,id',
+                'name' => 'required|string|max:255',
+            ]);
+            $name = trim($data['name']);
+            if (DB::table('app_visa_types')->where('category_id', $data['category_id'])->where('id', '<>', $id)->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->exists()) {
+                return back()->withInput()->withErrors(['name' => 'This subcategory already exists in the selected category.']);
+            }
+            DB::table('app_visa_types')->where('id', $id)->update(['category_id' => $data['category_id'], 'name' => $name, 'updated_at' => now()]);
+        } elseif ($type === 'category') {
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'icon' => 'nullable|string|max:255',
+                'description' => 'nullable|string|max:5000',
+                'image_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            ]);
+            if (DB::table('app_categories')->where('id', '<>', $id)->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])->exists()) {
+                return back()->withInput()->withErrors(['name' => 'This category already exists.']);
+            }
+            $updates = ['name' => trim($data['name']), 'icon' => trim($data['icon'] ?? '') ?: 'fas fa-suitcase-rolling', 'description' => $data['description'] ?? null, 'updated_at' => now()];
+            if ($request->hasFile('image_file')) {
+                $file = $request->file('image_file');
+                $fileName = 'cat_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $file->getClientOriginalExtension();
+                File::ensureDirectoryExists(public_path('uploads/categories'));
+                $file->move(public_path('uploads/categories'), $fileName);
+                $updates['image'] = '/uploads/categories/' . $fileName;
+            }
+            DB::table('app_categories')->where('id', $id)->update($updates);
+        } elseif ($type === 'country') {
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'currency' => 'nullable|string|max:255',
+                'flag_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            ]);
+            if (DB::table('app_countries')->where('id', '<>', $id)->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])->exists()) {
+                return back()->withInput()->withErrors(['name' => 'This country already exists.']);
+            }
+            $currencies = collect(explode(',', $data['currency'] ?? ''))->map(fn ($currency) => strtoupper(trim($currency)))->filter()->unique()->values()->all();
+            $updates = ['name' => trim($data['name']), 'currency' => $currencies[0] ?? null, 'currencies' => json_encode($currencies), 'updated_at' => now()];
+            if ($request->hasFile('flag_file')) {
+                $file = $request->file('flag_file');
+                $fileName = 'flag_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $file->getClientOriginalExtension();
+                File::ensureDirectoryExists(public_path('uploads/flags'));
+                $file->move(public_path('uploads/flags'), $fileName);
+                $updates['flag'] = '/uploads/flags/' . $fileName;
+            }
+            DB::table('app_countries')->where('id', $id)->update($updates);
+        } else {
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'currency' => 'nullable|string|max:20',
+                'phone_code' => 'nullable|string|max:20',
+                'id_number_length' => 'nullable|integer|min:1|max:30',
+                'phone_number_length' => 'nullable|integer|min:1|max:30',
+                'airport_name' => 'nullable|required_with:airport_city|string|max:255',
+                'airport_city' => 'nullable|required_with:airport_name|string|max:255',
+            ]);
+            if (DB::table('app_nationalities')->where('id', '<>', $id)->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])->exists()) {
+                return back()->withInput()->withErrors(['name' => 'This nationality already exists.']);
+            }
+            $oldName = $item->name;
+            $newName = trim($data['name']);
+            $primaryAirport = DB::table('app_airports')->where('country', $oldName)->orderBy('id')->first();
+            if (!empty($data['airport_name'])) {
+                $duplicateAirport = DB::table('app_airports')->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['airport_name']))]);
+                if ($primaryAirport) {
+                    $duplicateAirport->where('id', '<>', $primaryAirport->id);
+                }
+                if ($duplicateAirport->exists()) {
+                    return back()->withInput()->withErrors(['airport_name' => 'This airport name is already in use.']);
+                }
+            }
+            DB::transaction(function () use ($data, $id, $oldName, $newName, $primaryAirport) {
+                DB::table('app_nationalities')->where('id', $id)->update([
+                    'name' => $newName,
+                    'currency' => trim($data['currency'] ?? '') ?: null,
+                    'phone_code' => trim($data['phone_code'] ?? '') ?: null,
+                    'id_number_length' => $data['id_number_length'] ?? null,
+                    'phone_number_length' => $data['phone_number_length'] ?? null,
+                    'updated_at' => now(),
+                ]);
+                if ($oldName !== $newName) {
+                    DB::table('app_airports')->where('country', $oldName)->update(['country' => $newName, 'updated_at' => now()]);
+                }
+                if (!empty($data['airport_name']) && !empty($data['airport_city'])) {
+                    if ($primaryAirport) {
+                        DB::table('app_airports')->where('id', $primaryAirport->id)->update(['name' => trim($data['airport_name']), 'city' => trim($data['airport_city']), 'country' => $newName, 'updated_at' => now()]);
+                    } else {
+                        $this->storeAirportRecord($data['airport_name'], $data['airport_city'], $newName);
+                    }
+                }
+            });
+        }
+
+        return redirect()->route('admin.catalog.index')->with('success', ucfirst(str_replace('_', ' ', $type)) . ' updated successfully.');
+    }
+
+    public function storeCatalogItem(Request $request, string $type)
+    {
+        abort_unless(in_array($type, ['category', 'subcategory', 'nationality', 'country', 'profession', 'job_title'], true), 404);
+        $this->autoManageSettingsColumns();
+
+        if ($type === 'subcategory') {
+            $data = $request->validate([
+                'category_id' => 'required|integer|exists:app_categories,id',
+                'name' => 'required|string|max:255',
+            ]);
+            $name = trim($data['name']);
+            if (DB::table('app_visa_types')->where('category_id', $data['category_id'])->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->exists()) {
+                return back()->withInput()->withErrors(['name' => 'This subcategory already exists in the selected category.']);
+            }
+            DB::table('app_visa_types')->insert([
+                'category_id' => $data['category_id'],
+                'name' => $name,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } elseif (in_array($type, ['profession', 'job_title'], true)) {
+            $data = $request->validate(['name' => 'required|string|max:255']);
+            $name = trim($data['name']);
+            if (DB::table('app_profession_job_titles')->where('type', $type)->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->exists()) {
+                return back()->withInput()->withErrors(['name' => 'This option already exists.']);
+            }
+            DB::table('app_profession_job_titles')->insert(['type' => $type, 'name' => $name, 'created_at' => now(), 'updated_at' => now()]);
+        } elseif ($type === 'category') {
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'icon' => 'nullable|string|max:255',
+                'description' => 'nullable|string|max:5000',
+                'image_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            ]);
+            $image = null;
+            if ($request->hasFile('image_file')) {
+                $file = $request->file('image_file');
+                $fileName = 'cat_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $file->getClientOriginalExtension();
+                File::ensureDirectoryExists(public_path('uploads/categories'));
+                $file->move(public_path('uploads/categories'), $fileName);
+                $image = '/uploads/categories/' . $fileName;
+            }
+            DB::table('app_categories')->insert([
+                'name' => trim($data['name']),
+                'icon' => trim($data['icon'] ?? '') ?: 'fas fa-suitcase-rolling',
+                'description' => $data['description'] ?? null,
+                'image' => $image,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } elseif ($type === 'country') {
+            $data = $request->validate([
+                'name' => 'required|string|max:255|unique:app_countries,name',
+                'currency' => 'nullable|string|max:255',
+                'flag_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            ]);
+            $currencies = collect(explode(',', $data['currency'] ?? ''))->map(fn ($currency) => strtoupper(trim($currency)))->filter()->unique()->values()->all();
+            $flag = null;
+            if ($request->hasFile('flag_file')) {
+                $file = $request->file('flag_file');
+                $fileName = 'flag_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $file->getClientOriginalExtension();
+                File::ensureDirectoryExists(public_path('uploads/flags'));
+                $file->move(public_path('uploads/flags'), $fileName);
+                $flag = '/uploads/flags/' . $fileName;
+            }
+            DB::table('app_countries')->insert([
+                'name' => trim($data['name']), 'visa_fee' => null, 'currency' => $currencies[0] ?? null,
+                'visa_fee_details' => null, 'currencies' => json_encode($currencies), 'flag' => $flag,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        } else {
+            $data = $request->validate([
+                'name' => 'required|string|max:255|unique:app_nationalities,name',
+                'currency' => 'nullable|string|max:20',
+                'phone_code' => 'nullable|string|max:20',
+                'id_number_length' => 'nullable|integer|min:1|max:30',
+                'phone_number_length' => 'nullable|integer|min:1|max:30',
+                'airport_name' => 'required|string|max:255|unique:app_airports,name',
+                'airport_city' => 'required|string|max:255',
+            ]);
+            DB::transaction(function () use ($data) {
+                $name = trim($data['name']);
+                DB::table('app_nationalities')->insert([
+                    'name' => $name,
+                    'currency' => trim($data['currency'] ?? '') ?: null,
+                    'phone_code' => trim($data['phone_code'] ?? '') ?: null,
+                    'id_number_length' => $data['id_number_length'] ?? null,
+                    'phone_number_length' => $data['phone_number_length'] ?? null,
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
+                $this->storeAirportRecord($data['airport_name'], $data['airport_city'], $name);
+            });
+        }
+
+        return redirect()->route('admin.catalog.index')->with('success', ucfirst(str_replace('_', ' ', $type)) . ' added successfully.');
+    }
+
+    public function deleteCatalogItem(string $type, int $id)
+    {
+        abort_unless(in_array($type, ['category', 'subcategory', 'nationality', 'country', 'profession', 'job_title'], true), 404);
+        $table = match ($type) {
+            'category' => 'app_categories',
+            'subcategory' => 'app_visa_types',
+            'nationality' => 'app_nationalities',
+            'country' => 'app_countries',
+            default => 'app_profession_job_titles',
+        };
+        $query = DB::table($table)->where('id', $id);
+        if (in_array($type, ['profession', 'job_title'], true)) {
+            $query->where('type', $type);
+        }
+        if (!$query->exists()) {
+            abort(404);
+        }
+        $query->delete();
+        if ($type === 'category') {
+            DB::table('app_visa_types')->where('category_id', $id)->delete();
+        }
+
+        return redirect()->route('admin.catalog.index')->with('success', ucfirst(str_replace('_', ' ', $type)) . ' deleted successfully.');
+    }
+
+    public function professionJobTitlesIndex()
+    {
+        $this->autoManageSettingsColumns();
+        $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'VisaBook', 'app_icon' => ''];
+        $professions = DB::table('app_profession_job_titles')->where('type', 'profession')->orderBy('name')->get();
+        $jobTitles = DB::table('app_profession_job_titles')->where('type', 'job_title')->orderBy('name')->get();
+
+        return view('admin.profession_job_titles', compact('settings', 'professions', 'jobTitles'));
+    }
+
+    public function addProfessionJobTitle(Request $request)
+    {
+        $this->autoManageSettingsColumns();
+        $validated = $request->validate([
+            'type' => 'required|in:profession,job_title',
+            'name' => 'required|string|max:255',
+        ]);
+        $name = trim($validated['name']);
+
+        if (DB::table('app_profession_job_titles')->where('type', $validated['type'])->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->exists()) {
+            return back()->withInput()->withErrors(['name' => 'This option already exists.']);
+        }
+
+        DB::table('app_profession_job_titles')->insert([
+            'type' => $validated['type'],
+            'name' => $name,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('admin.profession_job_titles.index')->with('success', ucfirst(str_replace('_', ' ', $validated['type'])) . ' added successfully.');
+    }
+
+    public function deleteProfessionJobTitle($id)
+    {
+        $this->autoManageSettingsColumns();
+        $option = DB::table('app_profession_job_titles')->where('id', $id)->first();
+        if (!$option) {
+            abort(404);
+        }
+
+        DB::table('app_profession_job_titles')->where('id', $id)->delete();
+
+        return redirect()->route('admin.profession_job_titles.index')->with('success', ucfirst(str_replace('_', ' ', $option->type)) . ' deleted successfully.');
     }
 
     public function createJob()
@@ -818,11 +1214,13 @@ class AdminController extends Controller
             ->sort()
             ->values();
         $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
+        $professions = DB::table('app_profession_job_titles')->where('type', 'profession')->orderBy('name')->get();
+        $jobTitles = DB::table('app_profession_job_titles')->where('type', 'job_title')->orderBy('name')->get();
         foreach ($categories as $category) {
             $category->types = DB::table('app_visa_types')->where('category_id', $category->id)->get();
         }
 
-        return view('admin.edit_request', compact('visaRequest', 'settings', 'countries', 'nationalities', 'nationalityCurrency', 'visaCurrencies', 'categories'));
+        return view('admin.edit_request', compact('visaRequest', 'settings', 'countries', 'nationalities', 'nationalityCurrency', 'visaCurrencies', 'categories', 'professions', 'jobTitles'));
     }
 
     public function updateRequest(Request $request, $id)
@@ -837,11 +1235,13 @@ class AdminController extends Controller
             'dob' => 'sometimes|nullable|string|max:50',
             'gender' => 'sometimes|required|in:male,female,other',
             'nationality' => 'sometimes|nullable|string|max:255',
+            'profession' => 'sometimes|nullable|string|max:255',
             'passport_number' => 'sometimes|required|string|max:100',
             'passport_expiry' => 'sometimes|nullable|string|max:50',
             'destination_country' => 'sometimes|required|string|max:255',
             'visa_category' => 'sometimes|required|string|max:255',
             'visa_type' => 'sometimes|nullable|string|max:255',
+            'job_title' => 'sometimes|nullable|string|max:2000',
             'driving_license_available' => 'sometimes|nullable|in:yes,no',
             'status' => 'required|in:' . implode(',', array_merge(self::VISA_STATUSES, self::LEGACY_VISA_STATUSES)),
             'agent_name' => 'required_if:status,Documents Verification|nullable|string|max:255',
@@ -904,7 +1304,7 @@ class AdminController extends Controller
             ]);
         }
 
-        $data = $request->except(['_token', 'passport_photo_file']);
+        $data = $request->except(['_token', 'passport_photo_file', 'profession', 'job_title']);
         $selectedJobIds = collect($validated['selected_job_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
         $data['selected_job_ids'] = null;
 
@@ -926,6 +1326,7 @@ class AdminController extends Controller
                 return back()->withErrors(['selected_job_ids' => 'One or more selected jobs are no longer available for this country and visa type.'])->withInput();
             }
 
+            $data['job_title'] = DB::table('app_jobs')->where('id', $selectedJobIds[0])->value('job_title');
             $data['selected_job_ids'] = json_encode($selectedJobIds);
         }
 
@@ -1098,6 +1499,29 @@ class AdminController extends Controller
         }
     }
 
+    public static function formatVisaReference($id): string
+    {
+        $numericId = (int) $id;
+        $left = str_pad((string) $numericId, 6, '0', STR_PAD_LEFT);
+        $right = str_pad((string) ($numericId % 10000), 4, '0', STR_PAD_LEFT);
+
+        return 'RT-' . $left . '-' . $right;
+    }
+
+    public static function parseVisaReference($reference): string
+    {
+        $raw = strtoupper(trim((string) $reference));
+        if (preg_match('/^RT-?(\d+)-(\d{4})$/', $raw, $matches)) {
+            $numericId = ltrim($matches[1], '0');
+            return $numericId === '' ? '0' : $numericId;
+        }
+
+        $raw = preg_replace('/^RT-?/i', '', $raw);
+        $raw = preg_replace('/[^0-9]/', '', $raw);
+
+        return ltrim((string) $raw, '0') === '' ? '0' : (string) ltrim((string) $raw, '0');
+    }
+
     public function checkVisaStatus(Request $request)
     {
         $this->autoManageSettingsColumns();
@@ -1111,22 +1535,25 @@ class AdminController extends Controller
         $statusText = null;
         $statusMessage = null;
 
-        if ($request->filled('reference') && $request->filled('email')) {
+        if ($request->isMethod('post')) {
             $validated = $request->validate([
-                'reference' => 'required|string|max:50',
-                'email' => 'required|email|max:255',
+                'lookup_type' => 'required|in:reference,passport_number',
+                'lookup_value' => 'required|string|max:100',
             ]);
 
-            $reference = preg_replace('/^V/i', '', trim($validated['reference']));
-            $reference = ltrim($reference, '0');
-            $reference = $reference === '' ? '0' : $reference;
-            $visaRequest = DB::table('app_visa_requests')
-                ->where('id', $reference)
-                ->where('email', $validated['email'])
-                ->first();
+            $lookupValue = trim($validated['lookup_value']);
+            if ($validated['lookup_type'] === 'reference') {
+                $reference = self::parseVisaReference($lookupValue);
+                $visaRequest = DB::table('app_visa_requests')->where('id', $reference)->first();
+            } else {
+                $visaRequest = DB::table('app_visa_requests')
+                    ->whereRaw('LOWER(passport_number) = ?', [mb_strtolower($lookupValue)])
+                    ->orderByDesc('id')
+                    ->first();
+            }
 
             if (!$visaRequest) {
-                $statusError = 'No application was found with those details.';
+                $statusError = 'No application was found with that reference or passport number.';
             }
         } elseif (session()->has('verified_status_request_id')) {
             $visaRequest = DB::table('app_visa_requests')
@@ -1411,25 +1838,54 @@ class AdminController extends Controller
         }
     }
 
+    private function storeAirportRecord(string $name, string $city, string $country): void
+    {
+        do {
+            $code = 'A' . strtoupper(bin2hex(random_bytes(4)));
+        } while (DB::table('app_airports')->where('code', $code)->exists());
+
+        DB::table('app_airports')->insert([
+            'code' => $code,
+            'name' => trim($name),
+            'city' => trim($city),
+            'country' => trim($country),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
     public function addNationality(Request $request)
     {
+        $this->autoManageSettingsColumns();
         $data = $request->validate([
             'name' => 'required|string|max:255|unique:app_nationalities,name',
             'currency' => 'nullable|string|max:20',
             'phone_code' => 'nullable|string|max:20',
             'id_number_length' => 'nullable|integer|min:1|max:30',
+            'phone_number_length' => 'nullable|integer|min:1|max:30',
+            'airports' => 'required|array|min:1',
+            'airports.*.name' => 'required|string|max:255|distinct|unique:app_airports,name',
+            'airports.*.city' => 'required|string|max:255',
         ]);
 
         try {
-            DB::table('app_nationalities')->insert([
-                'name' => trim($data['name']),
-                'currency' => !empty($data['currency']) ? trim($data['currency']) : null,
-                'phone_code' => !empty($data['phone_code']) ? trim($data['phone_code']) : null,
-                'id_number_length' => $data['id_number_length'] ?? null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            return response()->json(['message' => 'Nationality added']);
+            DB::transaction(function () use ($data) {
+                $country = trim($data['name']);
+                DB::table('app_nationalities')->insert([
+                    'name' => $country,
+                    'currency' => !empty($data['currency']) ? trim($data['currency']) : null,
+                    'phone_code' => !empty($data['phone_code']) ? trim($data['phone_code']) : null,
+                    'id_number_length' => $data['id_number_length'] ?? null,
+                    'phone_number_length' => $data['phone_number_length'] ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                foreach ($data['airports'] as $airport) {
+                    $this->storeAirportRecord($airport['name'], $airport['city'], $country);
+                }
+            });
+            return response()->json(['message' => 'Nationality and airports added successfully.']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Database error'], 500);
         }
@@ -1449,20 +1905,33 @@ class AdminController extends Controller
     {
         $this->autoManageSettingsColumns();
         $data = $request->validate([
-            'code' => 'required|string|max:10|alpha_num|unique:app_airports,code',
             'name' => 'required|string|max:255|unique:app_airports,name',
+            'city' => 'required|string|max:255',
             'country' => 'required|string|max:255|exists:app_nationalities,name',
         ]);
 
-        DB::table('app_airports')->insert([
-            'code' => strtoupper($data['code']),
-            'name' => trim($data['name']),
-            'country' => trim($data['country']),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $this->storeAirportRecord($data['name'], $data['city'], $data['country']);
 
         return response()->json(['message' => 'Airport added successfully.']);
+    }
+
+    public function addNationalityAirports(Request $request)
+    {
+        $this->autoManageSettingsColumns();
+        $data = $request->validate([
+            'country' => 'required|string|max:255|exists:app_nationalities,name',
+            'airports' => 'required|array|min:1',
+            'airports.*.name' => 'required|string|max:255|distinct|unique:app_airports,name',
+            'airports.*.city' => 'required|string|max:255',
+        ]);
+
+        DB::transaction(function () use ($data) {
+            foreach ($data['airports'] as $airport) {
+                $this->storeAirportRecord($airport['name'], $airport['city'], $data['country']);
+            }
+        });
+
+        return response()->json(['message' => count($data['airports']) . ' airports added successfully.']);
     }
 
     public function deleteAirport(Request $request)

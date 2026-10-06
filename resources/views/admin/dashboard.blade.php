@@ -372,6 +372,111 @@
             font-size: 0.7rem;
         }
         .visa-type-tag i:hover { color: #ff4d4d; }
+
+        .main-content.dashboard-home {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            align-items: start;
+            gap: 10px;
+            padding: 16px;
+        }
+        .dashboard-home > .page-header,
+        .dashboard-home > .alert {
+            display: none !important;
+        }
+        .dashboard-home > #dashboardSection {
+            grid-column: 1 / -1;
+            width: 100%;
+            margin: 0 !important;
+        }
+        .dashboard-home .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            margin: 0;
+        }
+        .dashboard-home .stat-card {
+            min-height: 125px;
+        }
+        .dashboard-home .stat-info h3 {
+            font-variant-numeric: tabular-nums;
+        }
+        .dashboard-home #countriesSection,
+        .dashboard-home #nationalitiesSection {
+            display: block !important;
+            grid-column: span 6;
+            min-width: 0;
+        }
+        .dashboard-home #categoriesSection {
+            display: grid !important;
+            grid-column: 1 / -1;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            align-items: start;
+            gap: 10px;
+            min-width: 0;
+        }
+        .dashboard-home #categoriesSection .admin-card:nth-child(3) {
+            grid-column: 1 / -1;
+        }
+        .dashboard-home #airportsSection {
+            display: grid !important;
+            grid-column: 1 / -1;
+            grid-template-columns: minmax(0, 1fr);
+            align-items: start;
+            gap: 10px;
+            min-width: 0;
+        }
+        .dashboard-home #countriesSection .admin-card,
+        .dashboard-home #nationalitiesSection .admin-card,
+        .dashboard-home #categoriesSection .admin-card {
+            min-width: 0;
+            padding: 12px;
+            margin-bottom: 0;
+        }
+        .dashboard-home .section-title { font-size: 0.9rem; }
+        .dashboard-home .form-label { font-size: 0.72rem; margin-bottom: 4px; }
+        .dashboard-home .form-control,
+        .dashboard-home .form-select {
+            min-width: 0;
+            padding: 6px 8px;
+            font-size: 0.76rem;
+        }
+        .dashboard-home .row {
+            --bs-gutter-x: 0.5rem;
+            --bs-gutter-y: 0.5rem;
+        }
+        .dashboard-home #countriesSection .table-responsive,
+        .dashboard-home #nationalitiesSection .table-responsive,
+        .dashboard-home #categoriesSection .table-responsive {
+            max-height: 240px;
+            overflow: auto;
+        }
+        .dashboard-home .reviews-table th,
+        .dashboard-home .reviews-table td {
+            padding: 6px;
+            font-size: 0.7rem;
+            overflow-wrap: anywhere;
+        }
+        .dashboard-home .reviews-table { table-layout: fixed; }
+
+        @media (max-width: 1199px) {
+            .main-content.dashboard-home { display: block; }
+            .dashboard-home #countriesSection,
+            .dashboard-home #nationalitiesSection,
+            .dashboard-home #airportsSection,
+            .dashboard-home #categoriesSection {
+                margin-bottom: 16px;
+            }
+            .dashboard-home #airportsSection { display: block !important; }
+            .dashboard-home #airportsSection .admin-card { margin-bottom: 16px; }
+            .dashboard-home #categoriesSection { display: block !important; }
+            .dashboard-home #categoriesSection .admin-card { margin-bottom: 16px; }
+        }
+
+        .dashboard-home #countriesSection,
+        .dashboard-home #nationalitiesSection,
+        .dashboard-home #airportsSection,
+        .dashboard-home #categoriesSection {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -394,50 +499,32 @@
         <section id="dashboardSection" class="dashboard-section d-none">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: rgba(0, 123, 255, 0.1); color: var(--accent-blue);">
-                        <i class="fas fa-globe"></i>
-                    </div>
-                    <div class="stat-info">
-                        <p>Total Countries</p>
-                        <h3>{{ $stats['total_countries'] ?? 0 }}</h3>
-                    </div>
+                    <div class="stat-icon" style="background: rgba(0, 123, 255, 0.1); color: var(--accent-blue);"><i class="fas fa-file-signature"></i></div>
+                    <div class="stat-info"><p>Total Requests</p><h3 data-count="{{ $stats['total_requests'] ?? 0 }}">0</h3></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: rgba(163, 113, 247, 0.1); color: var(--accent-purple);">
-                        <i class="fas fa-th-large"></i>
-                    </div>
-                    <div class="stat-info">
-                        <p>Total Categories</p>
-                        <h3>{{ $stats['total_categories'] ?? 0 }}</h3>
-                    </div>
+                    <div class="stat-icon" style="background: rgba(210, 153, 34, 0.1); color: var(--accent-warning);"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info"><p>Pending Requests</p><h3 data-count="{{ $stats['pending_requests'] ?? 0 }}">0</h3></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: rgba(210, 153, 34, 0.1); color: var(--accent-warning);">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-info">
-                        <p>Pending Requests</p>
-                        <h3>{{ $stats['pending_requests'] ?? 0 }}</h3>
-                    </div>
+                    <div class="stat-icon" style="background: rgba(35, 134, 54, 0.1); color: var(--accent-success);"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-info"><p>Approved Requests</p><h3 data-count="{{ $stats['approved_requests'] ?? 0 }}">0</h3></div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: rgba(35, 134, 54, 0.1); color: var(--accent-success);">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stat-info">
-                        <p>Approved Requests</p>
-                        <h3>{{ $stats['approved_requests'] ?? 0 }}</h3>
-                    </div>
+                    <div class="stat-icon" style="background: rgba(163, 113, 247, 0.1); color: var(--accent-purple);"><i class="fas fa-th-large"></i></div>
+                    <div class="stat-info"><p>Total Categories</p><h3 data-count="{{ $stats['total_categories'] ?? 0 }}">0</h3></div>
                 </div>
-            </div>
-
-            <div class="admin-card">
-                <h5 class="section-title">Quick Actions</h5>
-                <div class="d-flex gap-3 mt-3">
-                    <button class="btn btn-outline-primary" onclick="showSection('requests')">Manage Requests</button>
-                    <button class="btn btn-outline-purple" style="color:#a371f7; border-color:#a371f7;" onclick="showSection('categories')">Manage Categories</button>
-                    <a class="btn btn-outline-info" href="{{ route('admin.jobs.index') }}">Manage Jobs</a>
-                    <button class="btn btn-outline-info" onclick="showSection('playstore')">Edit Settings</button>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(88, 166, 255, 0.1); color: var(--accent-blue);"><i class="fas fa-list"></i></div>
+                    <div class="stat-info"><p>Total Subcategories</p><h3 data-count="{{ $stats['total_subcategories'] ?? 0 }}">0</h3></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(240, 136, 62, 0.1); color: var(--accent-warning);"><i class="fas fa-user-tie"></i></div>
+                    <div class="stat-info"><p>Total Professions</p><h3 data-count="{{ $stats['total_professions'] ?? 0 }}">0</h3></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(86, 211, 100, 0.1); color: var(--accent-success);"><i class="fas fa-briefcase"></i></div>
+                    <div class="stat-info"><p>Total Job Titles</p><h3 data-count="{{ $stats['total_job_titles'] ?? 0 }}">0</h3></div>
                 </div>
             </div>
         </section>
@@ -541,6 +628,9 @@
                                     <strong>{{ $req->first_name }} {{ $req->last_name }}</strong><br>
                                     <small class="text-muted">DOB: {{ $req->dob }}</small><br>
                                     <small class="text-muted">Nationality: {{ $req->nationality ?: 'Not provided' }}</small>
+                                    @if(!empty($req->profession))
+                                        <br><small class="text-muted">Profession: {{ $req->profession }}</small>
+                                    @endif
                                 </td>
                                 <td>
                                     {{ $req->email }}<br>
@@ -549,8 +639,8 @@
                                 <td>
                                     {{ $req->destination_country }}<br>
                                     <small>{{ $req->visa_category }} - {{ $req->visa_type }}</small>
-                                    @if(!empty($req->selected_job_titles))
-                                        <br><small class="text-info">Applied jobs: {{ $req->selected_job_titles }}</small>
+                                    @if(!empty($req->job_title) || !empty($req->selected_job_titles))
+                                        <br><small class="text-info">Job title: {{ $req->job_title ?: $req->selected_job_titles }}</small>
                                     @endif
                                 </td>
                                 <td>
@@ -565,7 +655,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.requests.edit', $req->id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit request">
+                                    <a href="{{ route('admin.requests.edit', $req->id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit request, profession and job title" aria-label="Edit request, profession and job title for applicant {{ $req->first_name }} {{ $req->last_name }}">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @php
@@ -830,12 +920,38 @@
                             <input type="text" name="phone_code" class="form-control" placeholder="+92" maxlength="20">
                         </div>
                         <div class="col-md-2">
+                            <label class="form-label">Phone Digits</label>
+                            <input type="number" name="phone_number_length" class="form-control" placeholder="10" min="1" max="30">
+                        </div>
+                        <div class="col-md-2">
                             <label class="form-label">ID Digits</label>
                             <input type="number" name="id_number_length" class="form-control" placeholder="13" min="1" max="30">
                         </div>
-                        <div class="col-md-1 d-flex align-items-end">
-                            <button type="submit" class="btn-primary-custom w-100">Add</button>
+                    </div>
+                    <h6 class="section-title mt-3">Airports for this nationality</h6>
+                    <div id="nationalityAirportRows">
+                        <div class="nationality-airport-row row g-2 align-items-end mb-2">
+                            <div class="col-md-5">
+                                <label class="form-label">Airport Name</label>
+                                <input type="text" name="airports[0][name]" class="form-control" maxlength="255" placeholder="e.g. Jinnah International Airport" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">City</label>
+                                <input type="text" name="airports[0][city]" class="form-control" maxlength="255" placeholder="e.g. Karachi" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-danger w-100" data-remove-nationality-airport aria-label="Remove airport row" disabled>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
+                    </div>
+                    <div id="addNationalityError" class="alert alert-danger d-none mt-3" role="alert"></div>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <button type="button" id="addNationalityAirportRow" class="btn btn-outline-info">
+                            <i class="fas fa-plus me-1"></i> Add Airport Row
+                        </button>
+                        <button type="submit" id="addNationalitySubmit" class="btn-primary-custom">Add Nationality and Airports</button>
                     </div>
                 </form>
             </div>
@@ -843,7 +959,7 @@
                 <h5 class="section-title">Manage Nationalities</h5>
                 <div class="table-responsive mt-3">
                     <table class="reviews-table">
-                        <thead><tr><th>ID</th><th>Nationality</th><th>Currency</th><th>Phone Code</th><th>ID Digits</th><th>Action</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Nationality</th><th>Currency</th><th>Phone Code</th><th>Phone Digits</th><th>ID Digits</th><th>Action</th></tr></thead>
                         <tbody>
                             @foreach($nationalities as $nationality)
                             <tr>
@@ -851,6 +967,7 @@
                                 <td>{{ $nationality->name }}</td>
                                 <td>{{ $nationality->currency ?? '—' }}</td>
                                 <td>{{ $nationality->phone_code ?? '—' }}</td>
+                                <td>{{ $nationality->phone_number_length ?? '—' }}</td>
                                 <td>{{ $nationality->id_number_length ?? '—' }}</td>
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteNationality({{ $nationality->id }})"><i class="fas fa-trash"></i></button></td>
                             </tr>
@@ -864,43 +981,15 @@
         <!-- Section: Airports -->
         <section id="airportsSection" class="dashboard-section d-none">
             <div class="admin-card">
-                <h5 class="section-title">Add New Airport</h5>
-                <form id="addAirportForm">
-                    @csrf
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label" for="airportCode">Airport Code</label>
-                            <input id="airportCode" type="text" name="code" class="form-control" maxlength="10" placeholder="e.g. DAC" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" for="airportName">Airport Name</label>
-                            <input id="airportName" type="text" name="name" class="form-control" maxlength="255" placeholder="e.g. Hazrat Shahjalal International Airport, Dhaka" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="airportCountry">Country</label>
-                            <select id="airportCountry" name="country" class="form-select" required>
-                                <option value="">Select country</option>
-                                @foreach($nationalities as $nationality)
-                                    <option value="{{ $nationality->name }}">{{ $nationality->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn-primary-custom w-100">Add Airport</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="admin-card">
                 <h5 class="section-title">Manage Airports</h5>
                 <div class="table-responsive mt-3">
                     <table class="reviews-table">
-                        <thead><tr><th>Code</th><th>Airport Name</th><th>Country</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Airport Name</th><th>City</th><th>Nationality</th><th>Action</th></tr></thead>
                         <tbody>
                             @forelse($airports as $airport)
                             <tr>
-                                <td>{{ $airport->code }}</td>
                                 <td>{{ $airport->name }}</td>
+                                <td>{{ $airport->city ?? '—' }}</td>
                                 <td>{{ $airport->country ?? '—' }}</td>
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteAirport({{ $airport->id }})" title="Delete airport"><i class="fas fa-trash"></i></button></td>
                             </tr>
@@ -1124,6 +1213,8 @@
         function showSection(sectionId) {
             localStorage.setItem('activeAdminTab', sectionId);
             document.querySelectorAll('.dashboard-section').forEach(s => s.classList.add('d-none'));
+            const isDashboard = sectionId === 'dashboard';
+            document.querySelector('.main-content').classList.toggle('dashboard-home', isDashboard);
             const targetSection = document.getElementById(sectionId + 'Section');
             if (targetSection) targetSection.classList.remove('d-none');
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
@@ -1131,9 +1222,27 @@
             if (targetNav) targetNav.classList.add('active');
         }
 
+        function animateDashboardCounts() {
+            document.querySelectorAll('#dashboardSection [data-count]').forEach(counter => {
+                const target = Number.parseInt(counter.dataset.count, 10) || 0;
+                const duration = 1000;
+                const startTime = performance.now();
+
+                function updateCount(currentTime) {
+                    const progress = Math.min((currentTime - startTime) / duration, 1);
+                    counter.textContent = Math.floor(target * progress).toLocaleString();
+                    if (progress < 1) requestAnimationFrame(updateCount);
+                }
+
+                counter.textContent = '0';
+                requestAnimationFrame(updateCount);
+            });
+        }
+
         window.onload = function() {
             const activeTab = localStorage.getItem('activeAdminTab') || 'dashboard';
             showSection(activeTab === 'jobs' ? 'dashboard' : activeTab);
+            animateDashboardCounts();
         };
 
         const requestStatusModal = document.getElementById('requestStatusModal');
@@ -1359,24 +1468,65 @@
 
         document.getElementById('addNationalityForm').onsubmit = async function(e) {
             e.preventDefault();
-            const res = await fetch("{{ route('admin.nationalities.add') }}", {
-                method: 'POST',
-                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
-                body: new FormData(this)
-            });
-            if (res.ok) location.reload();
+            const form = this;
+            const errorBox = document.getElementById('addNationalityError');
+            const submitButton = document.getElementById('addNationalitySubmit');
+            errorBox.classList.add('d-none');
+            errorBox.textContent = '';
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch("{{ route('admin.nationalities.add') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: new FormData(form)
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    const messages = result.errors ? Object.values(result.errors).flat().join(' ') : '';
+                    throw new Error(messages || result.message || 'Unable to add nationality and airports.');
+                }
+                location.reload();
+            } catch (error) {
+                errorBox.textContent = error.message || 'Unable to add nationality and airports.';
+                errorBox.classList.remove('d-none');
+                submitButton.disabled = false;
+            }
         };
 
-        document.getElementById('addAirportForm').onsubmit = async function(e) {
-            e.preventDefault();
-            const res = await fetch("{{ route('admin.airports.add') }}", {
-                method: 'POST',
-                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
-                body: new FormData(this)
-            });
-            if (res.ok) location.reload();
-            else alert((await res.json()).message || 'Unable to add airport.');
-        };
+        const nationalityAirportRows = document.getElementById('nationalityAirportRows');
+        let nextNationalityAirportIndex = nationalityAirportRows.querySelectorAll('.nationality-airport-row').length;
+
+        document.getElementById('addNationalityAirportRow').addEventListener('click', function() {
+            const row = document.createElement('div');
+            const index = nextNationalityAirportIndex++;
+            row.className = 'nationality-airport-row row g-2 align-items-end mb-2';
+            row.innerHTML = `
+                <div class="col-md-5">
+                    <label class="form-label">Airport Name</label>
+                    <input type="text" name="airports[${index}][name]" class="form-control" maxlength="255" placeholder="e.g. Jinnah International Airport" required>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">City</label>
+                    <input type="text" name="airports[${index}][city]" class="form-control" maxlength="255" placeholder="e.g. Karachi" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-danger w-100" data-remove-nationality-airport aria-label="Remove airport row">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>`;
+            nationalityAirportRows.appendChild(row);
+        });
+
+        nationalityAirportRows.addEventListener('click', function(event) {
+            const removeButton = event.target.closest('[data-remove-nationality-airport]');
+            if (removeButton && !removeButton.disabled) {
+                removeButton.closest('.nationality-airport-row').remove();
+            }
+        });
 
         async function deleteAirport(id) {
             if (!confirm('Delete this airport?')) return;

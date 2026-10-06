@@ -18,17 +18,8 @@
         <a href="{{ route('admin.dashboard') }}" id="nav-tickets" class="nav-link admin-nav-link" onclick="localStorage.setItem('activeAdminTab', 'tickets')">
             <i class="fas fa-ticket-alt"></i> Ticket Requests
         </a>
-        <a href="{{ route('admin.dashboard') }}" id="nav-countries" class="nav-link admin-nav-link" onclick="localStorage.setItem('activeAdminTab', 'countries')">
-            <i class="fas fa-globe"></i> Countries
-        </a>
-        <a href="{{ route('admin.dashboard') }}" id="nav-nationalities" class="nav-link admin-nav-link" onclick="localStorage.setItem('activeAdminTab', 'nationalities')">
-            <i class="fas fa-flag"></i> Nationalities
-        </a>
-        <a href="{{ route('admin.dashboard') }}" id="nav-airports" class="nav-link admin-nav-link" onclick="localStorage.setItem('activeAdminTab', 'airports')">
-            <i class="fas fa-plane-departure"></i> Airports
-        </a>
-        <a href="{{ route('admin.dashboard') }}" id="nav-categories" class="nav-link admin-nav-link" onclick="localStorage.setItem('activeAdminTab', 'categories')">
-            <i class="fas fa-th-large"></i> Categories
+        <a href="{{ route('admin.catalog.index') }}" class="nav-link admin-nav-link {{ request()->routeIs('admin.catalog.*') ? 'active' : '' }}">
+            <i class="fas fa-list-alt"></i> Manage Catalog
         </a>
         <a href="{{ route('admin.jobs.index') }}" id="nav-jobs" class="nav-link admin-nav-link {{ request()->routeIs('admin.jobs.index', 'admin.jobs.edit', 'admin.jobs.update') ? 'active' : '' }}">
             <i class="fas fa-briefcase"></i> Jobs
@@ -36,6 +27,7 @@
         <a href="{{ route('admin.jobs.create') }}" class="nav-link admin-nav-link {{ request()->routeIs('admin.jobs.create') ? 'active' : '' }}">
             <i class="fas fa-plus"></i> Add Job
         </a>
+
         <a href="{{ route('admin.dashboard') }}" id="nav-security" class="nav-link admin-nav-link" onclick="localStorage.setItem('activeAdminTab', 'security')">
             <i class="fas fa-shield-alt"></i> Security
         </a>

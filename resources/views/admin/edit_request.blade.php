@@ -63,6 +63,34 @@
         <form action="{{ route('admin.requests.update', $visaRequest->id) }}" method="POST" enctype="multipart/form-data" class="card editor-card p-3 p-md-4">
             @csrf
 
+            <h2 class="section-title">Profession &amp; Job Information</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="profession">Profession</label>
+                    <select id="profession" name="profession" class="form-select">
+                        <option value="">Select profession</option>
+                        @foreach($professions as $profession)
+                            <option value="{{ $profession->name }}" {{ old('profession', $visaRequest->profession ?? '') === $profession->name ? 'selected' : '' }}>{{ $profession->name }}</option>
+                        @endforeach
+                        @if($visaRequest->profession && !$professions->contains('name', $visaRequest->profession))
+                            <option value="{{ $visaRequest->profession }}" selected>{{ $visaRequest->profession }}</option>
+                        @endif
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="job_title">Job Title</label>
+                    <select id="job_title" name="job_title" class="form-select">
+                        <option value="">Select job title</option>
+                        @foreach($jobTitles as $jobTitle)
+                            <option value="{{ $jobTitle->name }}" {{ old('job_title', $visaRequest->job_title ?? '') === $jobTitle->name ? 'selected' : '' }}>{{ $jobTitle->name }}</option>
+                        @endforeach
+                        @if($visaRequest->job_title && !$jobTitles->contains('name', $visaRequest->job_title))
+                            <option value="{{ $visaRequest->job_title }}" selected>{{ $visaRequest->job_title }}</option>
+                        @endif
+                    </select>
+                </div>
+            </div>
+
             <h2 class="section-title">Personal Details</h2>
             <div class="row g-3">
                 <div class="col-md-4">

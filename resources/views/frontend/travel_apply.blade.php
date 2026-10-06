@@ -62,7 +62,7 @@
                                 <select id="nationality_select" name="nationality" class="form-select" required style="padding-left: 48px;">
                                     <option value="" selected disabled>Select Nationality</option>
                                     @foreach($nationalities as $nationality)
-                                        <option value="{{ $nationality->name }}" data-phone-code="{{ $nationality->phone_code ?? '' }}" data-id-length="{{ $nationality->id_number_length ?? '' }}" data-currency="{{ $nationality->currency ?? '' }}" {{ old('nationality') == $nationality->name ? 'selected' : '' }}>{{ $nationality->name }}</option>
+                                        <option value="{{ $nationality->name }}" data-phone-code="{{ $nationality->phone_code ?? '' }}" data-phone-length="{{ $nationality->phone_number_length ?? '' }}" data-id-length="{{ $nationality->id_number_length ?? '' }}" data-currency="{{ $nationality->currency ?? '' }}" {{ old('nationality') == $nationality->name ? 'selected' : '' }}>{{ $nationality->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -72,7 +72,7 @@
                             <label>National Identity/Aadhaar Card *</label>
                             <div class="input-with-icon">
                                 <i class="far fa-id-card"></i>
-                                <input id="national_identity_input" type="text" name="national_identity" value="{{ old('national_identity') }}" placeholder="National Identity/Aadhaar Card" maxlength="100" required>
+                                <input id="national_identity_input" type="text" name="national_identity" value="{{ old('national_identity') }}" placeholder="National Identity/Aadhaar Card" maxlength="100" inputmode="numeric" pattern="[0-9]*" required>
                             </div>
                             <small id="national_identity_hint" class="form-text text-muted d-none mt-1"></small>
                         </div>
@@ -106,8 +106,9 @@
                                 <label>ACTIVE WHATSAPP NUMBER *</label>
                                 <div class="input-with-icon">
                                     <i class="fas fa-phone-alt"></i>
-                                    <input id="mobile_number_input" type="text" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="Active WhatsApp Number" required>
+                                    <input id="mobile_number_input" type="tel" name="mobile_number" value="{{ old('mobile_number') }}" placeholder="Active WhatsApp Number" inputmode="numeric" pattern="[0-9+\-\s]*" required>
                                 </div>
+                                <small id="mobile_number_hint" class="form-text text-muted d-none mt-1"></small>
                             </div>
                         </div>
 
@@ -116,7 +117,7 @@
                                 <label>DATE OF BIRTH *</label>
                                 <div class="input-with-icon">
                                     <i class="far fa-calendar-alt"></i>
-                                    <input type="text" name="dob" value="{{ old('dob') }}" placeholder="DD/MM/YYYY" required>
+                                    <input type="date" name="dob" value="{{ old('dob') ? \Illuminate\Support\Carbon::parse(old('dob'))->format('Y-m-d') : '' }}" placeholder="DD/MM/YYYY" required>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -150,7 +151,7 @@
                                 <label>PASSPORT EXPIRY *</label>
                                 <div class="input-with-icon">
                                     <i class="far fa-calendar-alt"></i>
-                                    <input type="text" name="passport_expiry" value="{{ old('passport_expiry') }}" placeholder="DD-MM-YYYY" required>
+                                    <input type="date" name="passport_expiry" value="{{ old('passport_expiry') ? \Illuminate\Support\Carbon::parse(old('passport_expiry'))->format('Y-m-d') : '' }}" placeholder="DD-MM-YYYY" required>
                                 </div>
                             </div>
                         </div>
@@ -295,11 +296,20 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input[type="date"]').forEach(function(dateInput) {
+                dateInput.addEventListener('focus', function() {
+                    if (typeof this.showPicker === 'function') {
+                        this.showPicker();
+                    }
+                });
+            });
+
             const catSelect = document.getElementById('visa_category_select');
             const typeSelect = document.getElementById('visa_type_select');
             const drivingLicenseField = document.getElementById('drivingLicenseField');
             const nationalitySelect = document.getElementById('nationality_select');
             const mobileNumberInput = document.getElementById('mobile_number_input');
+            const mobileNumberHint = document.getElementById('mobile_number_hint');
             const nationalIdentityInput = document.getElementById('national_identity_input');
             const nationalIdentityHint = document.getElementById('national_identity_hint');
             const destinationCountrySelect = document.getElementById('destination_country_select');
@@ -366,7 +376,7 @@
                     description.className = 'small mb-0';
                     description.textContent = job.job_description || '';
 
-                    const applyLabel = document.createElement('label');
+                    const applyLabel = document.createElement('div');
                     applyLabel.className = 'd-inline-flex mt-3 mb-0';
                     applyLabel.style.cursor = 'pointer';
 
@@ -378,6 +388,13 @@
                     applyCheckbox.style.display = 'none';
                     applyCheckbox.addEventListener('change', function() {
                         if (this.checked) {
+                            selectedJobIds.clear();
+                            availableJobsList.querySelectorAll('input[name="selected_job_ids[]"]').forEach(selectedCheckbox => {
+                                if (selectedCheckbox !== this && selectedCheckbox.checked) {
+                                    selectedCheckbox.checked = false;
+                                    selectedCheckbox.dispatchEvent(new Event('change'));
+                                }
+                            });
                             selectedJobIds.add(String(job.id));
                             applyButton.style.backgroundColor = '#16a34a';
                             applyButton.style.borderColor = '#16a34a';
@@ -399,7 +416,7 @@
                     const applyButton = document.createElement('span');
                     applyButton.className = 'btn btn-sm px-3 py-2';
                     applyButton.style.backgroundColor = applyCheckbox.checked ? '#16a34a' : '#2563eb';
-                    applyButton.style.border = '1px solid #2563eb';
+                    applyButton.style.border = `1px solid ${applyCheckbox.checked ? '#16a34a' : '#2563eb'}`;
                     applyButton.style.color = '#ffffff';
                     applyButton.style.borderRadius = '8px';
                     applyButton.style.fontWeight = '600';
@@ -432,6 +449,7 @@
                     buttonText.textContent = 'Apply for this job';
 
                     applyButton.append(radioIndicator, buttonText);
+                    applyLabel.append(applyCheckbox);
                     applyLabel.append(applyButton);
 
                     item.append(title, details, description, applyLabel);
@@ -442,6 +460,7 @@
             function updateNationalityPhoneCode() {
                 const selectedOption = nationalitySelect.options[nationalitySelect.selectedIndex];
                 const phoneCode = selectedOption ? (selectedOption.dataset.phoneCode || '').trim() : '';
+                const phoneDigitLength = Number.parseInt(selectedOption ? selectedOption.dataset.phoneLength : '', 10);
                 const previousCode = mobileNumberInput.dataset.nationalityPhoneCode || '';
                 const currentNumber = mobileNumberInput.value.trim();
 
@@ -454,10 +473,47 @@
                 }
 
                 mobileNumberInput.dataset.nationalityPhoneCode = phoneCode;
+                mobileNumberInput.dataset.phoneNumberLength = Number.isInteger(phoneDigitLength) && phoneDigitLength > 0
+                    ? String(phoneDigitLength)
+                    : '';
+                if (mobileNumberInput.dataset.phoneNumberLength) {
+                    mobileNumberHint.textContent = `Enter no more than ${phoneDigitLength} phone number digits, excluding the country code.`;
+                    mobileNumberHint.classList.remove('d-none');
+                } else {
+                    mobileNumberHint.textContent = '';
+                    mobileNumberHint.classList.add('d-none');
+                }
+                enforcePhoneNumberLength();
             }
 
             nationalitySelect.addEventListener('change', updateNationalityPhoneCode);
             updateNationalityPhoneCode();
+
+            function enforcePhoneNumberLength() {
+                const digitLength = Number.parseInt(mobileNumberInput.dataset.phoneNumberLength || '', 10);
+                if (!Number.isInteger(digitLength) || digitLength < 1) {
+                    return;
+                }
+
+                const phoneCode = mobileNumberInput.dataset.nationalityPhoneCode || '';
+                const value = mobileNumberInput.value;
+                const prefix = phoneCode && value.startsWith(phoneCode) ? value.slice(0, phoneCode.length) : '';
+                const subscriberNumber = value.slice(prefix.length);
+                let remainingDigits = digitLength;
+                const limitedSubscriberNumber = subscriberNumber.replace(/\d/g, digit => {
+                    if (remainingDigits === 0) {
+                        return '';
+                    }
+                    remainingDigits -= 1;
+                    return digit;
+                });
+                const limitedValue = `${prefix}${limitedSubscriberNumber}`;
+                if (limitedValue !== value) {
+                    mobileNumberInput.value = limitedValue;
+                }
+            }
+
+            mobileNumberInput.addEventListener('input', enforcePhoneNumberLength);
 
             function updateNationalIdentityLength() {
                 const selectedOption = nationalitySelect.options[nationalitySelect.selectedIndex];
