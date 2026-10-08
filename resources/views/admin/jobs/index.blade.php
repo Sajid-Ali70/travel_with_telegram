@@ -21,7 +21,7 @@
             <span class="text-muted">{{ $jobs->count() }} postings</span>
         </div>
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table align-middle mb-0">
                 <thead>
                     <tr>
                         <th>Job</th>
@@ -36,7 +36,21 @@
                 </thead>
                 <tbody>
                     @forelse($jobs as $job)
-                        @php($jobWorkingDays = json_decode($job->working_days ?? '[]', true) ?: [])
+                        @php
+                            $jobWorkingDays = json_decode($job->working_days ?? '[]', true) ?: [];
+                            $jobCategoryIds = json_decode($job->category_ids ?? '[]', true) ?: [];
+                            $jobCategoryNames = $categories->whereIn('id', $jobCategoryIds)->pluck('name')->all();
+                            $jobCityMap = json_decode($job->city_locations ?? '[]', true);
+                            $jobCities = collect(is_array($jobCityMap) ? $jobCityMap : [])
+                                ->flatten()
+                                ->filter(fn ($city) => is_string($city) && trim($city) !== '')
+                                ->unique()
+                                ->values();
+                            $jobSalaryRows = json_decode($job->salary_by_country ?? '[]', true);
+                            $jobSalaryRows = collect(is_array($jobSalaryRows) ? $jobSalaryRows : [])
+                                ->filter(fn ($salaryRow) => is_array($salaryRow) && isset($salaryRow['amount']))
+                                ->values();
+                        @endphp
                         <tr>
                             <td>
                                 <strong>{{ $job->job_title }}</strong>
@@ -44,12 +58,23 @@
                                 <div class="small text-muted">#{{ $job->id }}</div>
                             </td>
                             <td>
-                                {{ $job->category ?? '—' }}
-                                @if(!empty($job->category_visa_type))<div class="small text-muted">Subcategory: {{ $job->category_visa_type }}</div>@endif
+                                {{ $jobCategoryNames ? implode(', ', $jobCategoryNames) : ($job->category ?? '—') }}
+                                @if(!empty($job->category_visa_type) && !in_array($job->category_visa_type, $jobCategoryNames, true))<div class="small text-muted">Subcategory: {{ $job->category_visa_type }}</div>@endif
                             </td>
-                            <td>{{ $job->country_location ?? '—' }}</td>
+                            <td>
+                                {{ $job->country_location ?? '—' }}
+                                @if($jobCities->isNotEmpty())
+                                    <div class="small text-muted"><strong>Cities:</strong> {{ $jobCities->implode(', ') }}</div>
+                                @endif
+                            </td>
                             <td>{{ $job->number_of_vacancies ?? 1 }}</td>
-                            <td>{{ number_format((float) ($job->salary ?? 0), 2) }} {{ $job->salary_currency ?? 'SAR' }} / {{ $job->salary_period ?? 'month' }}</td>
+                            <td>
+                                @forelse($jobSalaryRows as $salaryRow)
+                                    <div>{{ $salaryRow['country'] ?? '—' }}: {{ number_format((float) $salaryRow['amount'], 2) }} {{ $salaryRow['currency'] ?? ($job->salary_currency ?? 'SAR') }} / {{ $salaryRow['period'] ?? ($job->salary_period ?? 'month') }}</div>
+                                @empty
+                                    {{ number_format((float) ($job->salary ?? 0), 2) }} {{ $job->salary_currency ?? 'SAR' }} / {{ $job->salary_period ?? 'month' }}
+                                @endforelse
+                            </td>
                             <td><span class="badge {{ ($job->status ?? 'Active') === 'Active' ? 'text-bg-success' : 'text-bg-secondary' }}">{{ $job->status ?? 'Active' }}</span></td>
                             <td>
                                 <details>

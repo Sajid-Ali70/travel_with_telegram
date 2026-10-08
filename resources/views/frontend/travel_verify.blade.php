@@ -490,7 +490,12 @@
                                                 @endif
                                             </div>
                                         @endif
-                                        <form action="{{ route('travel.apply.flight_ticket', $visaRequest->id) }}" method="POST" class="result-action-form">
+                                        @if($ticketRequest)
+                                            <button type="button" id="showVerifyTicketReapplyForm" class="action-submit" aria-controls="verifyTicketReapplyForm" aria-expanded="{{ $errors->any() ? 'true' : 'false' }}">
+                                                <i class="fas fa-redo me-2"></i>Reapply for Ticket
+                                            </button>
+                                        @endif
+                                        <form id="verifyTicketReapplyForm" action="{{ route('travel.apply.flight_ticket', $visaRequest->id) }}" method="POST" class="result-action-form {{ $ticketRequest && !$errors->any() ? 'd-none' : '' }}">
                                             @csrf
                                             <input type="hidden" name="email" value="{{ $visaRequest->email }}">
                                             <div class="action-grid">
@@ -510,7 +515,7 @@
                                                     <option value="{{ $code }}" {{ old('preferred_airport', $visaRequest->preferred_airport) === $code ? 'selected' : '' }}>{{ $airport }}</option>
                                                 @endforeach
                                             </select>
-                                            <button type="submit" class="action-submit"><i class="fas fa-paper-plane me-2"></i>Submit Flight Ticket Request</button>
+                                            <button type="submit" class="action-submit"><i class="fas fa-paper-plane me-2"></i>{{ $ticketRequest ? 'Submit Ticket Reapplication' : 'Submit Flight Ticket Request' }}</button>
                                         </form>
                                     </div>
                                     @endif
@@ -543,6 +548,8 @@
     <script>
         const verifyDateStart = document.getElementById('verify_preferred_date_start');
         const verifyDateEnd = document.getElementById('verify_preferred_date_end');
+        const verifyTicketReapplyButton = document.getElementById('showVerifyTicketReapplyForm');
+        const verifyTicketReapplyForm = document.getElementById('verifyTicketReapplyForm');
         const receiptInput = document.getElementById('verify_payment_receipt');
         const receiptPicker = document.getElementById('verify-payment-receipt-picker');
         const receiptPreview = document.getElementById('verify-payment-receipt-preview');
@@ -569,6 +576,11 @@
             if (verifyDateEnd.value && verifyDateEnd.value < verifyDateStart.value) {
                 verifyDateEnd.value = verifyDateStart.value;
             }
+        });
+        verifyTicketReapplyButton?.addEventListener('click', () => {
+            const isHidden = verifyTicketReapplyForm.classList.toggle('d-none');
+            verifyTicketReapplyButton.setAttribute('aria-expanded', String(!isHidden));
+            if (!isHidden) verifyTicketReapplyForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
     </script>
 </body>

@@ -31,6 +31,17 @@
             box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
             padding: 24px;
             margin-bottom: 18px;
+            transition: background-color .2s ease, border-color .2s ease;
+        }
+        .job-card:hover {
+            background: #161b22;
+            border-color: #30363d;
+        }
+        .job-card:hover h2,
+        .job-card:hover .job-meta,
+        .job-card:hover .job-meta span,
+        .job-card:hover p.text-secondary {
+            color: #fff !important;
         }
         .job-tag {
             display: inline-flex;
@@ -126,6 +137,27 @@
                 </div>
             @else
                 @foreach($jobs as $job)
+                    @php
+                        $jobCityList = [];
+                        $jobCityMap = json_decode($job->city_locations ?? '[]', true);
+                        if (is_array($jobCityMap)) {
+                            foreach ($jobCityMap as $countryCities) {
+                                if (is_array($countryCities)) {
+                                    foreach ($countryCities as $cityName) {
+                                        $trimmedCity = trim((string) $cityName);
+                                        if ($trimmedCity !== '' && !in_array($trimmedCity, $jobCityList, true)) {
+                                            $jobCityList[] = $trimmedCity;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        $jobSalaryRows = json_decode($job->salary_by_country ?? '[]', true);
+                        $jobSalaryRows = array_values(array_filter(
+                            is_array($jobSalaryRows) ? $jobSalaryRows : [],
+                            fn ($salaryRow) => is_array($salaryRow) && isset($salaryRow['amount'])
+                        ));
+                    @endphp
                     <article class="job-card">
                         <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
                             <div>
@@ -133,12 +165,19 @@
                                 <h2 class="mt-3 mb-2" style="font-size: clamp(1.3rem, 2vw, 2rem); font-weight: 800; color: #0f172a;">{{ $job->job_title }}</h2>
                             </div>
                             <div class="salary-badge">
-                                {{ number_format((float) ($job->salary ?? 0), 2) }} {{ $job->salary_currency ?? 'SAR' }} / {{ $job->salary_period ?? 'month' }}
+                                @forelse($jobSalaryRows as $salaryRow)
+                                    <div>{{ $salaryRow['country'] ?? '—' }}: {{ number_format((float) $salaryRow['amount'], 2) }} {{ $salaryRow['currency'] ?? ($job->salary_currency ?? 'SAR') }} / {{ $salaryRow['period'] ?? ($job->salary_period ?? 'month') }}</div>
+                                @empty
+                                    {{ number_format((float) ($job->salary ?? 0), 2) }} {{ $job->salary_currency ?? 'SAR' }} / {{ $job->salary_period ?? 'month' }}
+                                @endforelse
                             </div>
                         </div>
 
                         <div class="job-meta">
                             <span><i class="fas fa-map-marker-alt"></i> {{ $job->country_location ?? 'International' }}</span>
+                            @if(!empty($jobCityList))
+                                <span><i class="fas fa-city"></i> {{ implode(', ', $jobCityList) }}</span>
+                            @endif
                             <span><i class="fas fa-briefcase"></i> {{ $job->contract_duration ?? 'Contract' }}</span>
                             <span><i class="fas fa-clock"></i> {{ $job->working_hours ?? 'Flexible timing' }}</span>
                             <span><i class="fas fa-users"></i> {{ $job->number_of_vacancies ?? 1 }} vacancies</span>

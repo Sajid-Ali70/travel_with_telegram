@@ -17,7 +17,6 @@ class AdminController extends Controller
     private const VISA_STATUSES = [
         'Visa Application Submitted',
         'Documents Verification',
-        'Documents Verification Completed, Request Submitted to Embassy',
         'Visa Approved from Embassy',
         'Visa Rejected due to Documents Verification Failed',
         'Visa Rejected due to Non Payment of Fee',
@@ -99,6 +98,7 @@ class AdminController extends Controller
                     $table->string('currency', 20)->nullable();
                     $table->text('visa_fee_details')->nullable();
                     $table->text('currencies')->nullable();
+                    $table->text('cities')->nullable();
                     $table->string('flag')->nullable();
                     $table->timestamps();
                 });
@@ -108,6 +108,7 @@ class AdminController extends Controller
                     'currency' => "ALTER TABLE `app_countries` ADD `currency` VARCHAR(20) NULL DEFAULT NULL AFTER `visa_fee` ",
                     'visa_fee_details' => "ALTER TABLE `app_countries` ADD `visa_fee_details` TEXT NULL DEFAULT NULL AFTER `currency` ",
                     'currencies' => "ALTER TABLE `app_countries` ADD `currencies` TEXT NULL DEFAULT NULL ",
+                    'cities' => "ALTER TABLE `app_countries` ADD `cities` TEXT NULL DEFAULT NULL ",
                     'flag' => "ALTER TABLE `app_countries` ADD `flag` VARCHAR(255) NULL DEFAULT NULL AFTER `visa_fee_details` ",
                     'created_at' => "ALTER TABLE `app_countries` ADD `created_at` TIMESTAMP NULL DEFAULT NULL ",
                     'updated_at' => "ALTER TABLE `app_countries` ADD `updated_at` TIMESTAMP NULL DEFAULT NULL "
@@ -147,6 +148,7 @@ class AdminController extends Controller
                 Schema::create('app_categories', function (Blueprint $table) {
                     $table->id();
                     $table->string('name');
+                    $table->unsignedBigInteger('country_id')->nullable();
                     $table->string('icon')->nullable();
                     $table->string('image')->nullable();
                     $table->text('description')->nullable();
@@ -154,6 +156,7 @@ class AdminController extends Controller
                 });
             } else {
                 $categoryColumns = [
+                    'country_id' => "ALTER TABLE `app_categories` ADD `country_id` BIGINT UNSIGNED NULL DEFAULT NULL AFTER `name` ",
                     'icon' => "ALTER TABLE `app_categories` ADD `icon` VARCHAR(255) NULL DEFAULT NULL ",
                     'image' => "ALTER TABLE `app_categories` ADD `image` VARCHAR(255) NULL DEFAULT NULL ",
                     'description' => "ALTER TABLE `app_categories` ADD `description` TEXT NULL DEFAULT NULL ",
@@ -205,12 +208,16 @@ class AdminController extends Controller
                     $table->string('job_title');
                     $table->string('category')->nullable();
                     $table->string('category_visa_type')->nullable();
+                    $table->text('category_ids')->nullable();
                     $table->string('country_location')->nullable();
+                    $table->text('city_locations')->nullable();
+                    $table->text('global_country_ids')->nullable();
                     $table->string('profession')->nullable();
                     $table->unsignedInteger('number_of_vacancies')->default(1);
                     $table->text('job_description');
                     $table->text('requirements')->nullable();
                     $table->decimal('salary', 12, 2)->nullable();
+                    $table->text('salary_by_country')->nullable();
                     $table->string('salary_currency', 10)->default('SAR');
                     $table->string('salary_period', 20)->default('month');
                     $table->string('working_hours')->nullable();
@@ -230,12 +237,16 @@ class AdminController extends Controller
                     'job_title' => "ALTER TABLE `app_jobs` ADD `job_title` VARCHAR(255) NULL DEFAULT NULL AFTER `id` ",
                     'category' => "ALTER TABLE `app_jobs` ADD `category` VARCHAR(255) NULL DEFAULT NULL ",
                     'category_visa_type' => "ALTER TABLE `app_jobs` ADD `category_visa_type` VARCHAR(255) NULL DEFAULT NULL ",
+                    'category_ids' => "ALTER TABLE `app_jobs` ADD `category_ids` TEXT NULL DEFAULT NULL ",
                     'country_location' => "ALTER TABLE `app_jobs` ADD `country_location` VARCHAR(255) NULL DEFAULT NULL ",
+                    'city_locations' => "ALTER TABLE `app_jobs` ADD `city_locations` TEXT NULL DEFAULT NULL ",
+                    'global_country_ids' => "ALTER TABLE `app_jobs` ADD `global_country_ids` TEXT NULL DEFAULT NULL ",
                     'profession' => "ALTER TABLE `app_jobs` ADD `profession` VARCHAR(255) NULL DEFAULT NULL ",
                     'number_of_vacancies' => "ALTER TABLE `app_jobs` ADD `number_of_vacancies` INT UNSIGNED NOT NULL DEFAULT 1 ",
                     'job_description' => "ALTER TABLE `app_jobs` ADD `job_description` TEXT NULL DEFAULT NULL ",
                     'requirements' => "ALTER TABLE `app_jobs` ADD `requirements` TEXT NULL DEFAULT NULL ",
                     'salary' => "ALTER TABLE `app_jobs` ADD `salary` DECIMAL(12,2) NULL DEFAULT NULL ",
+                    'salary_by_country' => "ALTER TABLE `app_jobs` ADD `salary_by_country` TEXT NULL DEFAULT NULL ",
                     'salary_currency' => "ALTER TABLE `app_jobs` ADD `salary_currency` VARCHAR(10) NOT NULL DEFAULT 'SAR' ",
                     'salary_period' => "ALTER TABLE `app_jobs` ADD `salary_period` VARCHAR(20) NOT NULL DEFAULT 'month' ",
                     'working_hours' => "ALTER TABLE `app_jobs` ADD `working_hours` VARCHAR(100) NULL DEFAULT NULL ",
@@ -580,11 +591,20 @@ class AdminController extends Controller
         $jobsQuery = DB::table('app_jobs')->where('status', 'Active')->orderByDesc('id');
 
         if ($selectedCountry !== '') {
-            $jobsQuery->whereRaw('LOWER(country_location) = ?', [mb_strtolower($selectedCountry)]);
+            $jobsQuery->where(function ($query) use ($selectedCountry) {
+                $query->whereRaw('LOWER(country_location) = ?', [mb_strtolower($selectedCountry)])
+                    ->orWhereRaw('LOWER(country_location) = ?', [mb_strtolower('All Country (Global multi-select)')]);
+            });
         }
 
         if ($selectedCategory !== '') {
-            $jobsQuery->whereRaw('LOWER(category_visa_type) = ?', [mb_strtolower($selectedCategory)]);
+            $selectedCategoryId = DB::table('app_categories')->where('name', $selectedCategory)->value('id');
+            $jobsQuery->where(function ($query) use ($selectedCategory, $selectedCategoryId) {
+                $query->whereRaw('LOWER(category_visa_type) = ?', [mb_strtolower($selectedCategory)]);
+                if ($selectedCategoryId) {
+                    $query->orWhereRaw('JSON_CONTAINS(category_ids, ?)', [json_encode((int) $selectedCategoryId)]);
+                }
+            });
         }
 
         $jobs = $jobsQuery->get();
@@ -622,12 +642,29 @@ class AdminController extends Controller
         $this->autoManageSettingsColumns();
         $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'VisaBook', 'app_icon' => ''];
         $countries = DB::table('app_countries')->orderBy('name')->get();
+        foreach ($countries as $country) {
+            $countryCurrencies = json_decode($country->currencies ?? '[]', true);
+            if (!is_array($countryCurrencies) || !$countryCurrencies) {
+                $countryCurrencies = !empty($country->currency) ? [$country->currency] : [];
+            }
+            $country->currencies = collect($countryCurrencies)
+                ->map(fn ($currency) => trim((string) $currency))
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+            $countryCities = json_decode($country->cities ?? '[]', true);
+            $country->cities = is_array($countryCities) ? $countryCities : [];
+        }
         $nationalities = DB::table('app_nationalities')->orderBy('name')->get();
         $airportsByNationality = DB::table('app_airports')->orderBy('name')->get()->groupBy('country');
         foreach ($nationalities as $nationality) {
             $nationality->airports = $airportsByNationality->get($nationality->name, collect());
         }
-        $categories = DB::table('app_categories')->orderBy('name')->get();
+        $categories = DB::table('app_categories')
+            ->leftJoin('app_countries', 'app_countries.id', '=', 'app_categories.country_id')
+            ->orderBy('app_categories.name')
+            ->get(['app_categories.*', 'app_countries.name as country_name']);
         $subcategories = DB::table('app_visa_types')
             ->join('app_categories', 'app_categories.id', '=', 'app_visa_types.category_id')
             ->orderBy('app_categories.name')
@@ -669,8 +706,9 @@ class AdminController extends Controller
         $hierarchy = $this->catalogHierarchyData();
         $categories = $hierarchy['categories'];
         $professions = $hierarchy['professions'];
+        $countries = DB::table('app_countries')->orderBy('name')->get();
 
-        return view('admin.catalog.create', compact('settings', 'type', 'categories', 'professions'));
+        return view('admin.catalog.create', compact('settings', 'type', 'categories', 'professions', 'countries'));
 
     }
 
@@ -698,19 +736,25 @@ class AdminController extends Controller
         $hierarchy = $this->catalogHierarchyData();
         $categories = $hierarchy['categories'];
         $professions = $hierarchy['professions'];
+        $countries = DB::table('app_countries')->orderBy('name')->get();
         $airports = $type === 'nationality'
             ? DB::table('app_airports')->where('country', $item->name)->orderBy('name')->get()
             : collect();
         $primaryAirport = $airports->first();
         $currencies = [];
+        $cities = [];
         if ($type === 'country') {
             $currencies = json_decode($item->currencies ?? '[]', true) ?: [];
             if (!$currencies && !empty($item->currency)) {
                 $currencies = [$item->currency];
             }
+            $cities = json_decode($item->cities ?? '[]', true) ?: [];
+            if (!is_array($cities)) {
+                $cities = [];
+            }
         }
 
-        return view('admin.catalog.edit', compact('settings', 'type', 'id', 'item', 'categories', 'professions', 'airports', 'primaryAirport', 'currencies'));
+        return view('admin.catalog.edit', compact('settings', 'type', 'id', 'item', 'categories', 'professions', 'countries', 'airports', 'primaryAirport', 'currencies', 'cities'));
     }
 
     public function updateCatalogItem(Request $request, string $type, int $id)
@@ -739,33 +783,26 @@ class AdminController extends Controller
             $duplicate = DB::table('app_profession_job_titles')
                 ->where('type', $type)
                 ->where('id', '<>', $id)
-                ->where('category_id', $data['category_id'])
-                ->where('subcategory_id', $data['subcategory_id'])
                 ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)]);
             if ($type === 'job_title') {
-                $duplicate->where('profession_id', $data['profession_id']);
+                $duplicate->where('category_id', $data['category_id'])
+                    ->where('subcategory_id', $data['subcategory_id'])
+                    ->where('profession_id', $data['profession_id']);
             }
             if ($duplicate->exists()) {
                 return back()->withInput()->withErrors(['name' => 'This option already exists.']);
             }
             DB::transaction(function () use ($id, $type, $name, $data) {
-                DB::table('app_profession_job_titles')->where('id', $id)->where('type', $type)->update([
+                $updates = [
                     'name' => $name,
-                    'category_id' => $data['category_id'],
-                    'subcategory_id' => $data['subcategory_id'],
-                    'profession_id' => $data['profession_id'] ?? null,
                     'updated_at' => now(),
-                ]);
-                if ($type === 'profession') {
-                    DB::table('app_profession_job_titles')
-                        ->where('type', 'job_title')
-                        ->where('profession_id', $id)
-                        ->update([
-                            'category_id' => $data['category_id'],
-                            'subcategory_id' => $data['subcategory_id'],
-                            'updated_at' => now(),
-                        ]);
+                ];
+                if ($type === 'job_title') {
+                    $updates['category_id'] = $data['category_id'];
+                    $updates['subcategory_id'] = $data['subcategory_id'];
+                    $updates['profession_id'] = $data['profession_id'];
                 }
+                DB::table('app_profession_job_titles')->where('id', $id)->where('type', $type)->update($updates);
             });
         } elseif ($type === 'subcategory') {
             $data = $request->validate([
@@ -780,33 +817,29 @@ class AdminController extends Controller
         } elseif ($type === 'category') {
             $data = $request->validate([
                 'name' => 'required|string|max:255',
+                'country_id' => 'required|integer|exists:app_countries,id',
                 'icon' => 'nullable|string|max:255',
                 'description' => 'nullable|string|max:5000',
-                'image_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             ]);
-            if (DB::table('app_categories')->where('id', '<>', $id)->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])->exists()) {
-                return back()->withInput()->withErrors(['name' => 'This category already exists.']);
+            if (DB::table('app_categories')->where('id', '<>', $id)->where('country_id', $data['country_id'])->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])->exists()) {
+                return back()->withInput()->withErrors(['name' => 'This category already exists for the selected country.']);
             }
-            $updates = ['name' => trim($data['name']), 'icon' => trim($data['icon'] ?? '') ?: 'fas fa-suitcase-rolling', 'description' => $data['description'] ?? null, 'updated_at' => now()];
-            if ($request->hasFile('image_file')) {
-                $file = $request->file('image_file');
-                $fileName = 'cat_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $file->getClientOriginalExtension();
-                File::ensureDirectoryExists(public_path('uploads/categories'));
-                $file->move(public_path('uploads/categories'), $fileName);
-                $updates['image'] = '/uploads/categories/' . $fileName;
-            }
+            $updates = ['name' => trim($data['name']), 'country_id' => $data['country_id'], 'icon' => trim($data['icon'] ?? '') ?: 'fas fa-suitcase-rolling', 'description' => $data['description'] ?? null, 'updated_at' => now()];
             DB::table('app_categories')->where('id', $id)->update($updates);
         } elseif ($type === 'country') {
             $data = $request->validate([
                 'name' => 'required|string|max:255',
                 'currency' => 'nullable|string|max:255',
+                'cities' => 'nullable|array|max:100',
+                'cities.*' => 'nullable|string|max:255',
                 'flag_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             ]);
             if (DB::table('app_countries')->where('id', '<>', $id)->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])->exists()) {
                 return back()->withInput()->withErrors(['name' => 'This country already exists.']);
             }
             $currencies = collect(explode(',', $data['currency'] ?? ''))->map(fn ($currency) => strtoupper(trim($currency)))->filter()->unique()->values()->all();
-            $updates = ['name' => trim($data['name']), 'currency' => $currencies[0] ?? null, 'currencies' => json_encode($currencies), 'updated_at' => now()];
+            $cities = collect($data['cities'] ?? [])->map(fn ($city) => trim($city))->filter()->unique(fn ($city) => mb_strtolower($city))->values()->all();
+            $updates = ['name' => trim($data['name']), 'currency' => $currencies[0] ?? null, 'currencies' => json_encode($currencies), 'cities' => json_encode($cities), 'updated_at' => now()];
             if ($request->hasFile('flag_file')) {
                 $file = $request->file('flag_file');
                 $fileName = 'flag_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $file->getClientOriginalExtension();
@@ -890,11 +923,11 @@ class AdminController extends Controller
             $name = trim($data['name']);
             $duplicate = DB::table('app_profession_job_titles')
                 ->where('type', $type)
-                ->where('category_id', $data['category_id'])
-                ->where('subcategory_id', $data['subcategory_id'])
                 ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)]);
             if ($type === 'job_title') {
-                $duplicate->where('profession_id', $data['profession_id']);
+                $duplicate->where('category_id', $data['category_id'])
+                    ->where('subcategory_id', $data['subcategory_id'])
+                    ->where('profession_id', $data['profession_id']);
             }
             if ($duplicate->exists()) {
                 return back()->withInput()->withErrors(['name' => 'This option already exists.']);
@@ -902,8 +935,8 @@ class AdminController extends Controller
             DB::table('app_profession_job_titles')->insert([
                 'type' => $type,
                 'name' => $name,
-                'category_id' => $data['category_id'],
-                'subcategory_id' => $data['subcategory_id'],
+                'category_id' => $data['category_id'] ?? null,
+                'subcategory_id' => $data['subcategory_id'] ?? null,
                 'profession_id' => $data['profession_id'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -911,23 +944,18 @@ class AdminController extends Controller
         } elseif ($type === 'category') {
             $data = $request->validate([
                 'name' => 'required|string|max:255',
+                'country_id' => 'required|integer|exists:app_countries,id',
                 'icon' => 'nullable|string|max:255',
                 'description' => 'nullable|string|max:5000',
-                'image_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             ]);
-            $image = null;
-            if ($request->hasFile('image_file')) {
-                $file = $request->file('image_file');
-                $fileName = 'cat_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $file->getClientOriginalExtension();
-                File::ensureDirectoryExists(public_path('uploads/categories'));
-                $file->move(public_path('uploads/categories'), $fileName);
-                $image = '/uploads/categories/' . $fileName;
+            if (DB::table('app_categories')->where('country_id', $data['country_id'])->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])->exists()) {
+                return back()->withInput()->withErrors(['name' => 'This category already exists for the selected country.']);
             }
             DB::table('app_categories')->insert([
                 'name' => trim($data['name']),
+                'country_id' => $data['country_id'],
                 'icon' => trim($data['icon'] ?? '') ?: 'fas fa-suitcase-rolling',
                 'description' => $data['description'] ?? null,
-                'image' => $image,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -935,9 +963,12 @@ class AdminController extends Controller
             $data = $request->validate([
                 'name' => 'required|string|max:255|unique:app_countries,name',
                 'currency' => 'nullable|string|max:255',
+                'cities' => 'nullable|array|max:100',
+                'cities.*' => 'nullable|string|max:255',
                 'flag_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             ]);
             $currencies = collect(explode(',', $data['currency'] ?? ''))->map(fn ($currency) => strtoupper(trim($currency)))->filter()->unique()->values()->all();
+            $cities = collect($data['cities'] ?? [])->map(fn ($city) => trim($city))->filter()->unique(fn ($city) => mb_strtolower($city))->values()->all();
             $flag = null;
             if ($request->hasFile('flag_file')) {
                 $file = $request->file('flag_file');
@@ -948,7 +979,7 @@ class AdminController extends Controller
             }
             DB::table('app_countries')->insert([
                 'name' => trim($data['name']), 'visa_fee' => null, 'currency' => $currencies[0] ?? null,
-                'visa_fee_details' => null, 'currencies' => json_encode($currencies), 'flag' => $flag,
+                'visa_fee_details' => null, 'currencies' => json_encode($currencies), 'cities' => json_encode($cities), 'flag' => $flag,
                 'created_at' => now(), 'updated_at' => now(),
             ]);
         } else {
@@ -1074,10 +1105,10 @@ class AdminController extends Controller
         $name = trim($data['name']);
         $duplicate = DB::table('app_profession_job_titles')
             ->where('type', $validated['type'])
-            ->where('category_id', $data['category_id'])
-            ->where('subcategory_id', $data['subcategory_id'])
             ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)]);
         if ($validated['type'] === 'job_title') {
+            $duplicate->where('category_id', $data['category_id'])
+                ->where('subcategory_id', $data['subcategory_id']);
             $duplicate->where('profession_id', $data['profession_id']);
         }
         if ($duplicate->exists()) {
@@ -1087,8 +1118,8 @@ class AdminController extends Controller
         DB::table('app_profession_job_titles')->insert([
             'type' => $validated['type'],
             'name' => $name,
-            'category_id' => $data['category_id'],
-            'subcategory_id' => $data['subcategory_id'],
+            'category_id' => $data['category_id'] ?? null,
+            'subcategory_id' => $data['subcategory_id'] ?? null,
             'profession_id' => $data['profession_id'] ?? null,
             'created_at' => now(),
             'updated_at' => now(),
@@ -1179,16 +1210,18 @@ class AdminController extends Controller
 
     private function validateProfessionJobTitleData(Request $request, string $type): array
     {
-        $rules = [
-            'category_id' => 'required|integer|exists:app_categories,id',
-            'subcategory_id' => 'required|integer|exists:app_visa_types,id',
-            'name' => 'required|string|max:255',
-        ];
+        $rules = ['name' => 'required|string|max:255'];
         if ($type === 'job_title') {
+            $rules['category_id'] = 'required|integer|exists:app_categories,id';
+            $rules['subcategory_id'] = 'required|integer|exists:app_visa_types,id';
             $rules['profession_id'] = 'required|integer|exists:app_profession_job_titles,id';
         }
 
         $data = $request->validate($rules);
+        if ($type === 'profession') {
+            return $data;
+        }
+
         $subcategory = DB::table('app_visa_types')
             ->where('id', $data['subcategory_id'])
             ->where('category_id', $data['category_id'])
@@ -1220,8 +1253,22 @@ class AdminController extends Controller
     {
         $this->autoManageSettingsColumns();
         $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'VisaBook', 'app_icon' => ''];
-        $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
+        $categories = DB::table('app_categories')->orderBy('name')->get();
         $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+        foreach ($countries as $country) {
+            $currencies = json_decode($country->currencies ?? '[]', true);
+            if (!is_array($currencies) || !$currencies) {
+                $currencies = !empty($country->currency) ? [$country->currency] : [];
+            }
+            $country->currencies = collect($currencies)
+                ->map(fn ($currency) => strtoupper(trim((string) $currency)))
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+            $cities = json_decode($country->cities ?? '[]', true);
+            $country->cities = is_array($cities) ? $cities : [];
+        }
         $professions = DB::table('app_profession_job_titles')->where('type', 'profession')->orderBy('name')->get();
         $jobTitles = DB::table('app_profession_job_titles')->where('type', 'job_title')->orderBy('name')->get();
         foreach ($categories as $category) {
@@ -1235,16 +1282,28 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'job_title' => 'required|string|max:255',
-            'category_id' => 'required|integer|exists:app_categories,id',
-            'subcategory_id' => 'required|integer|exists:app_visa_types,id',
+            'category_id' => 'sometimes|nullable|integer|exists:app_categories,id',
+            'subcategory_id' => 'sometimes|nullable|integer|exists:app_visa_types,id',
             'country_location' => 'required|string|max:255',
+            'global_country_ids' => 'nullable|array',
+            'global_country_ids.*' => 'required|integer|distinct|exists:app_countries,id',
+            'city_locations' => 'nullable|array',
+            'city_locations.*' => 'array',
+            'city_locations.*.*' => 'required|string|max:255',
+            'category_ids' => 'required|array|min:1',
+            'category_ids.*' => 'required|integer|distinct|exists:app_categories,id',
             'profession' => 'required|string|max:255',
             'number_of_vacancies' => 'required|integer|min:1|max:100000',
             'job_description' => 'required|string',
             'requirements' => 'required|string',
-            'salary' => 'required|numeric|min:0|max:9999999999.99',
-            'salary_currency' => 'required|in:SAR,USD,AED,QAR,KWD,BHD,OMR,PKR',
-            'salary_period' => 'required|in:month,week,day',
+            'salary' => 'nullable|numeric|min:0|max:9999999999.99',
+            'salary_currency' => 'nullable|string|max:10',
+            'salary_period' => 'nullable|in:month,week,day',
+            'salary_by_country' => 'nullable|array',
+            'salary_by_country.*.country' => 'nullable|string|max:255',
+            'salary_by_country.*.amount' => 'nullable|numeric|min:0|max:9999999999.99',
+            'salary_by_country.*.currency' => 'nullable|string|max:10',
+            'salary_by_country.*.period' => 'nullable|in:month,week,day',
             'working_hours' => 'required|string|max:100',
             'working_days' => 'required|array|min:1',
             'working_days.*' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
@@ -1258,73 +1317,215 @@ class AdminController extends Controller
             'status' => 'required|in:Active,Inactive'
         ]);
 
-        $category = DB::table('app_categories')->where('id', $validated['category_id'])->first();
-        $subcategory = DB::table('app_visa_types')
-            ->where('id', $validated['subcategory_id'])
-            ->where('category_id', $validated['category_id'])
-            ->first();
         $errors = [];
-        if (!$category) {
-            $errors['category_id'] = 'Select a valid category.';
-        }
-        if (!$subcategory) {
-            $errors['subcategory_id'] = 'Select a subcategory from the selected category.';
+        $salaryByCountry = collect($validated['salary_by_country'] ?? [])
+            ->map(function ($row) {
+                if (!is_array($row)) {
+                    return null;
+                }
+                $country = trim((string) ($row['country'] ?? ''));
+                $amount = $row['amount'] ?? null;
+                $currency = strtoupper(trim((string) ($row['currency'] ?? '')));
+                $period = strtolower(trim((string) ($row['period'] ?? '')));
+                if ($country === '' && ($amount === null || $amount === '') && $currency === '' && $period === '') {
+                    return null;
+                }
+                return [
+                    'country' => $country,
+                    'amount' => $amount !== null && $amount !== '' ? (float) $amount : null,
+                    'currency' => $currency !== '' ? $currency : null,
+                    'period' => $period !== '' ? $period : null,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        if (!empty($salaryByCountry)) {
+            foreach ($salaryByCountry as $salaryRow) {
+                if (
+                    empty($salaryRow['country'])
+                    || $salaryRow['amount'] === null
+                    || empty($salaryRow['currency'])
+                    || empty($salaryRow['period'])
+                ) {
+                    $errors['salary_by_country'] = 'Each salary row needs a country, amount, currency, and period.';
+                    continue;
+                }
+
+                if ($salaryRow['country'] === 'All Country (Global multi-select)') {
+                    continue;
+                }
+
+                $salaryCountry = DB::table('app_countries')
+                    ->where('name', $salaryRow['country'])
+                    ->first(['currency', 'currencies']);
+                if (!$salaryCountry) {
+                    $errors['salary_by_country'] = 'Select a valid country for each salary row.';
+                    continue;
+                }
+                $countryCurrencies = json_decode($salaryCountry->currencies ?? '[]', true);
+                if (!is_array($countryCurrencies) || !$countryCurrencies) {
+                    $countryCurrencies = !empty($salaryCountry->currency) ? [$salaryCountry->currency] : [];
+                }
+                $countryCurrencies = array_map(
+                    fn ($currency) => strtoupper(trim((string) $currency)),
+                    $countryCurrencies
+                );
+                if ($countryCurrencies && !in_array($salaryRow['currency'], $countryCurrencies, true)) {
+                    $errors['salary_by_country'] = 'Choose a currency configured for the selected country.';
+                }
+            }
+
+            $firstSalaryRow = $salaryByCountry[0];
+            $validated['salary'] = $firstSalaryRow['amount'] ?? $validated['salary'];
+            $validated['salary_currency'] = $firstSalaryRow['currency'] ?? $validated['salary_currency'];
+            $validated['salary_period'] = $firstSalaryRow['period'] ?? $validated['salary_period'];
+            $validated['salary_by_country'] = $salaryByCountry;
+        } else {
+            $validated['salary_by_country'] = [];
         }
 
-        $professionOption = DB::table('app_profession_job_titles')
-            ->where('type', 'profession')
-            ->where('name', $validated['profession'])
-            ->where('category_id', $validated['category_id'])
-            ->where('subcategory_id', $validated['subcategory_id'])
-            ->first();
-        $jobTitleExists = DB::table('app_profession_job_titles')
-            ->where('type', 'job_title')
-            ->where('name', $validated['job_title'])
-            ->where('category_id', $validated['category_id'])
-            ->where('subcategory_id', $validated['subcategory_id'])
-            ->where('profession_id', $professionOption->id ?? 0)
-            ->exists();
-        $professionExists = $professionOption !== null;
-
-        if ($jobId !== null) {
-            $existingJob = DB::table('app_jobs')->where('id', $jobId)->first();
-            $sameSavedContext = $existingJob
-                && ($existingJob->category === $category->name || $existingJob->category === null)
-                && $existingJob->category_visa_type === $subcategory->name;
-            $professionExists = $professionExists || ($sameSavedContext && $existingJob->profession === $validated['profession']);
-            $jobTitleExists = $jobTitleExists || ($sameSavedContext && $existingJob->job_title === $validated['job_title']);
+        if ($validated['salary'] === null || $validated['salary'] === '' || $validated['salary_currency'] === null || $validated['salary_period'] === null) {
+            $errors['salary'] = 'Add at least one salary amount with a country, currency, and period.';
         }
 
-        if (!$professionExists) {
-            $errors['profession'] = 'Select a profession from the available options.';
+        $categoryIds = collect($validated['category_ids'])->map(fn ($id) => (int) $id)->unique()->values();
+        $selectedCategories = DB::table('app_categories')->whereIn('id', $categoryIds)->get(['id', 'name', 'country_id']);
+        $isGlobalCountry = mb_strtolower(trim($validated['country_location'])) === mb_strtolower('All Country (Global multi-select)');
+        $selectedCountryId = $isGlobalCountry
+            ? null
+            : DB::table('app_countries')->where('name', trim($validated['country_location']))->value('id');
+        $selectedGlobalCountryIds = collect($validated['global_country_ids'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->all();
+        $cityLocations = [];
+        foreach ($validated['city_locations'] ?? [] as $countryId => $cities) {
+            $countryId = filter_var($countryId, FILTER_VALIDATE_INT);
+            if ($countryId === false || (!$isGlobalCountry && (int) $countryId !== (int) $selectedCountryId)
+                || ($isGlobalCountry && !in_array((int) $countryId, $selectedGlobalCountryIds, true))) {
+                $errors['city_locations'] = 'Select cities only from the job’s selected country or countries.';
+                continue;
+            }
+
+            $country = DB::table('app_countries')->where('id', $countryId)->first(['cities']);
+            $availableCities = json_decode($country->cities ?? '[]', true);
+            $availableCities = is_array($availableCities) ? $availableCities : [];
+            $selectedCities = collect($cities)->map(fn ($city) => trim($city))->filter()->unique()->values();
+            if ($selectedCities->contains(fn ($city) => !in_array($city, $availableCities, true))) {
+                $errors['city_locations'] = 'Select cities configured for the chosen country.';
+                continue;
+            }
+            if ($selectedCities->isNotEmpty()) {
+                $cityLocations[(int) $countryId] = $selectedCities->all();
+            }
         }
-        if (!$jobTitleExists) {
-            $errors['job_title'] = 'Select a job title from the available options.';
+        $categoryCountryMismatch = !$isGlobalCountry && (
+            !$selectedCountryId || $selectedCategories->contains(
+                fn ($selectedCategory) => !$selectedCategory->country_id || (int) $selectedCategory->country_id !== (int) $selectedCountryId
+            )
+        );
+        if ($selectedCategories->count() !== $categoryIds->count() || $categoryCountryMismatch) {
+            $errors['category_ids'] = 'Select visa types available for the chosen country.';
         }
         if ($errors) {
             throw \Illuminate\Validation\ValidationException::withMessages($errors);
         }
 
-        $validated['category'] = $category->name;
-        $validated['category_visa_type'] = $subcategory->name;
+        $categoryId = $validated['category_id'] ?? null;
+        $subcategoryId = $validated['subcategory_id'] ?? null;
+        $existingJob = $jobId !== null ? DB::table('app_jobs')->where('id', $jobId)->first() : null;
+
+        if (($categoryId && !$subcategoryId) || (!$categoryId && $subcategoryId)) {
+            $errors['category_id'] = 'Category and subcategory must be selected together.';
+            $errors['subcategory_id'] = 'Category and subcategory must be selected together.';
+        } elseif ($categoryId && $subcategoryId) {
+            $category = DB::table('app_categories')->where('id', $categoryId)->first();
+            $subcategory = DB::table('app_visa_types')
+                ->where('id', $subcategoryId)
+                ->where('category_id', $categoryId)
+                ->first();
+            if (!$category) {
+                $errors['category_id'] = 'Select a valid category.';
+            }
+            if (!$subcategory) {
+                $errors['subcategory_id'] = 'Select a subcategory from the selected category.';
+            }
+        } else {
+            $category = null;
+            $subcategory = null;
+            if ($existingJob) {
+                $category = DB::table('app_categories')->where('name', $existingJob->category)->first();
+                if ($category) {
+                    $subcategory = DB::table('app_visa_types')
+                        ->where('category_id', $category->id)
+                        ->where('name', $existingJob->category_visa_type)
+                        ->first();
+                }
+            }
+        }
+
+        $professionOption = DB::table('app_profession_job_titles')
+            ->where('type', 'profession')
+            ->where('name', $validated['profession'])
+            ->first();
+        $professionExists = $professionOption !== null;
+
+        if ($existingJob) {
+            $sameSavedContext = ($existingJob->category === ($category->name ?? $existingJob->category))
+                && $existingJob->category_visa_type === ($subcategory->name ?? $existingJob->category_visa_type);
+            $professionExists = $professionExists || ($sameSavedContext && $existingJob->profession === $validated['profession']);
+        }
+
+        if (!$professionExists) {
+            $errors['profession'] = 'Select a profession from the available options.';
+        }
+        if ($errors) {
+            throw \Illuminate\Validation\ValidationException::withMessages($errors);
+        }
+
+        $validated['category'] = $category->name ?? $existingJob->category ?? null;
+        $validated['category_visa_type'] = $subcategory->name ?? $existingJob->category_visa_type ?? null;
+        $validated['category_ids'] = $categoryIds->all();
+        $validated['category'] = $selectedCategories->first()->name;
+        $validated['category_visa_type'] = $selectedCategories->first()->name;
+        $validated['city_locations'] = $cityLocations;
+        $validated['global_country_ids'] = $isGlobalCountry ? $selectedGlobalCountryIds : [];
 
         return $validated;
     }
 
     private function jobDataFromValidated(Request $request, array $validated): array
     {
+        $salaryByCountry = collect($validated['salary_by_country'] ?? [])
+            ->map(fn ($row) => is_array($row) ? [
+                'country' => trim((string) ($row['country'] ?? '')),
+                'amount' => isset($row['amount']) && $row['amount'] !== '' ? (float) $row['amount'] : null,
+                'currency' => isset($row['currency']) && $row['currency'] !== '' ? strtoupper(trim((string) $row['currency'])) : null,
+                'period' => isset($row['period']) && $row['period'] !== '' ? strtolower(trim((string) $row['period'])) : null,
+            ] : null)
+            ->filter(fn ($row) => is_array($row) && (($row['country'] ?? '') !== '' || ($row['amount'] ?? null) !== null || ($row['currency'] ?? null) !== null || ($row['period'] ?? null) !== null))
+            ->values()
+            ->all();
+
+        $primarySalary = !empty($salaryByCountry) ? $salaryByCountry[0] : null;
+
         return [
             'job_title' => trim($validated['job_title']),
-            'category' => trim($validated['category']),
-            'category_visa_type' => trim($validated['category_visa_type']),
+            'category' => isset($validated['category']) ? trim($validated['category']) : null,
+            'category_visa_type' => isset($validated['category_visa_type']) ? trim($validated['category_visa_type']) : null,
+            'category_ids' => json_encode($validated['category_ids']),
             'country_location' => trim($validated['country_location']),
+            'city_locations' => json_encode($validated['city_locations']),
+            'global_country_ids' => json_encode($validated['global_country_ids']),
             'profession' => trim($validated['profession']),
             'number_of_vacancies' => (int) $validated['number_of_vacancies'],
             'job_description' => trim($validated['job_description']),
             'requirements' => trim($validated['requirements']),
-            'salary' => $validated['salary'],
-            'salary_currency' => $validated['salary_currency'],
-            'salary_period' => $validated['salary_period'],
+            'salary' => $primarySalary['amount'] ?? ($validated['salary'] ?? null),
+            'salary_by_country' => json_encode($salaryByCountry),
+            'salary_currency' => $primarySalary['currency'] ?? ($validated['salary_currency'] ?? 'SAR'),
+            'salary_period' => $primarySalary['period'] ?? ($validated['salary_period'] ?? 'month'),
             'working_hours' => trim($validated['working_hours']),
             'working_days' => json_encode($validated['working_days']),
             'overtime_policy' => trim($validated['overtime_policy']),
@@ -1494,6 +1695,39 @@ class AdminController extends Controller
         return view('admin.edit_request', compact('visaRequest', 'settings', 'countries', 'nationalities', 'nationalityCurrency', 'visaCurrencies', 'categories', 'professions', 'jobTitles'));
     }
 
+    public function requestApplicationPdf($id)
+    {
+        $this->autoManageSettingsColumns();
+
+        $visaRequest = DB::table('app_visa_requests')->where('id', $id)->first();
+        if (!$visaRequest) {
+            abort(404);
+        }
+
+        $selectedJobIds = json_decode($visaRequest->selected_job_ids ?? '[]', true);
+        $selectedJobIds = is_array($selectedJobIds)
+            ? array_values(array_filter($selectedJobIds, fn ($jobId) => filter_var($jobId, FILTER_VALIDATE_INT) !== false))
+            : [];
+        $selectedJobTitles = $selectedJobIds
+            ? DB::table('app_jobs')->whereIn('id', $selectedJobIds)->orderBy('id')->pluck('job_title')->all()
+            : [];
+        $passportPhotoDataUri = null;
+        if (!empty($visaRequest->passport_photo)) {
+            $passportPhotoName = basename(str_replace('\\', '/', $visaRequest->passport_photo));
+            if (preg_match('/\A[a-zA-Z0-9._-]+\z/', $passportPhotoName)) {
+                $passportPhotoPath = public_path('uploads/passports/' . $passportPhotoName);
+                if (is_file($passportPhotoPath)) {
+                    $mimeType = mime_content_type($passportPhotoPath);
+                    if (in_array($mimeType, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+                        $passportPhotoDataUri = 'data:' . $mimeType . ';base64,' . base64_encode(file_get_contents($passportPhotoPath));
+                    }
+                }
+            }
+        }
+
+        return view('admin.request_pdf', compact('visaRequest', 'selectedJobTitles', 'passportPhotoDataUri'));
+    }
+
     public function updateRequest(Request $request, $id)
     {
         $this->autoManageSettingsColumns();
@@ -1580,28 +1814,44 @@ class AdminController extends Controller
         $data['selected_job_ids'] = null;
 
         if ($selectedJobIds) {
-            $allowedJobCategories = array_values(array_filter([
-                trim((string) ($data['visa_type'] ?? '')),
-                trim((string) ($data['visa_category'] ?? '')),
-            ]));
-            $matchingJobIds = DB::table('app_jobs')
+            $selectedProfession = mb_strtolower(trim((string) ($data['visa_type'] ?? '')));
+            $selectedVisaCategory = mb_strtolower(trim((string) ($data['visa_category'] ?? '')));
+            $selectedCategoryId = DB::table('app_categories')
+                ->where('name', trim((string) ($data['visa_category'] ?? '')))
+                ->value('id');
+            $matchingJobs = DB::table('app_jobs')
                 ->whereIn('id', $selectedJobIds)
                 ->where('status', 'Active')
-                ->whereRaw('LOWER(country_location) = ?', [mb_strtolower(trim((string) ($data['destination_country'] ?? '')))])
-                ->whereIn('category_visa_type', $allowedJobCategories)
+                ->where(function ($query) use ($data) {
+                    $query->whereRaw('LOWER(country_location) = ?', [mb_strtolower(trim((string) ($data['destination_country'] ?? '')))])
+                        ->orWhereRaw('LOWER(country_location) = ?', [mb_strtolower('All Country (Global multi-select)')]);
+                })
+                ->get(['id', 'category_visa_type', 'category_ids', 'profession']);
+            $matchingJobIds = $matchingJobs
+                ->filter(function ($job) use ($selectedProfession, $selectedVisaCategory, $selectedCategoryId) {
+                    $jobCategoryIds = json_decode($job->category_ids ?? '[]', true) ?: [];
+                    if (!is_array($jobCategoryIds)) {
+                        $jobCategoryIds = [];
+                    }
+                    $hasSelectedCategory = $selectedCategoryId && in_array((int) $selectedCategoryId, array_map('intval', $jobCategoryIds), true);
+                    $hasLegacyCategoryMatch = mb_strtolower(trim((string) $job->category_visa_type)) === $selectedVisaCategory;
+                    $hasSelectedProfession = mb_strtolower(trim((string) $job->profession)) === $selectedProfession;
+
+                    return $hasSelectedProfession && ($hasSelectedCategory || $hasLegacyCategoryMatch);
+                })
                 ->pluck('id')
                 ->map(fn ($id) => (int) $id)
                 ->all();
 
             if (count($matchingJobIds) !== count($selectedJobIds)) {
-                return back()->withErrors(['selected_job_ids' => 'One or more selected jobs are no longer available for this country and visa type.'])->withInput();
+                return back()->withErrors(['selected_job_ids' => 'One or more selected jobs are no longer available for this country, visa category, and profession.'])->withInput();
             }
 
             $data['job_title'] = DB::table('app_jobs')->where('id', $selectedJobIds[0])->value('job_title');
             $data['selected_job_ids'] = json_encode($selectedJobIds);
         }
 
-        if (is_string($data['visa_type'] ?? null) && preg_match('/driver/i', $data['visa_type'])) {
+        if (is_string($data['visa_type'] ?? null) && preg_match('/driver|chauffeur/i', $data['visa_type'])) {
             $request->validate(['driving_license_available' => 'required|in:yes,no']);
         }
 
@@ -1636,7 +1886,7 @@ class AdminController extends Controller
             abort(404);
         }
 
-        $ticketRequest = DB::table('app_ticket_requests')->where('visa_request_id', $id)->first();
+        $this->attachTicketRequestDetails($visaRequest, $ticketRequest);
         $countryPayment = DB::table('app_countries')
             ->where('name', $visaRequest->destination_country)
             ->first(['visa_fee', 'currency']);
@@ -1648,6 +1898,20 @@ class AdminController extends Controller
         $flightAirports = $this->getFlightAirports($visaRequest->nationality ?? null);
 
         return view('frontend.travel_success', compact('settings', 'visaRequest', 'ticketRequest', 'visaFee', 'visaFeeCurrency', 'bankAccounts', 'statusText', 'statusMessage', 'flightAirports'));
+    }
+
+    private function attachTicketRequestDetails($visaRequest, $ticketRequest): void
+    {
+        if (!$visaRequest || !$ticketRequest) {
+            return;
+        }
+
+        $visaRequest->flight_ticket_requested_at = $ticketRequest->requested_at;
+        $visaRequest->ticket_status = $ticketRequest->status;
+        $visaRequest->preferred_date_start = $ticketRequest->preferred_date_start;
+        $visaRequest->preferred_date_end = $ticketRequest->preferred_date_end;
+        $visaRequest->preferred_airport = $ticketRequest->preferred_airport;
+        $visaRequest->ticket_details = $ticketRequest->details;
     }
 
     public function uploadPaymentReceipt(Request $request, $id)
@@ -1714,12 +1978,8 @@ class AdminController extends Controller
         ]);
 
         $ticketRequest = DB::table('app_ticket_requests')->where('visa_request_id', $id)->first();
-        if ($ticketRequest) {
-            return back()->withErrors(['ticket' => 'A ticket request has already been submitted for this application.'])->withInput();
-        }
-
-        $ticketRequestId = DB::table('app_ticket_requests')->insertGetId([
-            'visa_request_id' => $id,
+        $isReapplication = $ticketRequest !== null;
+        $ticketRequestData = [
             'preferred_date_start' => $validated['preferred_date_start'],
             'preferred_date_end' => $validated['preferred_date_end'],
             'preferred_airport' => $validated['preferred_airport'],
@@ -1727,14 +1987,35 @@ class AdminController extends Controller
             'status' => 'Requested',
             'status_updated_at' => now(),
             'requested_at' => now(),
-            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        if ($ticketRequest) {
+            DB::table('app_ticket_requests')->where('id', $ticketRequest->id)->update($ticketRequestData);
+        } else {
+            DB::table('app_ticket_requests')->insert($ticketRequestData + [
+                'visa_request_id' => $id,
+                'created_at' => now(),
+            ]);
+        }
+
+        DB::table('app_visa_requests')->where('id', $id)->update([
+            'preferred_date_start' => $validated['preferred_date_start'],
+            'preferred_date_end' => $validated['preferred_date_end'],
+            'preferred_airport' => $validated['preferred_airport'],
+            'flight_ticket_requested_at' => now(),
+            'ticket_status' => 'Requested',
+            'ticket_details' => null,
+            'ticket_status_updated_at' => now(),
             'updated_at' => now(),
         ]);
 
-        $ticketRequest = DB::table('app_ticket_requests')->where('id', $ticketRequestId)->first();
+        $ticketRequest = DB::table('app_ticket_requests')->where('visa_request_id', $id)->first();
         $this->sendTicketBookingEmail($visaRequest, $ticketRequest);
 
-        return redirect()->route('travel.apply.success', $id)->with('result_notice', 'Flight ticket request submitted successfully.');
+        return redirect()->route('travel.apply.success', $id)->with('result_notice', $isReapplication
+            ? 'Flight ticket request resubmitted successfully.'
+            : 'Flight ticket request submitted successfully.');
     }
 
     public function updateTicketRequestStatus(Request $request)
@@ -1834,6 +2115,7 @@ class AdminController extends Controller
 
         if ($visaRequest) {
             $ticketRequest = DB::table('app_ticket_requests')->where('visa_request_id', $visaRequest->id)->first();
+            $this->attachTicketRequestDetails($visaRequest, $ticketRequest);
             $countryPayment = DB::table('app_countries')
                 ->where('name', $visaRequest->destination_country)
                 ->first(['visa_fee', 'currency']);
@@ -2224,21 +2506,22 @@ class AdminController extends Controller
     public function addCategory(Request $request)
     {
         $this->autoManageSettingsColumns();
-        $request->validate(['name' => 'required']);
-        $imageUrl = null;
-        if ($request->hasFile('image_file')) {
-            $file = $request->file('image_file');
-            $fileName = 'cat_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/categories'), $fileName);
-            $imageUrl = '/uploads/categories/' . $fileName;
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'country_id' => 'required|integer|exists:app_countries,id',
+            'icon' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:5000',
+        ]);
+        if (DB::table('app_categories')->where('country_id', $data['country_id'])->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])->exists()) {
+            return response()->json(['message' => 'This category already exists for the selected country.'], 422);
         }
 
         try {
             DB::table('app_categories')->insert([
-                'name' => $request->name,
-                'icon' => $request->icon ?? 'fas fa-suitcase-rolling',
-                'description' => $request->description,
-                'image' => $imageUrl,
+                'name' => trim($data['name']),
+                'country_id' => $data['country_id'],
+                'icon' => trim($data['icon'] ?? '') ?: 'fas fa-suitcase-rolling',
+                'description' => $data['description'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

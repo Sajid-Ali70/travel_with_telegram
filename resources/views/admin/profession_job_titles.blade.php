@@ -47,30 +47,30 @@
                     <div class="col-lg-6">
                         <section class="admin-card h-100">
                             <h2 class="h5 mb-3">{{ $group['title'] }}</h2>
-                            <form action="{{ route('admin.profession_job_titles.add') }}" method="POST" class="row g-2 mb-4 hierarchy-form" data-type="{{ $type }}">
+                            <form action="{{ route('admin.profession_job_titles.add') }}" method="POST" class="row g-2 mb-4 {{ $type === 'job_title' ? 'hierarchy-form' : '' }}" data-type="{{ $type }}">
                                 @csrf
                                 <input type="hidden" name="type" value="{{ $type }}">
-                                <div class="col-12">
-                                    <label class="form-label" for="{{ $type }}_category_id">Category</label>
-                                    <select id="{{ $type }}_category_id" name="category_id" class="form-select" required>
-                                        <option value="">Select category</option>
-                                        @foreach($categories as $category)
-                                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label" for="{{ $type }}_subcategory_id">Subcategory</label>
-                                    <select id="{{ $type }}_subcategory_id" name="subcategory_id" class="form-select" required>
-                                        <option value="">Select subcategory</option>
-                                        @foreach($categories as $category)
-                                            @foreach($category->types as $subcategory)
-                                                <option value="{{ $subcategory->id }}" data-category-id="{{ $category->id }}" {{ old('subcategory_id') == $subcategory->id ? 'selected' : '' }}>{{ $subcategory->name }}</option>
-                                            @endforeach
-                                        @endforeach
-                                    </select>
-                                </div>
                                 @if($type === 'job_title')
+                                    <div class="col-12">
+                                        <label class="form-label" for="{{ $type }}_category_id">Category</label>
+                                        <select id="{{ $type }}_category_id" name="category_id" class="form-select" required>
+                                            <option value="">Select category</option>
+                                            @foreach($categories as $category)
+                                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label" for="{{ $type }}_subcategory_id">Subcategory</label>
+                                        <select id="{{ $type }}_subcategory_id" name="subcategory_id" class="form-select" required>
+                                            <option value="">Select subcategory</option>
+                                            @foreach($categories as $category)
+                                                @foreach($category->types as $subcategory)
+                                                    <option value="{{ $subcategory->id }}" data-category-id="{{ $category->id }}" {{ old('subcategory_id') == $subcategory->id ? 'selected' : '' }}>{{ $subcategory->name }}</option>
+                                                @endforeach
+                                            @endforeach
+                                        </select>
+                                    </div>
                                     <div class="col-12">
                                         <label class="form-label" for="{{ $type }}_profession_id">Profession</label>
                                         <select id="{{ $type }}_profession_id" name="profession_id" class="form-select" required>

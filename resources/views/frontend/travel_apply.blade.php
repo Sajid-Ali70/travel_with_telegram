@@ -16,6 +16,9 @@
             @endphp
             background-image: url('{{ $bannerUrl }}') !important;
         }
+        #availableJobsList .available-job-card:hover .job-card-summary {
+            color: var(--text-main) !important;
+        }
     </style>
 </head>
 <body>
@@ -175,7 +178,7 @@
                                 <select id="destination_country_select" name="destination_country" class="form-select" required style="padding-left: 48px;">
                                     <option value="" selected disabled>Select Country</option>
                                     @foreach($countries as $country)
-                                        <option value="{{ $country->name }}" {{ old('destination_country') == $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
+                                        <option value="{{ $country->name }}" data-id="{{ $country->id }}" {{ old('destination_country') == $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
                                     @endforeach
                                     @if(count($countries) == 0)
                                         <option>United Arab Emirates</option>
@@ -204,7 +207,7 @@
                                             }
                                         @endphp
                                         @foreach($categories as $cat)
-                                            <option value="{{ $cat->name }}" data-id="{{ $cat->id }}" {{ (($defaultCategoryId && $cat->id == $defaultCategoryId) || old('visa_category') == $cat->name) ? 'selected' : '' }}>{{ strtoupper($cat->name) }}</option>
+                                            <option value="{{ $cat->name }}" data-id="{{ $cat->id }}" data-country-id="{{ $cat->country_id ?? '' }}" {{ (($defaultCategoryId && $cat->id == $defaultCategoryId) || old('visa_category') == $cat->name) ? 'selected' : '' }}>{{ strtoupper($cat->name) }}</option>
                                         @endforeach
                                     @else
                                         <option value="Work Visa" selected>WORK VISA</option>
@@ -214,11 +217,14 @@
                         </div>
 
                         <div class="form-group">
-                            <label>WORK TYPE / SUBCATEGORY OF VISA TYPE *</label>
+                            <label>PROFESSION *</label>
                             <div class="input-with-icon">
-                                <i class="far fa-list-alt"></i>
+                                <i class="fas fa-user-tie"></i>
                                 <select id="visa_type_select" name="visa_type" class="form-select" required style="padding-left: 48px;">
-                                    <option value="" selected disabled>Select Work Type / Subcategory</option>
+                                    <option value="" selected disabled>Select Profession</option>
+                                    @foreach($professions as $profession)
+                                        <option value="{{ $profession->name }}" {{ old('visa_type') === $profession->name ? 'selected' : '' }}>{{ $profession->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -316,18 +322,35 @@
             const availableJobsSection = document.getElementById('availableJobsSection');
             const availableJobsList = document.getElementById('availableJobsList');
             const availableJobs = @json($jobs);
+            const categoriesById = @json($categories->mapWithKeys(fn ($category) => [(string) $category->id => $category->name]));
             const selectedJobIds = new Set();
+
+            function filterCategories(resetSelection) {
+                const selectedCountryOption = destinationCountrySelect.options[destinationCountrySelect.selectedIndex];
+                const selectedCountryId = selectedCountryOption ? selectedCountryOption.dataset.id : '';
+                const currentCategoryOption = catSelect.options[catSelect.selectedIndex];
+
+                Array.from(catSelect.options).forEach(option => {
+                    if (!option.value) {
+                        option.hidden = false;
+                        return;
+                    }
+                    const categoryCountryId = option.dataset.countryId || '';
+                    option.hidden = Boolean(categoryCountryId && categoryCountryId !== selectedCountryId);
+                });
+
+                if (resetSelection || (currentCategoryOption && currentCategoryOption.hidden)) {
+                    catSelect.value = '';
+                }
+            }
 
             function renderAvailableJobs() {
                 const selectedCountry = destinationCountrySelect.value.trim().toLowerCase();
-                const selectedCategory = catSelect.value.trim().toLowerCase();
-                const selectedType = typeSelect.value.trim().toLowerCase();
-                const categoryTypes = Array.from(typeSelect.options)
-                    .map(option => option.value.trim().toLowerCase())
-                    .filter(Boolean);
+                const selectedCategory = catSelect.value.trim();
+                const selectedProfession = typeSelect.value.trim().toLowerCase();
 
                 availableJobsList.replaceChildren();
-                if (!selectedCountry || !selectedCategory) {
+                if (!selectedCountry || !selectedCategory || !selectedProfession) {
                     selectedJobIds.clear();
                     availableJobsSection.classList.add('d-none');
                     return;
@@ -336,12 +359,21 @@
                 availableJobsSection.classList.remove('d-none');
                 const matchingJobs = availableJobs.filter(job => {
                     const jobCountry = (job.country_location || '').trim().toLowerCase();
-                    const jobCategory = (job.category_visa_type || '').trim().toLowerCase();
-                    const belongsToCategory = jobCategory === selectedCategory || categoryTypes.includes(jobCategory);
+                    const jobProfession = (job.profession || '').trim().toLowerCase();
+                    const selectedCategoryOption = catSelect.options[catSelect.selectedIndex];
+                    const selectedCategoryId = selectedCategoryOption ? Number.parseInt(selectedCategoryOption.dataset.id, 10) : null;
+                    let jobCategoryIds = [];
+                    try {
+                        jobCategoryIds = Array.isArray(job.category_ids) ? job.category_ids : JSON.parse(job.category_ids || '[]');
+                    } catch (error) {
+                        console.error('Unable to read visa types assigned to a job.', error);
+                        jobCategoryIds = [];
+                    }
+                    const belongsToSelectedCategory = selectedCategoryId !== null && jobCategoryIds.map(Number).includes(selectedCategoryId);
 
-                    return jobCountry === selectedCountry
-                        && belongsToCategory
-                        && (!selectedType || jobCategory === selectedType);
+                    return (jobCountry === selectedCountry || jobCountry === 'all country (global multi-select)')
+                        && belongsToSelectedCategory
+                        && jobProfession === selectedProfession;
                 });
                 const visibleJobIds = new Set(matchingJobs.map(job => String(job.id)));
                 selectedJobIds.forEach(jobId => {
@@ -358,23 +390,141 @@
 
                 matchingJobs.forEach(job => {
                     const item = document.createElement('article');
-                    item.className = 'border rounded p-3 mb-2';
+                    item.className = 'available-job-card border rounded p-3 mb-2';
 
                     const title = document.createElement('h6');
                     title.className = 'mb-1 text-white';
                     title.textContent = job.job_title || 'Job Opening';
 
                     const details = document.createElement('p');
-                    details.className = 'small text-muted mb-2';
-                    const salary = job.salary !== null && job.salary !== ''
+                    details.className = 'job-card-summary small text-muted mb-2';
+                    const fallbackSalary = job.salary !== null && job.salary !== ''
                         ? `${Number(job.salary).toLocaleString()} ${job.salary_currency || ''}${job.salary_period ? ` / ${job.salary_period}` : ''}`
                         : '';
+                    let salary = fallbackSalary;
+                    if (job.salary_by_country) {
+                        try {
+                            const salaryRows = Array.isArray(job.salary_by_country)
+                                ? job.salary_by_country
+                                : JSON.parse(job.salary_by_country);
+                            if (Array.isArray(salaryRows) && salaryRows.length) {
+                                const normalizedCountry = country => (country || '').trim().toLowerCase();
+                                const selectedCountrySalary = salaryRows.find(row =>
+                                    row
+                                    && normalizedCountry(row.country) === selectedCountry
+                                    && row.amount !== null
+                                    && row.amount !== ''
+                                ) || salaryRows.find(row =>
+                                    row
+                                    && normalizedCountry(row.country) === 'all country (global multi-select)'
+                                    && row.amount !== null
+                                    && row.amount !== ''
+                                );
+                                salary = selectedCountrySalary
+                                    ? `${Number(selectedCountrySalary.amount).toLocaleString()} ${selectedCountrySalary.currency || job.salary_currency || ''}${selectedCountrySalary.period ? ` / ${selectedCountrySalary.period}` : ''}`
+                                    : '';
+                            }
+                        } catch (error) {
+                            console.error('Unable to read country-specific salary details for a job.', error);
+                        }
+                    }
                     const vacancies = job.number_of_vacancies ? `${job.number_of_vacancies} vacancies` : '';
                     details.textContent = [salary, vacancies].filter(Boolean).join(' | ');
 
-                    const description = document.createElement('p');
-                    description.className = 'small mb-0';
-                    description.textContent = job.job_description || '';
+                    let jobCategoryIds = [];
+                    try {
+                        jobCategoryIds = Array.isArray(job.category_ids) ? job.category_ids : JSON.parse(job.category_ids || '[]');
+                    } catch (error) {
+                        console.error('Unable to read visa types assigned to a job.', error);
+                    }
+                    const categoryNames = Array.isArray(jobCategoryIds)
+                        ? jobCategoryIds.map(categoryId => categoriesById[String(categoryId)]).filter(Boolean)
+                        : [];
+                    if (categoryNames.length) {
+                        const categoriesDetail = document.createElement('p');
+                        categoriesDetail.className = 'small mb-2';
+                        categoriesDetail.textContent = `Visa categories: ${categoryNames.join(', ')}`;
+                        item.append(title, details, categoriesDetail);
+                    } else {
+                        item.append(title, details);
+                    }
+
+                    const detailGrid = document.createElement('div');
+                    detailGrid.className = 'row g-2 small mb-3';
+                    const addJobDetail = (label, value) => {
+                        if (value === null || value === undefined || value === '') return;
+                        const detail = document.createElement('div');
+                        detail.className = 'col-sm-6';
+                        const detailLabel = document.createElement('strong');
+                        detailLabel.textContent = `${label}: `;
+                        const detailValue = document.createElement('span');
+                        detailValue.textContent = value;
+                        detail.append(detailLabel, detailValue);
+                        detailGrid.appendChild(detail);
+                    };
+                    const workingDays = (() => {
+                        if (Array.isArray(job.working_days)) return job.working_days;
+                        try {
+                            const parsedDays = JSON.parse(job.working_days || '[]');
+                            return Array.isArray(parsedDays) ? parsedDays : [];
+                        } catch (error) {
+                            console.error('Unable to read working days for a job.', error);
+                            return [];
+                        }
+                    })();
+                    const benefits = [
+                        ['Accommodation', job.accommodation_provided],
+                        ['Food allowance', job.food_allowance_provided],
+                        ['Medical insurance', job.medical_insurance],
+                        ['Air ticket', job.ticket_provided],
+                    ].map(([benefit, provided]) => `${benefit}: ${Number(provided) === 1 ? 'Provided' : 'Not provided'}`);
+
+                    const cityList = (() => {
+                        if (!job.city_locations) return '';
+                        try {
+                            const parsedCityMap = JSON.parse(job.city_locations || '{}');
+                            if (!parsedCityMap || typeof parsedCityMap !== 'object') return '';
+                            const cities = [];
+                            Object.values(parsedCityMap).forEach(countryCities => {
+                                if (Array.isArray(countryCities)) {
+                                    countryCities.forEach(city => {
+                                        if (city && !cities.includes(city)) cities.push(city);
+                                    });
+                                }
+                            });
+                            return cities.join(', ');
+                        } catch (error) {
+                            console.error('Unable to read city locations for a job.', error);
+                            return '';
+                        }
+                    })();
+
+                    addJobDetail('Country', job.country_location);
+                    if (cityList) addJobDetail('City', cityList);
+                    addJobDetail('Profession', job.profession);
+                    addJobDetail('Working hours', job.working_hours);
+                    addJobDetail('Working days', workingDays.join(', '));
+                    addJobDetail('Contract duration', job.contract_duration);
+                    addJobDetail('Paid leave after one year', job.paid_leave_days_after_one_year !== null && job.paid_leave_days_after_one_year !== ''
+                        ? `${job.paid_leave_days_after_one_year} days`
+                        : '');
+                    addJobDetail('Overtime policy', job.overtime_policy);
+                    addJobDetail('Benefits', benefits.join(' | '));
+                    if (detailGrid.childElementCount) item.appendChild(detailGrid);
+
+                    const appendJobText = (label, value) => {
+                        if (!value) return;
+                        const textBlock = document.createElement('div');
+                        textBlock.className = 'small mb-2';
+                        const textLabel = document.createElement('strong');
+                        textLabel.textContent = `${label}: `;
+                        const textContent = document.createElement('span');
+                        textContent.textContent = value;
+                        textBlock.append(textLabel, textContent);
+                        item.appendChild(textBlock);
+                    };
+                    appendJobText('Job description', job.job_description);
+                    appendJobText('Requirements / qualifications', job.requirements);
 
                     const applyLabel = document.createElement('div');
                     applyLabel.className = 'd-inline-flex mt-3 mb-0';
@@ -452,7 +602,7 @@
                     applyLabel.append(applyCheckbox);
                     applyLabel.append(applyButton);
 
-                    item.append(title, details, description, applyLabel);
+                    item.appendChild(applyLabel);
                     availableJobsList.appendChild(item);
                 });
             }
@@ -553,14 +703,9 @@
                 }
             });
 
-            function isDriverType(value) {
-                const text = (value || '').toLowerCase();
-                return text.includes('driver') || text.includes('chauffeur');
-            }
-
             function toggleDrivingLicenseField() {
                 const selectedValue = typeSelect.value || '';
-                const shouldShow = isDriverType(selectedValue);
+                const shouldShow = /driver|chauffeur/i.test(selectedValue);
 
                 drivingLicenseField.classList.toggle('d-none', !shouldShow);
                 if (!shouldShow) {
@@ -568,60 +713,24 @@
                 }
             }
 
-            async function updateVisaTypes(catId) {
-                if (!catId) {
-                    typeSelect.innerHTML = '<option value="" selected disabled>Select Visa Type</option>';
-                    toggleDrivingLicenseField();
-                    renderAvailableJobs();
-                    return;
-                }
-
-                typeSelect.innerHTML = '<option value="" selected disabled>Loading...</option>';
-                try {
-                    const response = await fetch(`/api/visa-types/${catId}`);
-                    const types = await response.json();
-
-                    typeSelect.innerHTML = '<option value="" selected disabled>Select Visa Type</option>';
-                    if (types.length > 0) {
-                        types.forEach(type => {
-                            const option = document.createElement('option');
-                            option.value = type.name;
-                            option.textContent = type.name;
-                            typeSelect.appendChild(option);
-                        });
-
-                        const firstDriverType = Array.from(typeSelect.options).find(option => isDriverType(option.value));
-                        if (firstDriverType) {
-                            typeSelect.value = firstDriverType.value;
-                        }
-                    } else {
-                        const option = document.createElement('option');
-                        option.value = "";
-                        option.textContent = "No types available for this category";
-                        typeSelect.appendChild(option);
-                    }
-                } catch (error) {
-                    console.error('Error fetching visa types:', error);
-                    typeSelect.innerHTML = '<option value="" selected disabled>Error loading types</option>';
-                }
-
+            function updateProfessionSelection() {
                 toggleDrivingLicenseField();
                 renderAvailableJobs();
             }
 
             typeSelect.addEventListener('change', toggleDrivingLicenseField);
             typeSelect.addEventListener('change', renderAvailableJobs);
-            destinationCountrySelect.addEventListener('change', renderAvailableJobs);
-
-            catSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                updateVisaTypes(selectedOption ? selectedOption.getAttribute('data-id') : null);
+            destinationCountrySelect.addEventListener('change', function() {
+                filterCategories(true);
+                renderAvailableJobs();
             });
 
-            const selectedOption = catSelect.options[catSelect.selectedIndex];
-            if (selectedOption) {
-                updateVisaTypes(selectedOption.getAttribute('data-id'));
-            }
+            catSelect.addEventListener('change', function() {
+                renderAvailableJobs();
+            });
+
+            filterCategories(false);
+            updateProfessionSelection();
         });
     </script>
 

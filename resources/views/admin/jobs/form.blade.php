@@ -2,27 +2,24 @@
 
 @php
     $isEditing = $job !== null;
-    $categoryValue = old('category_visa_type', $job->category_visa_type ?? '');
     $countryValue = old('country_location', $job->country_location ?? '');
-    $selectedCategory = $categories->firstWhere('name', $job->category ?? '');
-    if (!$selectedCategory && $isEditing) {
-        $selectedCategory = $categories->first(function ($category) use ($categoryValue) {
-            return $category->types->contains('name', $categoryValue);
-        });
-    }
-    $categoryIdValue = old('category_id', $selectedCategory->id ?? '');
-    $subcategoryIdValue = old('subcategory_id', $selectedCategory
-        ? ($selectedCategory->types->firstWhere('name', $categoryValue)->id ?? '')
-        : '');
     $professionValue = old('profession', $job->profession ?? '');
     $jobTitleValue = old('job_title', $job->job_title ?? '');
-    $matchingProfessions = $professions->where('category_id', $categoryIdValue)->where('subcategory_id', $subcategoryIdValue);
-    $matchingProfession = $matchingProfessions->firstWhere('name', $professionValue);
-    $matchingJobTitles = $jobTitles
-        ->where('category_id', $categoryIdValue)
-        ->where('subcategory_id', $subcategoryIdValue)
-        ->where('profession_id', $matchingProfession->id ?? 0);
     $workingDaysValue = old('working_days', $selectedWorkingDays);
+    $selectedCategoryIds = collect(old('category_ids', json_decode($job->category_ids ?? '[]', true) ?: []))
+        ->map(fn ($id) => (string) $id)
+        ->all();
+    $selectedCityLocations = old('city_locations', json_decode($job->city_locations ?? '[]', true) ?: []);
+    $selectedGlobalCountryIds = collect(old('global_country_ids', json_decode($job->global_country_ids ?? '[]', true) ?: []))
+        ->map(fn ($id) => (string) $id)
+        ->all();
+    if (!$selectedCategoryIds && $job) {
+        $legacyCategory = $categories->firstWhere('name', $job->category_visa_type)
+            ?? $categories->firstWhere('name', $job->category);
+        if ($legacyCategory) {
+            $selectedCategoryIds = [(string) $legacyCategory->id];
+        }
+    }
 @endphp
 
 @section('title', $isEditing ? 'Edit Job Posting' : 'Add Job Posting')
@@ -49,15 +46,32 @@
         <div class="row g-3">
             <div class="col-12"><h2 class="h5 mb-0">1. Job Basic Details</h2></div>
             <div class="col-md-6">
+                <label for="job_title" class="form-label">Job Title</label>
+                <input id="job_title" type="text" name="job_title" class="form-control" value="{{ $jobTitleValue }}" placeholder="Enter job title" maxlength="255" required>
+            </div>
+            <div class="col-md-6">
+                <label for="profession" class="form-label">Profession</label>
+                <select id="profession" name="profession" class="form-select" required>
+                    <option value="">Select profession</option>
+                    @if($professionValue && !$professions->contains('name', $professionValue))
+                        <option value="{{ $professionValue }}" selected>{{ $professionValue }} (current)</option>
+                    @endif
+                    @foreach($professions as $profession)
+                        <option value="{{ $profession->name }}" {{ $professionValue === $profession->name ? 'selected' : '' }}>{{ $profession->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
                 <label for="country_location" class="form-label">Country / Location</label>
                 @if(isset($countries) && $countries->isNotEmpty())
                     <select id="country_location" name="country_location" class="form-select" required>
                         <option value="">Select country</option>
-                        @if($countryValue && !$countries->contains('name', $countryValue))
+                        <option value="All Country (Global multi-select)" {{ $countryValue === 'All Country (Global multi-select)' ? 'selected' : '' }}>All Country (Global multi-select)</option>
+                        @if($countryValue && !$countries->contains('name', $countryValue) && $countryValue !== 'All Country (Global multi-select)')
                             <option value="{{ $countryValue }}" selected>{{ $countryValue }}</option>
                         @endif
                         @foreach($countries as $country)
-                            <option value="{{ $country->name }}" {{ $countryValue === $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
+                            <option value="{{ $country->name }}" data-country-id="{{ $country->id }}" {{ $countryValue === $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
                         @endforeach
                     </select>
                 @else
@@ -65,52 +79,97 @@
                 @endif
             </div>
             <div class="col-md-6">
-                <label for="category_id" class="form-label">Category</label>
-                <select id="category_id" name="category_id" class="form-select" required>
-                    <option value="">Select category</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" {{ (string) $categoryIdValue === (string) $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label for="subcategory_id" class="form-label">Subcategory</label>
-                <select id="subcategory_id" name="subcategory_id" class="form-select" required>
-                    <option value="">Select subcategory</option>
-                    @foreach($categories as $category)
-                        @foreach($category->types as $subcategory)
-                            <option value="{{ $subcategory->id }}" data-category-id="{{ $category->id }}" {{ (string) $subcategoryIdValue === (string) $subcategory->id ? 'selected' : '' }}>{{ $subcategory->name }}</option>
-                        @endforeach
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label for="profession" class="form-label">Profession</label>
-                <select id="profession" name="profession" class="form-select" required>
-                    <option value="">Select profession</option>
-                    @if($professionValue && !$matchingProfessions->contains('name', $professionValue))
-                        <option value="{{ $professionValue }}" selected>{{ $professionValue }} (current)</option>
-                    @endif
-                    @foreach($professions as $profession)
-                        <option value="{{ $profession->name }}" data-profession-id="{{ $profession->id }}" data-category-id="{{ $profession->category_id }}" data-subcategory-id="{{ $profession->subcategory_id }}" {{ $professionValue === $profession->name ? 'selected' : '' }}>{{ $profession->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label for="job_title" class="form-label">Job Title</label>
-                <select id="job_title" name="job_title" class="form-select" required>
-                    <option value="">Select job title</option>
-                    @if($jobTitleValue && !$matchingJobTitles->contains('name', $jobTitleValue))
-                        <option value="{{ $jobTitleValue }}" selected>{{ $jobTitleValue }} (current)</option>
-                    @endif
-                    @foreach($jobTitles as $jobTitle)
-                        <option value="{{ $jobTitle->name }}" data-category-id="{{ $jobTitle->category_id }}" data-subcategory-id="{{ $jobTitle->subcategory_id }}" data-profession-id="{{ $jobTitle->profession_id }}" {{ $jobTitleValue === $jobTitle->name ? 'selected' : '' }}>{{ $jobTitle->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-6">
                 <label for="number_of_vacancies" class="form-label">Number of Vacancies</label>
                 <input id="number_of_vacancies" type="number" name="number_of_vacancies" class="form-control" value="{{ old('number_of_vacancies', $job->number_of_vacancies ?? 1) }}" min="1" required>
+            </div>
+            <div class="col-12">
+                <section id="globalCountryMatrix" class="admin-card d-none p-3" aria-live="polite">
+                    <div class="d-flex justify-content-between align-items-center gap-3 border-bottom border-secondary pb-2 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-globe text-primary"></i>
+                            <div>
+                                <h3 class="h6 mb-0">Global Country &amp; Visa Matrix</h3>
+                                <small class="text-muted">Check countries and select valid visa types for each</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-light" id="selectAllCountriesBtn">Select All</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllCountriesBtn">Deselect All</button>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        @foreach($countries as $country)
+                            @php
+                                $countryCategories = $categories->where('country_id', $country->id);
+                                $hasSelectedCountryCategory = $countryCategories->contains(fn ($category) => in_array((string) $category->id, $selectedCategoryIds, true));
+                                $countryChecked = in_array((string) $country->id, $selectedGlobalCountryIds, true)
+                                    || isset($selectedCityLocations[$country->id])
+                                    || ($countryValue === 'All Country (Global multi-select)' && $hasSelectedCountryCategory);
+                            @endphp
+                            <div class="border border-secondary rounded p-3 country-matrix-row" data-country-id="{{ $country->id }}">
+                                <label class="d-flex align-items-center gap-2 m-0">
+                                    <input type="checkbox" class="form-check-input m-0 country-matrix-checkbox" name="global_country_ids[]" value="{{ $country->id }}" {{ $countryChecked ? 'checked' : '' }}>
+                                    <span class="fw-semibold">{{ strtoupper(substr($country->name, 0, 2)) }}</span>
+                                    <span class="fw-semibold">{{ $country->name }}</span>
+                                </label>
+                                <div class="country-matrix-categories d-flex flex-wrap gap-2 ms-4 pt-3 {{ $countryChecked ? '' : 'd-none' }}">
+                                    @forelse($countryCategories as $category)
+                                        <label class="d-inline-flex align-items-center gap-2 border border-secondary rounded px-3 py-2 m-0 bg-dark">
+                                            <input class="form-check-input m-0 flex-shrink-0 category-id-input global-category-input" type="checkbox" name="category_ids[]" value="{{ $category->id }}" {{ in_array((string) $category->id, $selectedCategoryIds, true) ? 'checked' : '' }}>
+                                            <span>{{ $category->name }}</span>
+                                        </label>
+                                    @empty
+                                        <span class="small text-muted">No visa types are configured for this country.</span>
+                                    @endforelse
+                                </div>
+                                @if(count($country->cities))
+                                    <fieldset class="country-matrix-cities ms-4 pt-3 {{ $countryChecked ? '' : 'd-none' }}">
+                                        <legend class="small fw-semibold mb-2">Job cities</legend>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @foreach($country->cities as $city)
+                                                <label class="d-inline-flex align-items-center gap-2 border border-secondary rounded px-3 py-2 m-0 bg-dark">
+                                                    <input class="form-check-input m-0 flex-shrink-0 city-location-input global-city-input" type="checkbox" name="city_locations[{{ $country->id }}][]" value="{{ $city }}" {{ in_array($city, $selectedCityLocations[$country->id] ?? [], true) ? 'checked' : '' }}>
+                                                    <span>{{ $city }}</span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </fieldset>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </section>
+
+                <section id="countryCategoriesPanel" class="admin-card d-none p-3" aria-live="polite">
+                    <div class="d-flex align-items-center gap-2 pb-3 border-bottom border-secondary">
+                        <input type="checkbox" id="selectedCountryIndicator" class="form-check-input m-0" checked disabled style="opacity: 1;" aria-label="Selected country">
+                        <h3 class="h6 mb-0" id="selectedCountryName"></h3>
+                    </div>
+                    <div id="countryCategoriesList" class="d-flex flex-wrap gap-2 ms-4 pt-3">
+                        @foreach($categories as $category)
+                            <label class="d-inline-flex align-items-center gap-2 border border-secondary rounded px-3 py-2 m-0 category-choice bg-dark" data-country-id="{{ $category->country_id ?? '' }}">
+                                <input class="form-check-input m-0 flex-shrink-0 category-id-input country-category-input" type="checkbox" name="category_ids[]" value="{{ $category->id }}" {{ in_array((string) $category->id, $selectedCategoryIds, true) ? 'checked' : '' }}>
+                                <span>{{ $category->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    <p id="noCountryCategories" class="small text-muted mb-0 d-none">No visa types are configured for this country.</p>
+                    <fieldset id="countryCitiesList" class="ms-4 pt-3 d-none">
+                        <legend class="small fw-semibold mb-2">Job cities</legend>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach($countries as $country)
+                                @foreach($country->cities as $city)
+                                    <label class="d-inline-flex align-items-center gap-2 border border-secondary rounded px-3 py-2 m-0 city-choice bg-dark" data-country-id="{{ $country->id }}">
+                                        <input class="form-check-input m-0 flex-shrink-0 city-location-input country-city-input" type="checkbox" name="city_locations[{{ $country->id }}][]" value="{{ $city }}" {{ in_array($city, $selectedCityLocations[$country->id] ?? [], true) ? 'checked' : '' }}>
+                                        <span>{{ $city }}</span>
+                                    </label>
+                                @endforeach
+                            @endforeach
+                        </div>
+                    </fieldset>
+                    @error('category_ids')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
+                    @error('city_locations')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
+                </section>
             </div>
 
             <div class="col-12 mt-4"><h2 class="h5 mb-0">2. Working Hours &amp; Schedule</h2></div>
@@ -141,16 +200,86 @@
             </div>
 
             <div class="col-12 mt-4"><h2 class="h5 mb-0">3. Salary &amp; Benefits</h2></div>
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                    <label class="form-label mb-0">Salary by Country</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="addSalaryCountryRow"><i class="fas fa-plus me-1"></i> Add Salary</button>
+                </div>
+                @php
+                    $salaryCountryRows = old('salary_by_country', !empty($job->salary_by_country) ? json_decode($job->salary_by_country, true) : []);
+                    if (!is_array($salaryCountryRows) || $salaryCountryRows === []) {
+                        $salaryCountryRows = [[
+                            'country' => old('country_location', $job->country_location ?? ''),
+                            'amount' => old('salary', $job->salary ?? ''),
+                            'currency' => old('salary_currency', $job->salary_currency ?? 'SAR'),
+                            'period' => old('salary_period', $job->salary_period ?? 'month'),
+                        ]];
+                    }
+                @endphp
+                <div id="salaryCountryRows" class="d-flex flex-column gap-2">
+                    @foreach($salaryCountryRows as $index => $salaryRow)
+                        @php
+                            $salaryCountryName = old('salary_by_country.' . $index . '.country', $salaryRow['country'] ?? '');
+                            $selectedSalaryCurrency = old('salary_by_country.' . $index . '.currency', $salaryRow['currency'] ?? 'SAR');
+                            $salaryCountry = $countries->firstWhere('name', $salaryCountryName);
+                            $hasConfiguredSalaryCurrencies = $salaryCountry && !empty($salaryCountry->currencies);
+                            $salaryCurrencies = $hasConfiguredSalaryCurrencies
+                                ? $salaryCountry->currencies
+                                : ['SAR', 'USD', 'AED', 'QAR', 'KWD', 'BHD', 'OMR', 'PKR'];
+                            if ($hasConfiguredSalaryCurrencies && !in_array($selectedSalaryCurrency, $salaryCurrencies, true)) {
+                                $selectedSalaryCurrency = $salaryCurrencies[0];
+                            } elseif (!$hasConfiguredSalaryCurrencies && $selectedSalaryCurrency && !in_array($selectedSalaryCurrency, $salaryCurrencies, true)) {
+                                $salaryCurrencies[] = $selectedSalaryCurrency;
+                            }
+                        @endphp
+                        <div class="row salary-country-row g-2 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label">Country</label>
+                                <select name="salary_by_country[{{ $index }}][country]" class="form-select">
+                                    <option value="">Select country</option>
+                                    <option value="All Country (Global multi-select)" {{ $salaryCountryName === 'All Country (Global multi-select)' ? 'selected' : '' }}>All Country (Global multi-select)</option>
+                                    @foreach($countries as $country)
+                                        <option value="{{ $country->name }}" {{ $salaryCountryName === $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Amount</label>
+                                <input type="number" step="0.01" min="0" name="salary_by_country[{{ $index }}][amount]" value="{{ old('salary_by_country.' . $index . '.amount', $salaryRow['amount'] ?? '') }}" class="form-control" placeholder="e.g. 1800">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Currency</label>
+                                <select name="salary_by_country[{{ $index }}][currency]" class="form-select">
+                                    @foreach($salaryCurrencies as $currency)
+                                        <option value="{{ $currency }}" {{ $selectedSalaryCurrency === $currency ? 'selected' : '' }}>{{ $currency }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Per</label>
+                                <select name="salary_by_country[{{ $index }}][period]" class="form-select">
+                                    @foreach(['month' => 'Month', 'week' => 'Week', 'day' => 'Day'] as $period => $label)
+                                        <option value="{{ $period }}" {{ (old('salary_by_country.' . $index . '.period', $salaryRow['period'] ?? 'month') ?? 'month') === $period ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-outline-danger remove-salary-country-row" aria-label="Remove salary row"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
             <div class="col-md-6">
-                <label for="salary" class="form-label">Basic Salary</label>
+                <label for="salary" class="form-label">Primary Salary (fallback)</label>
                 <div class="input-group">
-                    <input id="salary" type="number" step="0.01" min="0" name="salary" class="form-control" value="{{ old('salary', $job->salary ?? '') }}" placeholder="e.g. 1800" required>
-                    <select name="salary_currency" class="form-select" aria-label="Salary currency" required>
+                    <input id="salary" type="number" step="0.01" min="0" name="salary" class="form-control" value="{{ old('salary', $job->salary ?? '') }}" placeholder="e.g. 1800">
+                    <select name="salary_currency" class="form-select" aria-label="Salary currency">
                         @foreach(['SAR', 'USD', 'AED', 'QAR', 'KWD', 'BHD', 'OMR', 'PKR'] as $currency)
                             <option value="{{ $currency }}" {{ old('salary_currency', $job->salary_currency ?? 'SAR') === $currency ? 'selected' : '' }}>{{ $currency }}</option>
                         @endforeach
                     </select>
-                    <select name="salary_period" class="form-select" aria-label="Salary period" required>
+                    <select name="salary_period" class="form-select" aria-label="Salary period">
                         @foreach(['month' => 'month', 'week' => 'week', 'day' => 'day'] as $period => $label)
                             <option value="{{ $period }}" {{ old('salary_period', $job->salary_period ?? 'month') === $period ? 'selected' : '' }}>/ {{ $label }}</option>
                         @endforeach
@@ -210,68 +339,217 @@
         </div>
     </form>
     <script>
-        const categorySelect = document.getElementById('category_id');
-        const subcategorySelect = document.getElementById('subcategory_id');
-        const professionSelect = document.getElementById('profession');
-        const jobTitleSelect = document.getElementById('job_title');
+        document.addEventListener('DOMContentLoaded', function () {
+            const countrySelect = document.getElementById('country_location');
+            const panel = document.getElementById('countryCategoriesPanel');
+            const globalCountryMatrix = document.getElementById('globalCountryMatrix');
+            const selectedCountryName = document.getElementById('selectedCountryName');
+            const emptyMessage = document.getElementById('noCountryCategories');
+            const categoryChoices = Array.from(document.querySelectorAll('.category-choice'));
+            const countryMatrixCheckboxes = Array.from(document.querySelectorAll('.country-matrix-checkbox'));
+            const globalCategoryInputs = Array.from(document.querySelectorAll('.global-category-input'));
+            const countryCategoryInputs = Array.from(document.querySelectorAll('.country-category-input'));
+            const globalCityInputs = Array.from(document.querySelectorAll('.global-city-input'));
+            const countryCityInputs = Array.from(document.querySelectorAll('.country-city-input'));
+            const cityChoices = Array.from(document.querySelectorAll('.city-choice'));
+            const countryCitiesList = document.getElementById('countryCitiesList');
+            const globalCountry = 'All Country (Global multi-select)';
+            const selectAllCountriesBtn = document.getElementById('selectAllCountriesBtn');
+            const deselectAllCountriesBtn = document.getElementById('deselectAllCountriesBtn');
 
-        function filterSubcategories(resetSelection) {
-            const selectedCategory = categorySelect.value;
-            let selectedOptionIsAvailable = false;
+            function updateGlobalCountryRows(clearUnselectedCategories) {
+                countryMatrixCheckboxes.forEach(function (checkbox) {
+                    const row = checkbox.closest('.country-matrix-row');
+                    const categories = row.querySelector('.country-matrix-categories');
+                    categories.classList.toggle('d-none', !checkbox.checked);
+                    const cities = row.querySelector('.country-matrix-cities');
+                    if (cities) cities.classList.toggle('d-none', !checkbox.checked);
 
-            Array.from(subcategorySelect.options).forEach((option) => {
-                if (!option.dataset.categoryId) {
-                    option.hidden = false;
-                    return;
-                }
-
-                const isAvailable = option.dataset.categoryId === selectedCategory;
-                option.hidden = !isAvailable;
-                if (option.selected && isAvailable) {
-                    selectedOptionIsAvailable = true;
-                }
-            });
-
-            if (resetSelection || !selectedOptionIsAvailable) {
-                subcategorySelect.value = '';
+                    row.querySelectorAll('.global-category-input').forEach(function (categoryInput) {
+                        categoryInput.disabled = !checkbox.checked;
+                        if (!checkbox.checked && clearUnselectedCategories) {
+                            categoryInput.checked = false;
+                        }
+                    });
+                    row.querySelectorAll('.global-city-input').forEach(function (cityInput) {
+                        cityInput.disabled = !checkbox.checked;
+                    });
+                });
             }
-            subcategorySelect.disabled = !selectedCategory;
-        }
 
-        function filterContextOptions(select, selectedCategory, selectedSubcategory, selectedProfessionId, resetSelection) {
-            let selectedOptionIsAvailable = false;
-            Array.from(select.options).forEach((option) => {
-                if (!option.dataset.categoryId) {
-                    option.hidden = false;
-                    return;
-                }
+            if (selectAllCountriesBtn) {
+                selectAllCountriesBtn.addEventListener('click', function () {
+                    countryMatrixCheckboxes.forEach(function (checkbox) {
+                        checkbox.checked = true;
+                    });
+                    updateGlobalCountryRows(false);
+                });
+            }
 
-                const isAvailable = option.dataset.categoryId === selectedCategory
-                    && option.dataset.subcategoryId === selectedSubcategory
-                    && (!selectedProfessionId || option.dataset.professionId === selectedProfessionId);
-                option.hidden = !isAvailable;
-                if (option.selected && isAvailable) selectedOptionIsAvailable = true;
+            if (deselectAllCountriesBtn) {
+                deselectAllCountriesBtn.addEventListener('click', function () {
+                    countryMatrixCheckboxes.forEach(function (checkbox) {
+                        checkbox.checked = false;
+                    });
+                    updateGlobalCountryRows(true);
+                });
+            }
+
+            countryMatrixCheckboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    updateGlobalCountryRows(true);
+                });
             });
-            if (resetSelection || !selectedOptionIsAvailable) select.value = '';
-            select.disabled = !selectedCategory || !selectedSubcategory || (select === jobTitleSelect && !selectedProfessionId);
-        }
 
-        function updateJobCatalogOptions(resetSelection) {
-            filterSubcategories(resetSelection);
-            filterContextOptions(professionSelect, categorySelect.value, subcategorySelect.value, '', resetSelection);
-            const filteredProfession = professionSelect.selectedOptions[0];
-            filterContextOptions(jobTitleSelect, categorySelect.value, subcategorySelect.value, filteredProfession ? filteredProfession.dataset.professionId : '', resetSelection);
-        }
+            function updateCountryCategories() {
+                const selectedCountry = countrySelect.value;
+                const selectedOption = countrySelect instanceof HTMLSelectElement
+                    ? countrySelect.options[countrySelect.selectedIndex]
+                    : null;
+                const selectedCountryId = selectedOption ? selectedOption.dataset.countryId : '';
+                const showAll = selectedCountry === globalCountry;
+                const showGlobalMatrix = showAll;
+                let visibleCityChoices = 0;
+                let visibleChoices = 0;
 
-        categorySelect.addEventListener('change', () => updateJobCatalogOptions(true));
-        subcategorySelect.addEventListener('change', () => {
-            filterContextOptions(professionSelect, categorySelect.value, subcategorySelect.value, '', true);
-            filterContextOptions(jobTitleSelect, categorySelect.value, subcategorySelect.value, '', true);
+                categoryChoices.forEach(choice => {
+                    const belongsToCountry = choice.dataset.countryId === selectedCountryId;
+                    const visible = Boolean(selectedCountry) && !showAll && belongsToCountry;
+                    choice.classList.toggle('d-none', !visible);
+                    const checkbox = choice.querySelector('input');
+                    checkbox.disabled = !visible;
+                    if (!visible) checkbox.checked = false;
+                    if (visible) visibleChoices++;
+                });
+
+                panel.classList.toggle('d-none', !selectedCountry || showAll);
+                countryCitiesList.classList.toggle('d-none', !selectedCountry || showAll);
+                globalCountryMatrix.classList.toggle('d-none', !showGlobalMatrix);
+                countryCategoryInputs.forEach(function (checkbox) {
+                    const visible = Boolean(selectedCountry) && !showAll && checkbox.closest('.category-choice').dataset.countryId === selectedCountryId;
+                    checkbox.disabled = !visible;
+                    if (!visible) checkbox.checked = false;
+                });
+                globalCategoryInputs.forEach(function (checkbox) {
+                    checkbox.disabled = !showAll || !checkbox.closest('.country-matrix-row').querySelector('.country-matrix-checkbox').checked;
+                });
+                cityChoices.forEach(function (choice) {
+                    const visible = Boolean(selectedCountry) && !showAll && choice.dataset.countryId === selectedCountryId;
+                    choice.classList.toggle('d-none', !visible);
+                    const checkbox = choice.querySelector('input');
+                    checkbox.disabled = !visible;
+                    if (visible) visibleCityChoices++;
+                });
+                countryCityInputs.forEach(function (checkbox) {
+                    checkbox.disabled = !selectedCountry || showAll || checkbox.closest('.city-choice').dataset.countryId !== selectedCountryId;
+                });
+                globalCityInputs.forEach(function (checkbox) {
+                    checkbox.disabled = !showAll || !checkbox.closest('.country-matrix-row').querySelector('.country-matrix-checkbox').checked;
+                });
+                selectedCountryName.textContent = showAll ? 'All Countries' : selectedCountry;
+                emptyMessage.classList.toggle('d-none', !selectedCountry || visibleChoices > 0);
+            }
+
+            const salaryCountryRows = document.getElementById('salaryCountryRows');
+            const addSalaryCountryRowButton = document.getElementById('addSalaryCountryRow');
+            const currenciesByCountry = @json($countries->mapWithKeys(fn ($country) => [$country->name => $country->currencies]));
+            const fallbackCurrencies = ['SAR', 'USD', 'AED', 'QAR', 'KWD', 'BHD', 'OMR', 'PKR'];
+
+            function updateSalaryCurrencyOptions(row, chooseFirstCurrency) {
+                const countrySelect = row.querySelector('select[name$="[country]"]');
+                const currencySelect = row.querySelector('select[name$="[currency]"]');
+                const availableCurrencies = currenciesByCountry[countrySelect.value] || fallbackCurrencies;
+                const currentCurrency = currencySelect.value;
+                const currencies = [...availableCurrencies];
+                if (!chooseFirstCurrency && currentCurrency && !currencies.includes(currentCurrency)) {
+                    currencies.push(currentCurrency);
+                }
+                currencySelect.replaceChildren();
+                currencies.forEach(function (currency) {
+                    const option = document.createElement('option');
+                    option.value = currency;
+                    option.textContent = currency;
+                    currencySelect.appendChild(option);
+                });
+                if (chooseFirstCurrency) {
+                    currencySelect.value = currencies[0] || '';
+                } else if (currencies.includes(currentCurrency)) {
+                    currencySelect.value = currentCurrency;
+                }
+            }
+
+            salaryCountryRows?.querySelectorAll('.salary-country-row').forEach(function (row) {
+                const countrySelect = row.querySelector('select[name$="[country]"]');
+                countrySelect.addEventListener('change', function () {
+                    updateSalaryCurrencyOptions(row, true);
+                });
+                updateSalaryCurrencyOptions(row, false);
+            });
+
+            function addSalaryCountryRow() {
+                if (!salaryCountryRows) return;
+                const rowCount = salaryCountryRows.querySelectorAll('.salary-country-row').length;
+                const row = document.createElement('div');
+                row.className = 'row salary-country-row g-2 align-items-end';
+                row.innerHTML = `
+                    <div class="col-md-4">
+                        <label class="form-label">Country</label>
+                        <select name="salary_by_country[${rowCount}][country]" class="form-select">
+                            <option value="">Select country</option>
+                            <option value="All Country (Global multi-select)">All Country (Global multi-select)</option>
+                            @foreach($countries as $country)
+                                <option value="{{ $country->name }}">{{ $country->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" step="0.01" min="0" name="salary_by_country[${rowCount}][amount]" class="form-control" placeholder="e.g. 1800">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Currency</label>
+                        <select name="salary_by_country[${rowCount}][currency]" class="form-select">
+                            @foreach(['SAR', 'USD', 'AED', 'QAR', 'KWD', 'BHD', 'OMR', 'PKR'] as $currency)
+                                <option value="{{ $currency }}" {{ $currency === 'SAR' ? 'selected' : '' }}>{{ $currency }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Per</label>
+                        <select name="salary_by_country[${rowCount}][period]" class="form-select">
+                            @foreach(['month' => 'Month', 'week' => 'Week', 'day' => 'Day'] as $period => $label)
+                                <option value="{{ $period }}" {{ $period === 'month' ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-outline-danger remove-salary-country-row" aria-label="Remove salary row"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                salaryCountryRows.appendChild(row);
+                const countrySelect = row.querySelector('select[name$="[country]"]');
+                countrySelect.addEventListener('change', function () {
+                    updateSalaryCurrencyOptions(row, true);
+                });
+                updateSalaryCurrencyOptions(row, false);
+            }
+
+            if (addSalaryCountryRowButton) {
+                addSalaryCountryRowButton.addEventListener('click', addSalaryCountryRow);
+            }
+
+            salaryCountryRows?.addEventListener('click', function (event) {
+                const removeButton = event.target.closest('.remove-salary-country-row');
+                if (!removeButton) return;
+                const row = removeButton.closest('.salary-country-row');
+                if (row && salaryCountryRows.querySelectorAll('.salary-country-row').length > 1) {
+                    row.remove();
+                }
+            });
+
+            updateGlobalCountryRows(false);
+            countrySelect.addEventListener(countrySelect instanceof HTMLSelectElement ? 'change' : 'input', updateCountryCategories);
+            updateCountryCategories();
         });
-        professionSelect.addEventListener('change', () => {
-            const selectedProfession = professionSelect.selectedOptions[0];
-            filterContextOptions(jobTitleSelect, categorySelect.value, subcategorySelect.value, selectedProfession ? selectedProfession.dataset.professionId : '', true);
-        });
-        updateJobCatalogOptions(false);
     </script>
 @endsection

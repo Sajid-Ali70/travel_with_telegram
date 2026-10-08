@@ -213,7 +213,7 @@
                         };
                     @endphp
                     <select name="status" id="request_status" class="form-select" required>
-                        @foreach(['Visa Application Submitted', 'Documents Verification', 'Documents Verification Completed, Request Submitted to Embassy', 'Visa Approved from Embassy', 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected due to Non Payment of Fee'] as $statusOption)
+                        @foreach(['Visa Application Submitted', 'Documents Verification', 'Visa Approved from Embassy', 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected due to Non Payment of Fee'] as $statusOption)
                             <option value="{{ $statusOption }}" {{ $selectedStatus === $statusOption ? 'selected' : '' }}>{{ $statusOption }}</option>
                         @endforeach
                     </select>

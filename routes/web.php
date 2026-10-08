@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 function getAppSettings() {
     $settings = null;
@@ -46,7 +47,12 @@ Route::get('/', function () {
     $categories = [];
     try {
         $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
-        $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
+        $categoryQuery = DB::table('app_categories')->orderBy('id', 'desc');
+        if (Schema::hasColumn('app_categories', 'country_id')) {
+            $categoryQuery->leftJoin('app_countries', 'app_countries.id', '=', 'app_categories.country_id')
+                ->select('app_categories.*', 'app_countries.name as country_name');
+        }
+        $categories = $categoryQuery->get();
     } catch (\Exception $e) {}
 
     if ($theme === 'playstore') {
@@ -77,14 +83,16 @@ Route::get('/apply', function () {
     $countries = [];
     $nationalities = [];
     $categories = [];
+    $professions = [];
     $jobs = [];
     try {
         $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
         $nationalities = DB::table('app_nationalities')->orderBy('name', 'asc')->get();
         $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
+        $professions = DB::table('app_profession_job_titles')->where('type', 'profession')->orderBy('name')->get();
         $jobs = DB::table('app_jobs')->where('status', 'Active')->orderByDesc('id')->get();
     } catch (\Exception $e) {}
-    return view('frontend.travel_apply', compact('settings', 'countries', 'nationalities', 'categories', 'jobs'));
+    return view('frontend.travel_apply', compact('settings', 'countries', 'nationalities', 'categories', 'professions', 'jobs'));
 })->name('travel.apply');
 
 Route::post('/apply', [AdminController::class, 'submitVisaRequest'])->name('travel.apply.post');
@@ -169,6 +177,7 @@ Route::middleware(['admin.auth'])->group(function () {
 
     // Requests Management
     Route::post('/admin/requests/delete', [AdminController::class, 'deleteRequest'])->name('admin.requests.delete');
+    Route::get('/admin/requests/{id}/pdf', [AdminController::class, 'requestApplicationPdf'])->whereNumber('id')->name('admin.requests.pdf');
     Route::get('/admin/requests/{id}/edit', [AdminController::class, 'editRequest'])->name('admin.requests.edit');
     Route::post('/admin/requests/update-status', [AdminController::class, 'updateRequestStatus'])->name('admin.requests.update_status');
     Route::post('/admin/requests/{id}', [AdminController::class, 'updateRequest'])->whereNumber('id')->name('admin.requests.update');

@@ -20,24 +20,38 @@
         @if($errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
         <form action="{{ route('admin.catalog.store', $type) }}" method="POST" enctype="multipart/form-data" class="form-card">
             @csrf
-            @if(in_array($type, ['profession', 'job_title']))
+            @if($type === 'job_title')
                 <div class="mb-3"><label for="category_id" class="form-label">Category</label><select id="category_id" name="category_id" class="form-select" required><option value="">Select category</option>@foreach($categories as $category)<option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>@endforeach</select></div>
                 <div class="mb-3"><label for="subcategory_id" class="form-label">Subcategory</label><select id="subcategory_id" name="subcategory_id" class="form-select" required><option value="">Select subcategory</option>@foreach($categories as $category)@foreach($category->types as $subcategory)<option value="{{ $subcategory->id }}" data-category-id="{{ $category->id }}" {{ old('subcategory_id') == $subcategory->id ? 'selected' : '' }}>{{ $subcategory->name }}</option>@endforeach @endforeach</select></div>
-                @if($type === 'job_title')
-                    <div class="mb-3"><label for="profession_id" class="form-label">Profession</label><select id="profession_id" name="profession_id" class="form-select" required><option value="">Select profession</option>@foreach($professions as $profession)<option value="{{ $profession->id }}" data-category-id="{{ $profession->category_id }}" data-subcategory-id="{{ $profession->subcategory_id }}" {{ old('profession_id') == $profession->id ? 'selected' : '' }}>{{ $profession->name }}</option>@endforeach</select></div>
-                @endif
-                <div class="mb-3"><label for="name" class="form-label">{{ $type === 'profession' ? 'Profession' : 'Job Title' }}</label><input id="name" type="text" name="name" class="form-control" maxlength="255" value="{{ old('name') }}" required autofocus></div>
+                <div class="mb-3"><label for="profession_id" class="form-label">Profession</label><select id="profession_id" name="profession_id" class="form-select" required><option value="">Select profession</option>@foreach($professions as $profession)<option value="{{ $profession->id }}" data-category-id="{{ $profession->category_id }}" data-subcategory-id="{{ $profession->subcategory_id }}" {{ old('profession_id') == $profession->id ? 'selected' : '' }}>{{ $profession->name }}</option>@endforeach</select></div>
+                <div class="mb-3"><label for="name" class="form-label">Job Title</label><input id="name" type="text" name="name" class="form-control" maxlength="255" value="{{ old('name') }}" required autofocus></div>
+            @elseif($type === 'profession')
+                <div class="mb-3"><label for="name" class="form-label">Profession</label><input id="name" type="text" name="name" class="form-control" maxlength="255" value="{{ old('name') }}" required autofocus></div>
             @elseif($type === 'subcategory')
                 <div class="mb-3"><label for="category_id" class="form-label">Parent Category</label><select id="category_id" name="category_id" class="form-select" required><option value="">Select category</option>@foreach($categories as $category)<option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>@endforeach</select></div>
                 <div class="mb-3"><label for="name" class="form-label">Subcategory Name</label><input id="name" type="text" name="name" class="form-control" maxlength="255" value="{{ old('name') }}" required autofocus></div>
             @elseif($type === 'category')
                 <div class="mb-3"><label for="name" class="form-label">Category Name</label><input id="name" type="text" name="name" class="form-control" maxlength="255" value="{{ old('name') }}" required autofocus></div>
+                <div class="mb-3"><label for="country_id" class="form-label">Country</label><select id="country_id" name="country_id" class="form-select" required><option value="">Select country</option>@foreach($countries as $country)<option value="{{ $country->id }}" {{ old('country_id') == $country->id ? 'selected' : '' }}>{{ $country->name }}</option>@endforeach</select></div>
                 <div class="mb-3"><label for="icon" class="form-label">Icon Class (Font Awesome)</label><input id="icon" type="text" name="icon" class="form-control" maxlength="255" value="{{ old('icon', 'fas fa-suitcase-rolling') }}"></div>
                 <div class="mb-3"><label for="description" class="form-label">Description</label><textarea id="description" name="description" class="form-control" rows="4" maxlength="5000">{{ old('description') }}</textarea></div>
-                <div class="mb-3"><label for="image_file" class="form-label">Category Image (optional)</label><input id="image_file" type="file" name="image_file" class="form-control" accept="image/jpeg,image/png,image/webp"></div>
             @elseif($type === 'country')
                 <div class="mb-3"><label for="name" class="form-label">Country Name</label><input id="name" type="text" name="name" class="form-control" maxlength="255" value="{{ old('name') }}" required autofocus></div>
                 <div class="mb-3"><label for="currency" class="form-label">Currencies (comma-separated)</label><input id="currency" type="text" name="currency" class="form-control" maxlength="255" placeholder="e.g. SAR, USD" value="{{ old('currency') }}"></div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label mb-0">Cities</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="addCountryCity"><i class="fas fa-plus me-1"></i> Add City</button>
+                    </div>
+                    <div id="countryCities" class="d-flex flex-column gap-2">
+                        @foreach(old('cities', ['']) as $city)
+                            <div class="input-group country-city-row">
+                                <input type="text" name="cities[]" class="form-control" maxlength="255" value="{{ $city }}" placeholder="Enter city name">
+                                <button type="button" class="btn btn-outline-danger remove-country-city" aria-label="Remove city"><i class="fas fa-trash"></i></button>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
                 <div class="mb-3"><label for="flag_file" class="form-label">Flag (optional)</label><input id="flag_file" type="file" name="flag_file" class="form-control" accept="image/jpeg,image/png,image/webp"></div>
             @else
                 <div class="mb-3"><label for="name" class="form-label">Nationality</label><input id="name" type="text" name="name" class="form-control" maxlength="255" value="{{ old('name') }}" required autofocus></div>
@@ -80,6 +94,35 @@
                 @endif
             });
             updateCatalogSelectors(false);
+        </script>
+    @endif
+    @if($type === 'country')
+        <script>
+            const countryCities = document.getElementById('countryCities');
+            document.getElementById('addCountryCity').addEventListener('click', function () {
+                const row = document.createElement('div');
+                row.className = 'input-group country-city-row';
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = 'cities[]';
+                input.maxLength = 255;
+                input.className = 'form-control';
+                input.placeholder = 'Enter city name';
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'btn btn-outline-danger remove-country-city';
+                removeButton.setAttribute('aria-label', 'Remove city');
+                removeButton.innerHTML = '<i class="fas fa-trash"></i>';
+                row.append(input, removeButton);
+                countryCities.appendChild(row);
+                input.focus();
+            });
+            countryCities.addEventListener('click', function (event) {
+                const removeButton = event.target.closest('.remove-country-city');
+                if (removeButton && countryCities.querySelectorAll('.country-city-row').length > 1) {
+                    removeButton.closest('.country-city-row').remove();
+                }
+            });
         </script>
     @endif
 </body></html>

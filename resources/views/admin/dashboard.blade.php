@@ -663,6 +663,7 @@
                                     @endphp
                                     <button type="button" class="btn btn-sm btn-outline-info me-1" title="View and update status" aria-label="View and update status for request {{ $req->id }}"
                                         data-id="{{ $req->id }}"
+                                        data-pdf-url="{{ route('admin.requests.pdf', $req->id) }}"
                                         data-status="{{ $req->status }}"
                                         data-fee="{{ $req->visa_fee ?? '' }}"
                                         data-currency="{{ $req->visa_fee_currency ?? $requestNationalityCurrency }}"
@@ -703,7 +704,7 @@
                     <div class="mb-3">
                         <label class="form-label" for="requestStatusValue">Status</label>
                         <select name="status" id="requestStatusValue" class="form-select" required>
-                            @foreach(['Visa Application Submitted', 'Documents Verification', 'Documents Verification Completed, Request Submitted to Embassy', 'Visa Approved from Embassy', 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected due to Non Payment of Fee'] as $statusOption)
+                            @foreach(['Visa Application Submitted', 'Documents Verification', 'Visa Approved from Embassy', 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected due to Non Payment of Fee'] as $statusOption)
                                 <option value="{{ $statusOption }}">{{ $statusOption }}</option>
                             @endforeach
                         </select>
@@ -746,9 +747,12 @@
                         </div>
                     </div>
                     <div id="requestStatusError" class="alert alert-danger d-none mt-3 mb-0" role="alert"></div>
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-outline-light" onclick="closeRequestStatusModal()">Cancel</button>
-                        <button type="submit" id="requestStatusSave" class="btn btn-primary">Save Status</button>
+                    <div class="d-flex justify-content-between gap-2 mt-4">
+                        <a id="requestStatusPdf" href="#" target="_blank" rel="noopener" class="btn btn-outline-success"><i class="fas fa-file-pdf me-1"></i>Download PDF</a>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-light" onclick="closeRequestStatusModal()">Cancel</button>
+                            <button type="submit" id="requestStatusSave" class="btn btn-primary">Save Status</button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -1006,7 +1010,7 @@
         <section id="categoriesSection" class="dashboard-section d-none">
             <div class="admin-card">
                 <h5 class="section-title">Add New Category</h5>
-                <form id="addCategoryForm" enctype="multipart/form-data">
+                <form id="addCategoryForm">
                     @csrf
                     <div class="row g-3">
                         <div class="col-md-4">
@@ -1014,12 +1018,17 @@
                             <input type="text" name="name" class="form-control" placeholder="e.g. Tourist Visa" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Icon Class (FontAwesome)</label>
-                            <input type="text" name="icon" class="form-control" placeholder="fas fa-suitcase-rolling" value="fas fa-suitcase-rolling">
+                            <label class="form-label">Country</label>
+                            <select name="country_id" class="form-select" required>
+                                <option value="">Select country</option>
+                                @foreach($countries as $country)
+                                    <option value="{{ $country->id }}">{{ $country->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Display Image</label>
-                            <input type="file" name="image_file" class="form-control" accept="image/*">
+                            <label class="form-label">Icon Class (FontAwesome)</label>
+                            <input type="text" name="icon" class="form-control" placeholder="fas fa-suitcase-rolling" value="fas fa-suitcase-rolling">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Short Description</label>
@@ -1062,7 +1071,7 @@
                 <h5 class="section-title">Manage Categories & Visa Types</h5>
                 <div class="table-responsive mt-3">
                     <table class="reviews-table">
-                        <thead><tr><th>ID</th><th>Icon/Image</th><th>Category Name & Types</th><th>Action</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Icon</th><th>Category Name & Types</th><th>Country</th><th>Action</th></tr></thead>
                         <tbody>
                             @foreach($categories as $cat)
                             <tr>
@@ -1071,9 +1080,6 @@
                                     <div class="d-flex gap-2">
                                         @if(!empty($cat->icon))
                                             <div class="cat-icon-preview"><i class="{{ $cat->icon }}"></i></div>
-                                        @endif
-                                        @if(!empty($cat->image))
-                                            <img src="{{ $cat->image }}" class="cat-image-sm">
                                         @endif
                                     </div>
                                 </td>
@@ -1092,6 +1098,7 @@
                                         <button class="btn btn-outline-purple" type="button" onclick="addVisaTypeQuick({{ $cat->id }})"><i class="fas fa-plus"></i></button>
                                     </div>
                                 </td>
+                                <td>{{ $countries->firstWhere('id', $cat->country_id)->name ?? '—' }}</td>
                                 <td><button class="btn btn-sm btn-danger" onclick="deleteCategory({{ $cat->id }})"><i class="fas fa-trash"></i></button></td>
                             </tr>
                             @endforeach
@@ -1269,6 +1276,7 @@
         function openRequestStatusModal(button) {
             requestStatusForm.reset();
             document.getElementById('requestStatusId').value = button.dataset.id;
+            document.getElementById('requestStatusPdf').href = button.dataset.pdfUrl;
             const legacyStatusLabels = {
                 'Verification of Documents Successful': 'Documents Verification Completed, Request Submitted to Embassy',
                 'Visa Approved': 'Visa Approved from Embassy',

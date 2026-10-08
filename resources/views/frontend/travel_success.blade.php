@@ -283,6 +283,7 @@
     </style>
 </head>
 <body>
+    @php($hasTicketRequest = $ticketRequest !== null || !empty($visaRequest->flight_ticket_requested_at))
     <div class="mobile-container">
         @include('partials.nav')
 
@@ -382,8 +383,12 @@
                             <div class="bank-entry"><strong>Ticket details:</strong><br>{!! nl2br(e($visaRequest->ticket_details)) !!}</div>
                         @endif
                     @endif
-                    @unless($visaRequest->flight_ticket_requested_at)
-                    <form action="{{ route('travel.apply.flight_ticket', $visaRequest->id) }}" method="POST" class="result-action-form">
+                    @if($hasTicketRequest)
+                        <button type="button" id="showTicketReapplyForm" class="action-submit" aria-controls="ticketReapplyForm" aria-expanded="{{ $errors->any() ? 'true' : 'false' }}">
+                            <i class="fas fa-redo me-2"></i>Reapply for Ticket
+                        </button>
+                    @endif
+                    <form id="ticketReapplyForm" action="{{ route('travel.apply.flight_ticket', $visaRequest->id) }}" method="POST" class="result-action-form {{ $hasTicketRequest && !$errors->any() ? 'd-none' : '' }}">
                         @csrf
                         <input type="hidden" name="email" value="{{ $visaRequest->email }}">
                         <div class="action-grid">
@@ -403,9 +408,8 @@
                                 <option value="{{ $code }}" {{ old('preferred_airport', $visaRequest->preferred_airport) === $code ? 'selected' : '' }}>{{ $airport }}</option>
                             @endforeach
                         </select>
-                        <button type="submit" class="action-submit"><i class="fas fa-paper-plane me-2"></i>Submit Flight Ticket Request</button>
+                        <button type="submit" class="action-submit"><i class="fas fa-paper-plane me-2"></i>{{ $hasTicketRequest ? 'Submit Ticket Reapplication' : 'Submit Flight Ticket Request' }}</button>
                     </form>
-                    @endunless
                 </div>
                 @endif
 
@@ -429,6 +433,13 @@
     <script>
         const dateStart = document.getElementById('preferred_date_start');
         const dateEnd = document.getElementById('preferred_date_end');
+        const reapplyButton = document.getElementById('showTicketReapplyForm');
+        const ticketReapplyForm = document.getElementById('ticketReapplyForm');
+        reapplyButton?.addEventListener('click', () => {
+            const isHidden = ticketReapplyForm.classList.toggle('d-none');
+            reapplyButton.setAttribute('aria-expanded', String(!isHidden));
+            if (!isHidden) ticketReapplyForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
         dateStart?.addEventListener('change', () => {
             dateEnd.min = dateStart.value || dateEnd.min;
             if (dateEnd.value && dateEnd.value < dateStart.value) dateEnd.value = dateStart.value;
