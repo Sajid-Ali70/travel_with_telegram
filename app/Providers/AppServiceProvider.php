@@ -26,7 +26,8 @@ class AppServiceProvider extends ServiceProvider
 
             try {
                 $footerCategories = DB::table('app_categories')
-                    ->orderBy('name', 'asc')
+                    ->inRandomOrder()
+                    ->limit(6)
                     ->get();
             } catch (\Exception $e) {
                 // Keep the footer available if the categories table is unavailable.

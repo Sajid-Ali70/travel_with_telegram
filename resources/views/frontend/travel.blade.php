@@ -407,14 +407,14 @@
             <div class="visa-types-grid">
                 @php
                     // Default categories if none exist in database
-                    $displayCategories = (isset($categories) && count($categories) > 0) ? $categories : [
+                    $displayCategories = collect((isset($categories) && count($categories) > 0) ? $categories : [
                         (object)['id' => 1, 'name' => 'Tourist Visa', 'icon' => 'fas fa-plane-departure', 'tagline' => 'Explore the World'],
                         (object)['id' => 2, 'name' => 'Private Sector Work Visa', 'icon' => 'fas fa-briefcase', 'tagline' => 'Build Your Career'],
                         (object)['id' => 3, 'name' => 'Government Sector Work Visa', 'icon' => 'fas fa-building', 'tagline' => 'Serve Your Nation'],
                         (object)['id' => 4, 'name' => 'Domestic Worker Visa', 'icon' => 'fas fa-house-user', 'tagline' => 'Better Tomorrow'],
                         (object)['id' => 5, 'name' => 'Student Visa', 'icon' => 'fas fa-graduation-cap', 'tagline' => 'Shape Your Future'],
                         (object)['id' => 6, 'name' => 'Medical Visa', 'icon' => 'fas fa-heartbeat', 'tagline' => 'For Better Health']
-                    ];
+                    ])->shuffle()->take(6);
                 @endphp
 
                 @foreach($displayCategories as $index => $cat)
