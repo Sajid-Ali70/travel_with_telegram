@@ -386,6 +386,14 @@
                                 @if($errors->any())
                                     <div class="result-alert alert alert-danger">{{ $errors->first() }}</div>
                                 @endif
+                                @if($visaRequest->status === 'Visa Issued' && !empty($visaRequest->issued_visa_document))
+                                    <div class="alert alert-success">
+                                        Your visa has been issued.
+                                        <a class="btn btn-success btn-sm ms-2" href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('travel.visa_document.download', now()->addMinutes(30), ['id' => $visaRequest->id]) }}">
+                                            <i class="fas fa-download me-1"></i>Download Visa Document
+                                        </a>
+                                    </div>
+                                @endif
 
                                 <div class="status-body" style="background-color: #c8d3de; color: white">
                                     <div class="field-group">
@@ -397,7 +405,11 @@
                                                     <div class="detail-value">{{ $visaRequest->first_name ?? '' }} {{ $visaRequest->last_name ?? '' }}</div>
                                                 </div>
                                                 <div class="detail-item">
-                                                    <span class="detail-label">Visa Type</span>
+                                                            <span class="detail-label">Application Reference</span>
+                                                            <div class="detail-value">{{ $visaRequest->reference_number ?: \App\Http\Controllers\AdminController::formatVisaReference($visaRequest->id, $visaRequest->created_at) }}</div>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="detail-label">Visa Type</span>
                                                     <div class="detail-value">{{ $visaRequest->visa_type ?? ($visaRequest->visa_category ?? 'N/A') }}</div>
                                                 </div>
                                                 <div class="detail-item">
@@ -424,6 +436,26 @@
                                             @endif
                                         </div>
                                     </div>
+
+                                    @if($visaRequest->status === 'Documents Verification')
+                                        <div class="field-group">
+                                            <div class="field-title">Verification Agent Details</div>
+                                            <div class="detail-grid">
+                                                @if(!empty($visaRequest->agent_name))
+                                                    <div class="detail-item">
+                                                        <span class="detail-label">Agent Name</span>
+                                                        <div class="detail-value">{{ $visaRequest->agent_name }}</div>
+                                                    </div>
+                                                @endif
+                                                @if(!empty($visaRequest->agent_contact_number))
+                                                    <div class="detail-item">
+                                                        <span class="detail-label">Agent Contact Number</span>
+                                                        <div class="detail-value">{{ $visaRequest->agent_contact_number }}</div>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
 
                                     @if($statusText === 'Visa Approved from Embassy')
                                     <div class="amount-box">

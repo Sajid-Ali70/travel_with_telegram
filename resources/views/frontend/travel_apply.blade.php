@@ -16,8 +16,59 @@
             @endphp
             background-image: url('{{ $bannerUrl }}') !important;
         }
-        #availableJobsList .available-job-card:hover .job-card-summary {
-            color: var(--text-main) !important;
+        #availableJobsList .available-job-card {
+            background: #fff;
+            border: 2px solid #000 !important;
+            border-radius: 8px !important;
+            color: #111827;
+            padding: 12px !important;
+        }
+        #availableJobsList .available-job-card h6 {
+            color: #111827 !important;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+        #availableJobsList .job-card-summary {
+            color: #111827 !important;
+            line-height: 1.5;
+        }
+        #availableJobsList .job-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        #availableJobsList .job-card-actions .btn {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 5px 8px;
+        }
+        #availableJobsList .job-card-actions .select-job-button,
+        #availableJobsList .job-card-actions .description-job-button {
+            background-color: #fff !important;
+            box-shadow: none !important;
+        }
+        #availableJobsList .job-card-actions .select-job-button {
+            border-color: #198754 !important;
+            color: #198754 !important;
+        }
+        #availableJobsList .job-card-actions .select-job-button.is-selected {
+            background-color: #2563eb !important;
+            border-color: #2563eb !important;
+            color: #fff !important;
+        }
+        #availableJobsList .job-card-actions .description-job-button {
+            border-color: #2563eb !important;
+            color: #2563eb !important;
+        }
+        #availableJobsList .job-card-actions .select-job-button:hover,
+        #availableJobsList .job-card-actions .description-job-button:hover {
+            filter: brightness(0.96);
+        }
+        #availableJobsList .job-card-details {
+            border-top: 1px solid #e5e7eb;
+            color: #374151;
+            margin-top: 10px;
+            padding-top: 10px;
         }
     </style>
 </head>
@@ -322,7 +373,6 @@
             const availableJobsSection = document.getElementById('availableJobsSection');
             const availableJobsList = document.getElementById('availableJobsList');
             const availableJobs = @json($jobs);
-            const categoriesById = @json($categories->mapWithKeys(fn ($category) => [(string) $category->id => $category->name]));
             const selectedJobIds = new Set();
 
             function filterCategories(resetSelection) {
@@ -346,6 +396,8 @@
 
             function renderAvailableJobs() {
                 const selectedCountry = destinationCountrySelect.value.trim().toLowerCase();
+                const selectedCountryOption = destinationCountrySelect.options[destinationCountrySelect.selectedIndex];
+                const selectedCountryId = selectedCountryOption ? String(selectedCountryOption.dataset.id || '') : '';
                 const selectedCategory = catSelect.value.trim();
                 const selectedProfession = typeSelect.value.trim().toLowerCase();
 
@@ -393,11 +445,11 @@
                     item.className = 'available-job-card border rounded p-3 mb-2';
 
                     const title = document.createElement('h6');
-                    title.className = 'mb-1 text-white';
+                    title.className = 'mb-1';
                     title.textContent = job.job_title || 'Job Opening';
 
                     const details = document.createElement('p');
-                    details.className = 'job-card-summary small text-muted mb-2';
+                    details.className = 'job-card-summary small mb-2';
                     const fallbackSalary = job.salary !== null && job.salary !== ''
                         ? `${Number(job.salary).toLocaleString()} ${job.salary_currency || ''}${job.salary_period ? ` / ${job.salary_period}` : ''}`
                         : '';
@@ -428,8 +480,19 @@
                             console.error('Unable to read country-specific salary details for a job.', error);
                         }
                     }
-                    const vacancies = job.number_of_vacancies ? `${job.number_of_vacancies} vacancies` : '';
-                    details.textContent = [salary, vacancies].filter(Boolean).join(' | ');
+                    const summaryLines = [];
+                    if (job.profession) summaryLines.push(`Profession: ${job.profession}`);
+                    if (salary) summaryLines.push(`Salary: ${salary}`);
+                    if (job.number_of_vacancies) summaryLines.push(`Vacancies: ${job.number_of_vacancies}`);
+                    details.textContent = '';
+                    summaryLines.forEach((line, index) => {
+                        if (index) details.appendChild(document.createElement('br'));
+                        details.appendChild(document.createTextNode(line));
+                    });
+                    item.append(title, details);
+
+                    const detailContent = document.createElement('div');
+                    detailContent.className = 'job-card-details small d-none';
 
                     let jobCategoryIds = [];
                     try {
@@ -438,15 +501,19 @@
                         console.error('Unable to read visa types assigned to a job.', error);
                     }
                     const categoryNames = Array.isArray(jobCategoryIds)
-                        ? jobCategoryIds.map(categoryId => categoriesById[String(categoryId)]).filter(Boolean)
+                        ? jobCategoryIds
+                            .map(categoryId => Array.from(catSelect.options).find(option =>
+                                option.dataset.id === String(categoryId)
+                                && (!(option.dataset.countryId || '') || option.dataset.countryId === selectedCountryId)
+                            ))
+                            .filter(Boolean)
+                            .map(option => option.textContent.trim())
                         : [];
                     if (categoryNames.length) {
                         const categoriesDetail = document.createElement('p');
                         categoriesDetail.className = 'small mb-2';
                         categoriesDetail.textContent = `Visa categories: ${categoryNames.join(', ')}`;
-                        item.append(title, details, categoriesDetail);
-                    } else {
-                        item.append(title, details);
+                        detailContent.appendChild(categoriesDetail);
                     }
 
                     const detailGrid = document.createElement('div');
@@ -484,14 +551,10 @@
                         try {
                             const parsedCityMap = JSON.parse(job.city_locations || '{}');
                             if (!parsedCityMap || typeof parsedCityMap !== 'object') return '';
-                            const cities = [];
-                            Object.values(parsedCityMap).forEach(countryCities => {
-                                if (Array.isArray(countryCities)) {
-                                    countryCities.forEach(city => {
-                                        if (city && !cities.includes(city)) cities.push(city);
-                                    });
-                                }
-                            });
+                            const countryCities = parsedCityMap[selectedCountryId] || parsedCityMap[selectedCountry] || [];
+                            const cities = Array.isArray(countryCities)
+                                ? countryCities.filter(city => typeof city === 'string' && city.trim() !== '')
+                                : [];
                             return cities.join(', ');
                         } catch (error) {
                             console.error('Unable to read city locations for a job.', error);
@@ -499,8 +562,9 @@
                         }
                     })();
 
-                    addJobDetail('Country', job.country_location);
-                    if (cityList) addJobDetail('City', cityList);
+                    addJobDetail('Country / City', cityList
+                        ? `${destinationCountrySelect.value}: ${cityList}`
+                        : job.country_location);
                     addJobDetail('Profession', job.profession);
                     addJobDetail('Working hours', job.working_hours);
                     addJobDetail('Working days', workingDays.join(', '));
@@ -510,7 +574,7 @@
                         : '');
                     addJobDetail('Overtime policy', job.overtime_policy);
                     addJobDetail('Benefits', benefits.join(' | '));
-                    if (detailGrid.childElementCount) item.appendChild(detailGrid);
+                    if (detailGrid.childElementCount) detailContent.appendChild(detailGrid);
 
                     const appendJobText = (label, value) => {
                         if (!value) return;
@@ -521,14 +585,10 @@
                         const textContent = document.createElement('span');
                         textContent.textContent = value;
                         textBlock.append(textLabel, textContent);
-                        item.appendChild(textBlock);
+                        detailContent.appendChild(textBlock);
                     };
                     appendJobText('Job description', job.job_description);
                     appendJobText('Requirements / qualifications', job.requirements);
-
-                    const applyLabel = document.createElement('div');
-                    applyLabel.className = 'd-inline-flex mt-3 mb-0';
-                    applyLabel.style.cursor = 'pointer';
 
                     const applyCheckbox = document.createElement('input');
                     applyCheckbox.type = 'checkbox';
@@ -546,63 +606,43 @@
                                 }
                             });
                             selectedJobIds.add(String(job.id));
-                            applyButton.style.backgroundColor = '#16a34a';
-                            applyButton.style.borderColor = '#16a34a';
-                            applyButton.style.boxShadow = '0 0 0 3px rgba(22, 163, 74, 0.18)';
-                            radioIndicator.style.backgroundColor = '#ffffff';
-                            radioIndicator.style.borderColor = '#ffffff';
-                            radioIndicator.innerHTML = '<span style="display:block;width:7px;height:7px;border-radius:50%;background:#16a34a;"></span>';
-                        } else {
-                            selectedJobIds.delete(String(job.id));
-                            applyButton.style.backgroundColor = '#2563eb';
-                            applyButton.style.borderColor = '#2563eb';
-                            applyButton.style.boxShadow = '0 8px 18px rgba(37, 99, 235, 0.25)';
-                            radioIndicator.style.backgroundColor = 'transparent';
-                            radioIndicator.style.borderColor = '#ffffff';
-                            radioIndicator.innerHTML = '';
                         }
+                        if (!this.checked) selectedJobIds.delete(String(job.id));
+                        selectButton.innerHTML = this.checked
+                            ? '<i class="fas fa-check-circle"></i> Selected'
+                            : '<i class="fas fa-check-circle"></i> Select Job';
+                        selectButton.classList.toggle('is-selected', this.checked);
+                        selectButton.setAttribute('aria-pressed', String(this.checked));
                     });
 
-                    const applyButton = document.createElement('span');
-                    applyButton.className = 'btn btn-sm px-3 py-2';
-                    applyButton.style.backgroundColor = applyCheckbox.checked ? '#16a34a' : '#2563eb';
-                    applyButton.style.border = `1px solid ${applyCheckbox.checked ? '#16a34a' : '#2563eb'}`;
-                    applyButton.style.color = '#ffffff';
-                    applyButton.style.borderRadius = '8px';
-                    applyButton.style.fontWeight = '600';
-                    applyButton.style.boxShadow = applyCheckbox.checked ? '0 0 0 3px rgba(22, 163, 74, 0.18)' : '0 8px 18px rgba(37, 99, 235, 0.25)';
-                    applyButton.style.transition = 'all 0.2s ease';
-                    applyButton.style.display = 'inline-flex';
-                    applyButton.style.alignItems = 'center';
-                    applyButton.style.gap = '8px';
-                    applyButton.addEventListener('click', function() {
+                    const selectButton = document.createElement('button');
+                    selectButton.type = 'button';
+                    selectButton.className = `btn select-job-button${applyCheckbox.checked ? ' is-selected' : ''}`;
+                    selectButton.setAttribute('aria-pressed', String(applyCheckbox.checked));
+                    selectButton.innerHTML = applyCheckbox.checked
+                        ? '<i class="fas fa-check-circle"></i> Selected'
+                        : '<i class="fas fa-check-circle"></i> Select Job';
+                    selectButton.addEventListener('click', function() {
                         applyCheckbox.checked = !applyCheckbox.checked;
                         applyCheckbox.dispatchEvent(new Event('change'));
                     });
 
-                    const radioIndicator = document.createElement('span');
-                    radioIndicator.style.width = '18px';
-                    radioIndicator.style.height = '18px';
-                    radioIndicator.style.borderRadius = '50%';
-                    radioIndicator.style.border = '2px solid #ffffff';
-                    radioIndicator.style.display = 'inline-flex';
-                    radioIndicator.style.alignItems = 'center';
-                    radioIndicator.style.justifyContent = 'center';
-                    radioIndicator.style.background = applyCheckbox.checked ? '#ffffff' : 'transparent';
-                    radioIndicator.style.boxShadow = '0 0 0 2px rgba(255,255,255,0.18)';
-                    radioIndicator.style.marginRight = '8px';
-                    radioIndicator.innerHTML = applyCheckbox.checked ? '<span style="display:block;width:7px;height:7px;border-radius:50%;background:#16a34a;"></span>' : '';
-                    radioIndicator.style.position = 'relative';
-                    radioIndicator.style.zIndex = '1';
+                    const descriptionButton = document.createElement('button');
+                    descriptionButton.type = 'button';
+                    descriptionButton.className = 'btn description-job-button';
+                    descriptionButton.innerHTML = '<i class="fas fa-file-alt"></i> View Full Description';
+                    descriptionButton.addEventListener('click', function() {
+                        const showingDetails = !detailContent.classList.contains('d-none');
+                        detailContent.classList.toggle('d-none', showingDetails);
+                        descriptionButton.innerHTML = showingDetails
+                            ? '<i class="fas fa-file-alt"></i> View Full Description'
+                            : '<i class="fas fa-chevron-up"></i> Hide Full Description';
+                    });
 
-                    const buttonText = document.createElement('span');
-                    buttonText.textContent = 'Apply for this job';
-
-                    applyButton.append(radioIndicator, buttonText);
-                    applyLabel.append(applyCheckbox);
-                    applyLabel.append(applyButton);
-
-                    item.appendChild(applyLabel);
+                    const actions = document.createElement('div');
+                    actions.className = 'job-card-actions';
+                    actions.append(applyCheckbox, selectButton, descriptionButton);
+                    item.append(actions, detailContent);
                     availableJobsList.appendChild(item);
                 });
             }

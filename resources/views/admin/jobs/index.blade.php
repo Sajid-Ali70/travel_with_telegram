@@ -14,7 +14,6 @@
     @if($errors->any())
         <div class="alert alert-danger">{{ $errors->first() }}</div>
     @endif
-
     <section class="admin-card">
         <div class="d-flex align-items-center justify-content-between mb-3">
             <h2 class="h5 mb-0">Manage Jobs</h2>
@@ -97,6 +96,10 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <a href="{{ route('admin.jobs.edit', $job->id) }}" class="btn btn-sm btn-outline-primary" aria-label="Edit {{ $job->job_title }}"><i class="fas fa-pen"></i></a>
+                                    <form action="{{ route('admin.jobs.duplicate', $job->id) }}" method="POST" onsubmit="return confirm('Duplicate this job posting?')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="Duplicate {{ $job->job_title }}" title="Duplicate job"><i class="fas fa-copy"></i></button>
+                                    </form>
                                     <form action="{{ route('admin.jobs.delete') }}" method="POST" onsubmit="return confirm('Delete this job posting?')">
                                         @csrf
                                         <input type="hidden" name="id" value="{{ $job->id }}">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visa Application #{{ $visaRequest->id }}</title>
+    <title>Visa Application {{ $visaRequest->reference_number ?: \App\Http\Controllers\AdminController::formatVisaReference($visaRequest->id, $visaRequest->created_at) }}</title>
     <style>
         body { color: #1f2937; font: 14px Arial, sans-serif; margin: 0; padding: 32px; }
         h1 { margin: 0 0 6px; font-size: 24px; }
@@ -24,7 +24,7 @@
 <body>
     <button class="print-action" type="button" onclick="window.print()">Print / Save as PDF</button>
     <h1>Visa Application</h1>
-    <div class="subtitle">Application #{{ $visaRequest->id }} · {{ $visaRequest->created_at ?: 'Submission date not available' }}</div>
+    <div class="subtitle">Reference {{ $visaRequest->reference_number ?: \App\Http\Controllers\AdminController::formatVisaReference($visaRequest->id, $visaRequest->created_at) }} · {{ $visaRequest->created_at ?: 'Submission date not available' }}</div>
 
     <h2>Applicant</h2>
     <table>

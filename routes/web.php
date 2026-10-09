@@ -73,6 +73,10 @@ Route::get('/dashboard', function () {
 })->name('travel.dashboard');
 
 Route::match(['get', 'post'], '/verify', [AdminController::class, 'checkVisaStatus'])->name('travel.verify');
+Route::get('/verify/visa-document/{id}', [AdminController::class, 'downloadIssuedVisaDocument'])
+    ->middleware('signed')
+    ->whereNumber('id')
+    ->name('travel.visa_document.download');
 
 Route::get('/apply/success/{id}', [AdminController::class, 'applicationSuccess'])->name('travel.apply.success');
 Route::post('/apply/success/{id}/payment-receipt', [AdminController::class, 'uploadPaymentReceipt'])->name('travel.apply.payment_receipt');
@@ -124,6 +128,7 @@ Route::middleware(['admin.auth'])->group(function () {
     // Job management pages
     Route::get('/admin/jobs', [AdminController::class, 'jobsIndex'])->name('admin.jobs.index');
     Route::get('/admin/jobs/create', [AdminController::class, 'createJob'])->name('admin.jobs.create');
+    Route::post('/admin/jobs/{id}/duplicate', [AdminController::class, 'duplicateJob'])->whereNumber('id')->name('admin.jobs.duplicate');
     Route::get('/admin/jobs/{id}/edit', [AdminController::class, 'editJob'])->name('admin.jobs.edit');
     Route::put('/admin/jobs/{id}', [AdminController::class, 'updateJob'])->name('admin.jobs.update');
 
@@ -178,6 +183,7 @@ Route::middleware(['admin.auth'])->group(function () {
     // Requests Management
     Route::post('/admin/requests/delete', [AdminController::class, 'deleteRequest'])->name('admin.requests.delete');
     Route::get('/admin/requests/{id}/pdf', [AdminController::class, 'requestApplicationPdf'])->whereNumber('id')->name('admin.requests.pdf');
+    Route::get('/admin/requests/{id}/visa-document', [AdminController::class, 'downloadIssuedVisaDocument'])->whereNumber('id')->name('admin.requests.visa_document');
     Route::get('/admin/requests/{id}/edit', [AdminController::class, 'editRequest'])->name('admin.requests.edit');
     Route::post('/admin/requests/update-status', [AdminController::class, 'updateRequestStatus'])->name('admin.requests.update_status');
     Route::post('/admin/requests/{id}', [AdminController::class, 'updateRequest'])->whereNumber('id')->name('admin.requests.update');

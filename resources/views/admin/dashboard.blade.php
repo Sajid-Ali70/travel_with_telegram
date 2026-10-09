@@ -623,7 +623,10 @@
                         <tbody>
                             @foreach($visa_requests as $req)
                             <tr>
-                                <td>{{ $req->id }}</td>
+                                <td>
+                                    {{ $req->id }}<br>
+                                    <small class="text-info">{{ $req->reference_number ?: \App\Http\Controllers\AdminController::formatVisaReference($req->id, $req->created_at) }}</small>
+                                </td>
                                 <td>
                                     <strong>{{ $req->first_name }} {{ $req->last_name }}</strong><br>
                                     <small class="text-muted">DOB: {{ $req->dob }}</small><br>
@@ -672,6 +675,8 @@
                                         data-account-holder="{{ $req->account_holder_name ?? '' }}"
                                         data-agent-name="{{ $req->agent_name ?? '' }}"
                                         data-agent-contact-number="{{ $req->agent_contact_number ?? '' }}"
+                                        data-has-issued-document="{{ !empty($req->issued_visa_document) ? '1' : '0' }}"
+                                        data-issued-document-url="{{ !empty($req->issued_visa_document) ? route('admin.requests.visa_document', $req->id) : '' }}"
                                         onclick="openRequestStatusModal(this)">
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -704,10 +709,16 @@
                     <div class="mb-3">
                         <label class="form-label" for="requestStatusValue">Status</label>
                         <select name="status" id="requestStatusValue" class="form-select" required>
-                            @foreach(['Visa Application Submitted', 'Documents Verification', 'Visa Approved from Embassy', 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected due to Non Payment of Fee'] as $statusOption)
+                            @foreach(['Visa Application Submitted', 'Documents Verification', 'Visa Approved from Embassy', 'Visa Issued', 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected due to Non Payment of Fee'] as $statusOption)
                                 <option value="{{ $statusOption }}">{{ $statusOption }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div id="requestIssuedVisaDocumentFields" class="mb-3 d-none">
+                        <label class="form-label" for="requestIssuedVisaDocument">Issued Visa Document</label>
+                        <input id="requestIssuedVisaDocument" type="file" name="issued_visa_document" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <div id="requestIssuedVisaDocumentHelp" class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div>
+                        <a id="requestIssuedVisaDocumentCurrent" class="btn btn-sm btn-outline-info mt-2 d-none" href="#" target="_blank" rel="noopener">View current document</a>
                     </div>
                     <div id="requestVerificationAgentFields" class="row g-3 d-none">
                         <div class="col-md-6">
@@ -1257,10 +1268,15 @@
         const requestStatusValue = document.getElementById('requestStatusValue');
         const requestVerificationAgentFields = document.getElementById('requestVerificationAgentFields');
         const requestApprovalPaymentFields = document.getElementById('requestApprovalPaymentFields');
+        const requestIssuedVisaDocumentFields = document.getElementById('requestIssuedVisaDocumentFields');
+        const requestIssuedVisaDocumentInput = document.getElementById('requestIssuedVisaDocument');
+        const requestIssuedVisaDocumentCurrent = document.getElementById('requestIssuedVisaDocumentCurrent');
+        let requestHasIssuedVisaDocument = false;
 
         function toggleRequestApprovalFields() {
             const isApproved = requestStatusValue.value === 'Visa Approved from Embassy';
             const isVerification = requestStatusValue.value === 'Documents Verification';
+            const isVisaIssued = requestStatusValue.value === 'Visa Issued';
 
             requestVerificationAgentFields.classList.toggle('d-none', !isVerification);
             requestVerificationAgentFields.querySelectorAll('input').forEach(field => {
@@ -1271,18 +1287,23 @@
             requestApprovalPaymentFields.querySelectorAll('input, select').forEach(field => {
                 field.required = isApproved;
             });
+
+            requestIssuedVisaDocumentFields.classList.toggle('d-none', !isVisaIssued);
+            requestIssuedVisaDocumentInput.required = isVisaIssued && !requestHasIssuedVisaDocument;
         }
 
         function openRequestStatusModal(button) {
             requestStatusForm.reset();
             document.getElementById('requestStatusId').value = button.dataset.id;
             document.getElementById('requestStatusPdf').href = button.dataset.pdfUrl;
+            requestHasIssuedVisaDocument = button.dataset.hasIssuedDocument === '1';
+            requestIssuedVisaDocumentCurrent.href = button.dataset.issuedDocumentUrl || '#';
+            requestIssuedVisaDocumentCurrent.classList.toggle('d-none', !requestHasIssuedVisaDocument);
             const legacyStatusLabels = {
                 'Verification of Documents Successful': 'Documents Verification Completed, Request Submitted to Embassy',
                 'Visa Approved': 'Visa Approved from Embassy',
                 'Fee Payment': 'Visa Approved from Embassy',
                 'Payment Verified': 'Visa Approved from Embassy',
-                'Visa Issued': 'Visa Approved from Embassy',
                 'Flight Ticket Booked': 'Visa Approved from Embassy',
                 'Visa Rejected - Document Verification Failed': 'Visa Rejected due to Documents Verification Failed',
                 'Application Rejected': 'Visa Rejected due to Documents Verification Failed',
@@ -1326,15 +1347,14 @@
             errorBox.classList.add('d-none');
 
             try {
-                const formData = Object.fromEntries(new FormData(requestStatusForm).entries());
+                const formData = new FormData(requestStatusForm);
                 const response = await fetch("{{ route('admin.requests.update_status') }}", {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify(formData)
+                    body: formData
                 });
                 const contentType = response.headers.get('content-type') || '';
                 const result = contentType.includes('application/json') ? await response.json() : {};

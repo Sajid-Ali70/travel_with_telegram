@@ -57,8 +57,22 @@
             @else
                 <div class="mb-3"><label for="name" class="form-label">Nationality</label><input id="name" type="text" name="name" class="form-control" maxlength="255" value="{{ old('name', $item->name) }}" required autofocus></div>
                 <div class="row g-3"><div class="col-md-3"><label for="currency" class="form-label">Currency</label><input id="currency" type="text" name="currency" class="form-control" maxlength="20" value="{{ old('currency', $item->currency) }}"></div><div class="col-md-3"><label for="phone_code" class="form-label">Phone Code</label><input id="phone_code" type="text" name="phone_code" class="form-control" maxlength="20" value="{{ old('phone_code', $item->phone_code) }}"></div><div class="col-md-3"><label for="phone_number_length" class="form-label">Phone Number Digits</label><input id="phone_number_length" type="number" name="phone_number_length" class="form-control" min="1" max="30" value="{{ old('phone_number_length', $item->phone_number_length) }}"></div><div class="col-md-3"><label for="id_number_length" class="form-label">National ID Digits</label><input id="id_number_length" type="number" name="id_number_length" class="form-control" min="1" max="30" value="{{ old('id_number_length', $item->id_number_length) }}"></div></div>
-                <h2 class="h6 mt-4 mb-3">Primary Airport</h2><div class="row g-3"><div class="col-md-6"><label for="airport_name" class="form-label">Airport Name</label><input id="airport_name" type="text" name="airport_name" class="form-control" maxlength="255" value="{{ old('airport_name', $primaryAirport->name ?? '') }}"></div><div class="col-md-6"><label for="airport_city" class="form-label">Airport City</label><input id="airport_city" type="text" name="airport_city" class="form-control" maxlength="255" value="{{ old('airport_city', $primaryAirport->city ?? '') }}"></div></div>
-                @if($airports->count() > 1)<p class="form-text mt-2">Other linked airports are unchanged.</p>@endif
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                    <h2 class="h6 mb-0">Airports for this Nationality</h2>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="addNationalityAirport"><i class="fas fa-plus me-1"></i> Add Airport</button>
+                </div>
+                <div id="nationalityAirports" class="d-flex flex-column gap-3">
+                    @foreach(old('airports', $airports->all()) as $index => $airport)
+                        <div class="nationality-airport-row border border-secondary rounded p-3">
+                            <input type="hidden" name="airports[{{ $index }}][id]" value="{{ data_get($airport, 'id') }}">
+                            <div class="row g-3">
+                                <div class="col-md-6"><label class="form-label">Airport Name</label><input type="text" name="airports[{{ $index }}][name]" class="form-control" maxlength="255" value="{{ data_get($airport, 'name') }}" required></div>
+                                <div class="col-md-6"><label class="form-label">Airport City</label><input type="text" name="airports[{{ $index }}][city]" class="form-control" maxlength="255" value="{{ data_get($airport, 'city') }}" required></div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-nationality-airport"><i class="fas fa-trash me-1"></i> Remove Airport</button>
+                        </div>
+                    @endforeach
+                </div>
             @endif
             <div class="d-flex justify-content-end gap-2 mt-4"><a href="{{ route('admin.catalog.index') }}" class="btn btn-outline-light">Cancel</a><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Changes</button></div>
         </form>
@@ -122,6 +136,33 @@
                 const removeButton = event.target.closest('.remove-country-city');
                 if (removeButton && countryCities.querySelectorAll('.country-city-row').length > 1) {
                     removeButton.closest('.country-city-row').remove();
+                }
+            });
+        </script>
+    @endif
+    @if($type === 'nationality')
+        <script>
+            const nationalityAirports = document.getElementById('nationalityAirports');
+            let nextAirportIndex = Array.from(nationalityAirports.querySelectorAll('input[name]')).reduce((nextIndex, input) => {
+                const match = input.name.match(/^airports\[(\d+)\]/);
+                return match ? Math.max(nextIndex, Number(match[1]) + 1) : nextIndex;
+            }, 0);
+            document.getElementById('addNationalityAirport').addEventListener('click', function () {
+                const row = document.createElement('div');
+                row.className = 'nationality-airport-row border border-secondary rounded p-3';
+                row.innerHTML = `
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label">Airport Name</label><input type="text" name="airports[${nextAirportIndex}][name]" class="form-control" maxlength="255" required></div>
+                        <div class="col-md-6"><label class="form-label">Airport City</label><input type="text" name="airports[${nextAirportIndex}][city]" class="form-control" maxlength="255" required></div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-nationality-airport"><i class="fas fa-trash me-1"></i> Remove Airport</button>`;
+                nextAirportIndex += 1;
+                nationalityAirports.appendChild(row);
+            });
+            nationalityAirports.addEventListener('click', function (event) {
+                const removeButton = event.target.closest('.remove-nationality-airport');
+                if (removeButton && nationalityAirports.querySelectorAll('.nationality-airport-row').length > 1) {
+                    removeButton.closest('.nationality-airport-row').remove();
                 }
             });
         </script>

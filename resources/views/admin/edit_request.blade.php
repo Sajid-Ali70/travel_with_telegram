@@ -206,17 +206,29 @@
                             'pending' => 'Visa Application Submitted',
                             'processing' => 'Documents Verification',
                             'Verification of Documents Successful' => 'Documents Verification Completed, Request Submitted to Embassy',
-                            'Visa Approved', 'approved', 'Fee Payment', 'Payment Verified', 'Visa Issued', 'Flight Ticket Booked' => 'Visa Approved from Embassy',
+                            'Visa Approved', 'approved', 'Fee Payment', 'Payment Verified', 'Flight Ticket Booked' => 'Visa Approved from Embassy',
                             'Visa Rejected - Document Verification Failed', 'Application Rejected', 'rejected' => 'Visa Rejected due to Documents Verification Failed',
                             'Visa Rejected - Fee Not Paid' => 'Visa Rejected due to Non Payment of Fee',
                             default => $selectedStatus,
                         };
                     @endphp
                     <select name="status" id="request_status" class="form-select" required>
-                        @foreach(['Visa Application Submitted', 'Documents Verification', 'Visa Approved from Embassy', 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected due to Non Payment of Fee'] as $statusOption)
+                        @foreach(['Visa Application Submitted', 'Documents Verification', 'Visa Approved from Embassy', 'Visa Issued', 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected due to Non Payment of Fee'] as $statusOption)
                             <option value="{{ $statusOption }}" {{ $selectedStatus === $statusOption ? 'selected' : '' }}>{{ $statusOption }}</option>
                         @endforeach
                     </select>
+                </div>
+            </div>
+
+            <div id="issuedVisaDocumentFields" class="row g-3 mt-1 {{ $selectedStatus === 'Visa Issued' ? '' : 'd-none' }}">
+                <div class="col-md-6">
+                    <label class="form-label" for="issued_visa_document">Issued Visa Document</label>
+                    <input id="issued_visa_document" type="file" name="issued_visa_document" class="form-control" accept=".pdf,.jpg,.jpeg,.png" {{ $selectedStatus === 'Visa Issued' && empty($visaRequest->issued_visa_document) ? 'required' : '' }}>
+                    <div class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div>
+                    @if(!empty($visaRequest->issued_visa_document))
+                        <a href="{{ route('admin.requests.visa_document', $visaRequest->id) }}" target="_blank" rel="noopener" class="btn btn-outline-info btn-sm mt-2">View current document</a>
+                        <div class="form-text">Upload another file only to replace the current document.</div>
+                    @endif
                 </div>
             </div>
 
@@ -290,6 +302,9 @@
         const requestStatus = document.getElementById('request_status');
         const verificationAgentFields = document.getElementById('verificationAgentFields');
         const approvedPaymentFields = document.getElementById('approvedPaymentFields');
+        const issuedVisaDocumentFields = document.getElementById('issuedVisaDocumentFields');
+        const issuedVisaDocumentInput = document.getElementById('issued_visa_document');
+        const hasIssuedVisaDocument = {{ !empty($visaRequest->issued_visa_document) ? 'true' : 'false' }};
 
         function toggleVerificationAgentFields() {
             const isVerification = requestStatus.value === 'Documents Verification';
@@ -307,12 +322,20 @@
             });
         }
 
+        function toggleIssuedVisaDocumentFields() {
+            const isVisaIssued = requestStatus.value === 'Visa Issued';
+            issuedVisaDocumentFields.classList.toggle('d-none', !isVisaIssued);
+            issuedVisaDocumentInput.required = isVisaIssued && !hasIssuedVisaDocument;
+        }
+
         requestStatus.addEventListener('change', () => {
             toggleVerificationAgentFields();
             toggleApprovedPaymentFields();
+            toggleIssuedVisaDocumentFields();
         });
         toggleVerificationAgentFields();
         toggleApprovedPaymentFields();
+        toggleIssuedVisaDocumentFields();
     </script>
 </body>
 </html>
