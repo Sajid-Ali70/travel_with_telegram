@@ -345,7 +345,7 @@
                 <h2>Our Priority<br><span>Get Your Visa With<br>Rainbow Travels Kuwait</span></h2>
                 <p>{{ $settings->description ?? 'Apply for your visa online with ease. Track your application status in real-time and step closer to your next adventure.' }}</p>
                 <div class="hero-btn-group">
-                    <a href="{{ route('travel.apply') }}" class="btn-apply" style="margin:0; border-radius: 12px;">Apply Visa Now <i class="fas fa-arrow-right ms-2"></i></a>
+                    <a href="{{ route('travel.apply') }}" class="btn-apply" style="margin:0; border-radius: 12px;">Apply Visa/Job Now <i class="fas fa-arrow-right ms-2"></i></a>
                     <a href="{{ route('travel.verify') }}" class="btn-verify" style="margin:0; border-radius: 12px;">Check Status <i class="fas fa-search ms-2"></i></a>
                 </div>
             </div>
