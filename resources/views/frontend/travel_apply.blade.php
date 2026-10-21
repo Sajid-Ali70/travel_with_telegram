@@ -240,32 +240,7 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>VISA CATEGORY *</label>
-                            <div class="input-with-icon">
-                                <i class="fas fa-briefcase"></i>
-                                <select id="visa_category_select" name="visa_category" class="visa-type-selector form-select" required style="padding-left: 48px;">
-                                    <option value="" selected disabled>Select Visa Category</option>
-                                    @if(isset($categories) && count($categories) > 0)
-                                        @php
-                                            $defaultCategoryId = null;
-                                            foreach ($categories as $cat) {
-                                                $name = strtolower($cat->name ?? '');
-                                                if (str_contains($name, 'hospital') || str_contains($name, 'medical')) {
-                                                    $defaultCategoryId = $cat->id;
-                                                    break;
-                                                }
-                                            }
-                                        @endphp
-                                        @foreach($categories as $cat)
-                                            <option value="{{ $cat->name }}" data-id="{{ $cat->id }}" data-country-id="{{ $cat->country_id ?? '' }}" {{ (($defaultCategoryId && $cat->id == $defaultCategoryId) || old('visa_category') == $cat->name) ? 'selected' : '' }}>{{ strtoupper($cat->name) }}</option>
-                                        @endforeach
-                                    @else
-                                        <option value="Work Visa" selected>WORK VISA</option>
-                                    @endif
-                                </select>
-                            </div>
-                        </div>
+                        <input id="visa_category_input" type="hidden" name="visa_category" value="{{ old('visa_category') }}">
 
                         <div class="form-group">
                             <label>PROFESSION *</label>
@@ -274,7 +249,10 @@
                                 <select id="visa_type_select" name="visa_type" class="form-select" required style="padding-left: 48px;">
                                     <option value="" selected disabled>Select Profession</option>
                                     @foreach($professions as $profession)
-                                        <option value="{{ $profession->name }}" {{ old('visa_type') === $profession->name ? 'selected' : '' }}>{{ $profession->name }}</option>
+                                        @php
+                                            $professionCategory = $categories->firstWhere('id', $profession->category_id);
+                                        @endphp
+                                        <option value="{{ $profession->name }}" data-category-name="{{ $professionCategory->name ?? '' }}" {{ old('visa_type') === $profession->name ? 'selected' : '' }}>{{ $profession->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -361,8 +339,8 @@
                 });
             });
 
-            const catSelect = document.getElementById('visa_category_select');
             const typeSelect = document.getElementById('visa_type_select');
+            const visaCategoryInput = document.getElementById('visa_category_input');
             const drivingLicenseField = document.getElementById('drivingLicenseField');
             const nationalitySelect = document.getElementById('nationality_select');
             const mobileNumberInput = document.getElementById('mobile_number_input');
@@ -373,36 +351,22 @@
             const availableJobsSection = document.getElementById('availableJobsSection');
             const availableJobsList = document.getElementById('availableJobsList');
             const availableJobs = @json($jobs);
+            const visaCategories = @json($categories);
             const selectedJobIds = new Set();
 
-            function filterCategories(resetSelection) {
-                const selectedCountryOption = destinationCountrySelect.options[destinationCountrySelect.selectedIndex];
-                const selectedCountryId = selectedCountryOption ? selectedCountryOption.dataset.id : '';
-                const currentCategoryOption = catSelect.options[catSelect.selectedIndex];
-
-                Array.from(catSelect.options).forEach(option => {
-                    if (!option.value) {
-                        option.hidden = false;
-                        return;
-                    }
-                    const categoryCountryId = option.dataset.countryId || '';
-                    option.hidden = Boolean(categoryCountryId && categoryCountryId !== selectedCountryId);
-                });
-
-                if (resetSelection || (currentCategoryOption && currentCategoryOption.hidden)) {
-                    catSelect.value = '';
-                }
+            function updateVisaCategory() {
+                const selectedProfession = typeSelect.options[typeSelect.selectedIndex];
+                visaCategoryInput.value = selectedProfession ? selectedProfession.dataset.categoryName || '' : '';
             }
 
             function renderAvailableJobs() {
                 const selectedCountry = destinationCountrySelect.value.trim().toLowerCase();
                 const selectedCountryOption = destinationCountrySelect.options[destinationCountrySelect.selectedIndex];
                 const selectedCountryId = selectedCountryOption ? String(selectedCountryOption.dataset.id || '') : '';
-                const selectedCategory = catSelect.value.trim();
                 const selectedProfession = typeSelect.value.trim().toLowerCase();
 
                 availableJobsList.replaceChildren();
-                if (!selectedCountry || !selectedCategory || !selectedProfession) {
+                if (!selectedCountry || !selectedProfession) {
                     selectedJobIds.clear();
                     availableJobsSection.classList.add('d-none');
                     return;
@@ -412,19 +376,7 @@
                 const matchingJobs = availableJobs.filter(job => {
                     const jobCountry = (job.country_location || '').trim().toLowerCase();
                     const jobProfession = (job.profession || '').trim().toLowerCase();
-                    const selectedCategoryOption = catSelect.options[catSelect.selectedIndex];
-                    const selectedCategoryId = selectedCategoryOption ? Number.parseInt(selectedCategoryOption.dataset.id, 10) : null;
-                    let jobCategoryIds = [];
-                    try {
-                        jobCategoryIds = Array.isArray(job.category_ids) ? job.category_ids : JSON.parse(job.category_ids || '[]');
-                    } catch (error) {
-                        console.error('Unable to read visa types assigned to a job.', error);
-                        jobCategoryIds = [];
-                    }
-                    const belongsToSelectedCategory = selectedCategoryId !== null && jobCategoryIds.map(Number).includes(selectedCategoryId);
-
                     return (jobCountry === selectedCountry || jobCountry === 'all country (global multi-select)')
-                        && belongsToSelectedCategory
                         && jobProfession === selectedProfession;
                 });
                 const visibleJobIds = new Set(matchingJobs.map(job => String(job.id)));
@@ -502,12 +454,12 @@
                     }
                     const categoryNames = Array.isArray(jobCategoryIds)
                         ? jobCategoryIds
-                            .map(categoryId => Array.from(catSelect.options).find(option =>
-                                option.dataset.id === String(categoryId)
-                                && (!(option.dataset.countryId || '') || option.dataset.countryId === selectedCountryId)
+                            .map(categoryId => visaCategories.find(category =>
+                                String(category.id) === String(categoryId)
+                                && (!category.country_id || String(category.country_id) === selectedCountryId)
                             ))
                             .filter(Boolean)
-                            .map(option => option.textContent.trim())
+                            .map(category => category.name)
                         : [];
                     if (categoryNames.length) {
                         const categoriesDetail = document.createElement('p');
@@ -758,18 +710,16 @@
                 renderAvailableJobs();
             }
 
-            typeSelect.addEventListener('change', toggleDrivingLicenseField);
-            typeSelect.addEventListener('change', renderAvailableJobs);
+            typeSelect.addEventListener('change', function() {
+                updateVisaCategory();
+                toggleDrivingLicenseField();
+                renderAvailableJobs();
+            });
             destinationCountrySelect.addEventListener('change', function() {
-                filterCategories(true);
                 renderAvailableJobs();
             });
 
-            catSelect.addEventListener('change', function() {
-                renderAvailableJobs();
-            });
-
-            filterCategories(false);
+            updateVisaCategory();
             updateProfessionSelection();
         });
     </script>

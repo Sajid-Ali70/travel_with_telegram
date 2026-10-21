@@ -658,8 +658,11 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.requests.edit', $req->id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit request, profession and job title" aria-label="Edit request, profession and job title for applicant {{ $req->first_name }} {{ $req->last_name }}">
+                                    {{-- <a href="{{ route('admin.requests.edit', $req->id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit request, profession and job title" aria-label="Edit request, profession and job title for applicant {{ $req->first_name }} {{ $req->last_name }}">
                                         <i class="fas fa-edit"></i>
+                                    </a> --}}
+                                    <a href="{{ route('admin.requests.pdf', $req->id) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success me-1" title="Download application PDF" aria-label="Download application PDF for request {{ $req->id }}">
+                                        <i class="fas fa-download"></i>
                                     </a>
                                     @php
                                         $requestNationalityCurrency = $nationalities->firstWhere('name', $req->nationality)->currency ?? '';
@@ -715,7 +718,7 @@
                         </select>
                     </div>
                     <div id="requestIssuedVisaDocumentFields" class="mb-3 d-none">
-                        <label class="form-label" for="requestIssuedVisaDocument">Issued Visa Document</label>
+                        <label class="form-label" for="requestIssuedVisaDocument">Attach Approval Letter</label>
                         <input id="requestIssuedVisaDocument" type="file" name="issued_visa_document" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                         <div id="requestIssuedVisaDocumentHelp" class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div>
                         <a id="requestIssuedVisaDocumentCurrent" class="btn btn-sm btn-outline-info mt-2 d-none" href="#" target="_blank" rel="noopener">View current document</a>

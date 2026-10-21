@@ -1890,6 +1890,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'nationality' => 'required|string|max:255|exists:app_nationalities,name',
             'national_identity' => 'required|string|max:100',
+            'visa_type' => 'required|string|max:255',
             'selected_job_ids' => 'nullable|array',
             'selected_job_ids.*' => 'required|integer|exists:app_jobs,id',
             'driving_license_available' => 'nullable|in:yes,no',
@@ -1905,15 +1906,22 @@ class AdminController extends Controller
         }
 
         $data = $request->except(['_token', 'passport_photo_file', 'profession', 'job_title']);
+        $profession = DB::table('app_profession_job_titles')
+            ->where('type', 'profession')
+            ->where('name', trim($validated['visa_type']))
+            ->first(['category_id']);
+        if (!$profession) {
+            return back()->withErrors(['visa_type' => 'Select a valid profession.'])->withInput();
+        }
+        $data['visa_category'] = $profession->category_id
+            ? DB::table('app_categories')->where('id', $profession->category_id)->value('name')
+            : null;
+
         $selectedJobIds = collect($validated['selected_job_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
         $data['selected_job_ids'] = null;
 
         if ($selectedJobIds) {
             $selectedProfession = mb_strtolower(trim((string) ($data['visa_type'] ?? '')));
-            $selectedVisaCategory = mb_strtolower(trim((string) ($data['visa_category'] ?? '')));
-            $selectedCategoryId = DB::table('app_categories')
-                ->where('name', trim((string) ($data['visa_category'] ?? '')))
-                ->value('id');
             $matchingJobs = DB::table('app_jobs')
                 ->whereIn('id', $selectedJobIds)
                 ->where('status', 'Active')
@@ -1921,27 +1929,25 @@ class AdminController extends Controller
                     $query->whereRaw('LOWER(country_location) = ?', [mb_strtolower(trim((string) ($data['destination_country'] ?? '')))])
                         ->orWhereRaw('LOWER(country_location) = ?', [mb_strtolower('All Country (Global multi-select)')]);
                 })
-                ->get(['id', 'category_visa_type', 'category_ids', 'profession']);
+                ->get(['id', 'category', 'profession']);
             $matchingJobIds = $matchingJobs
-                ->filter(function ($job) use ($selectedProfession, $selectedVisaCategory, $selectedCategoryId) {
-                    $jobCategoryIds = json_decode($job->category_ids ?? '[]', true) ?: [];
-                    if (!is_array($jobCategoryIds)) {
-                        $jobCategoryIds = [];
-                    }
-                    $hasSelectedCategory = $selectedCategoryId && in_array((int) $selectedCategoryId, array_map('intval', $jobCategoryIds), true);
-                    $hasLegacyCategoryMatch = mb_strtolower(trim((string) $job->category_visa_type)) === $selectedVisaCategory;
+                ->filter(function ($job) use ($selectedProfession) {
                     $hasSelectedProfession = mb_strtolower(trim((string) $job->profession)) === $selectedProfession;
 
-                    return $hasSelectedProfession && ($hasSelectedCategory || $hasLegacyCategoryMatch);
+                    return $hasSelectedProfession;
                 })
                 ->pluck('id')
                 ->map(fn ($id) => (int) $id)
                 ->all();
 
             if (count($matchingJobIds) !== count($selectedJobIds)) {
-                return back()->withErrors(['selected_job_ids' => 'One or more selected jobs are no longer available for this country, visa category, and profession.'])->withInput();
+                return back()->withErrors(['selected_job_ids' => 'One or more selected jobs are no longer available for this country and profession.'])->withInput();
             }
 
+            if (!$data['visa_category']) {
+                $selectedJob = $matchingJobs->firstWhere('id', $selectedJobIds[0]);
+                $data['visa_category'] = $selectedJob->category ?? null;
+            }
             $data['job_title'] = DB::table('app_jobs')->where('id', $selectedJobIds[0])->value('job_title');
             $data['selected_job_ids'] = json_encode($selectedJobIds);
         }
