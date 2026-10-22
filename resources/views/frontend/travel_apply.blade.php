@@ -70,22 +70,244 @@
             margin-top: 10px;
             padding-top: 10px;
         }
+        .apply-wizard-page {
+            background: #f4f7fc;
+            flex: 1;
+        }
+        .apply-wizard-header {
+            background: #0865ed;
+            color: #fff;
+            padding: 15px 14px 11px;
+            position: relative;
+        }
+        .apply-wizard-header-back {
+            align-items: center;
+            background: transparent;
+            border: 0;
+            color: #fff;
+            display: inline-flex;
+            font-size: .8rem;
+            height: 32px;
+            justify-content: center;
+            left: 8px;
+            padding: 0;
+            position: absolute;
+            top: 7px;
+            width: 32px;
+        }
+        .apply-wizard-header-back i {
+            color: #fff !important;
+        }
+        .apply-wizard-header h1 {
+            color: #fff !important;
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0 0 12px;
+            text-align: center;
+        }
+        .apply-stepper {
+            align-items: flex-start;
+            display: flex;
+            list-style: none;
+            margin: 0 auto;
+            max-width: 400px;
+            padding: 0;
+        }
+        .apply-stepper li {
+            color: rgba(255, 255, 255, .65);
+            flex: 1;
+            font-size: .66rem;
+            line-height: 1.2;
+            position: relative;
+            text-align: center;
+        }
+        .apply-stepper li:not(:last-child)::after {
+            background: rgba(255, 255, 255, .38);
+            content: "";
+            height: 1px;
+            left: calc(50% + 11px);
+            position: absolute;
+            right: calc(-50% + 11px);
+            top: 9px;
+        }
+        .apply-stepper li.is-complete,
+        .apply-stepper li.is-active {
+            color: #fff;
+        }
+        .apply-stepper-icon {
+            align-items: center;
+            background: rgba(255, 255, 255, .25);
+            border: 1px solid rgba(255, 255, 255, .7);
+            border-radius: 50%;
+            color: #fff;
+            display: flex;
+            font-size: .65rem;
+            height: 19px;
+            justify-content: center;
+            margin: 0 auto 4px;
+            position: relative;
+            width: 19px;
+            z-index: 1;
+        }
+        .is-complete .apply-stepper-icon,
+        .is-active .apply-stepper-icon {
+            background: #fff;
+            border-color: #fff;
+            color: #0865ed;
+        }
+        .apply-wizard-content {
+            margin: 0 auto;
+            max-width: 500px;
+            padding: 13px 12px 24px;
+        }
+        .apply-wizard-card {
+            background: #fff;
+            border: 1px solid #e6edf7;
+            border-radius: 14px;
+            box-shadow: 0 5px 18px rgba(22, 47, 89, .06);
+            padding: 15px 12px;
+        }
+        .apply-step-heading {
+            align-items: flex-start;
+            display: flex;
+            gap: 9px;
+            margin-bottom: 12px;
+        }
+        .apply-step-heading-icon {
+            align-items: center;
+            background: #eef5ff;
+            border-radius: 50%;
+            color: #0871f9;
+            display: flex;
+            flex: 0 0 32px;
+            height: 32px;
+            justify-content: center;
+        }
+        .apply-step-heading h2 {
+            color: #102b51 !important;
+            font-size: 1rem;
+            font-weight: 800;
+            margin: 1px 0 2px;
+        }
+        .apply-step-heading p {
+            color: #6f7f96 !important;
+            font-size: .75rem;
+            line-height: 1.4;
+            margin: 0;
+        }
+        .apply-wizard-card .form-group {
+            margin-bottom: 10px;
+        }
+        .apply-wizard-card .form-group label {
+            color: #0d2d59 !important;
+            font-size: .72rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .apply-wizard-card .input-with-icon i {
+            color: #6a7c96;
+            font-size: 12px;
+            left: 10px;
+        }
+        .apply-wizard-card .input-with-icon input,
+        .apply-wizard-card .input-with-icon select {
+            background-color: #fff;
+            border: 1px solid #dce6f3;
+            border-radius: 7px;
+            color: #425675 !important;
+            font-size: .8rem;
+            min-height: 38px;
+            padding: 8px 10px 8px 32px;
+        }
+        .apply-wizard-card .form-row {
+            gap: 8px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .apply-wizard-card .form-check-label,
+        .apply-wizard-card .text-white {
+            color: #344864 !important;
+        }
+        .apply-wizard-card .terms-box {
+            color: #667891;
+            font-size: .75rem;
+            line-height: 1.5;
+        }
+        .apply-wizard-card .apply-terms-check {
+            background: #f7faff !important;
+            border-color: #dce6f3 !important;
+            border-radius: 7px !important;
+            padding: 8px 10px !important;
+        }
+        .apply-wizard-card .apply-terms-check label {
+            color: #193b6b !important;
+            font-size: .66rem !important;
+        }
+        .apply-wizard-navigation {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+        .apply-wizard-navigation button {
+            border-radius: 8px !important;
+            font-size: .85rem !important;
+            margin: 0 !important;
+            min-height: 34px;
+            padding: 8px 12px !important;
+        }
+        #wizardBack {
+            background: #fff;
+            border: 1px solid #d7e2f1;
+            color: #25456f !important;
+            flex: 0 0 34%;
+        }
+        #wizardNext {
+            background: #0865ed;
+            border: 1px solid #0865ed;
+            color: #fff !important;
+            flex: 1;
+            font-weight: 700;
+            width: 100%;
+        }
+        #wizardSubmit {
+            flex: 1;
+        }
+        .apply-wizard-card .upload-box {
+            padding: 14px;
+        }
+        .apply-wizard-card .upload-icon {
+            font-size: 22px;
+            margin-bottom: 7px;
+        }
+        @media (max-width: 420px) {
+            .apply-wizard-card .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+        @media (max-width: 360px) {
+            .apply-wizard-header { padding-left: 9px; padding-right: 9px; }
+            .apply-wizard-content { padding-left: 8px; padding-right: 8px; }
+            .apply-stepper li { font-size: .58rem; }
+            .apply-wizard-card { padding: 12px 9px; }
+        }
     </style>
 </head>
 <body>
     <div class="mobile-container">
-        @include('partials.nav')
+        <header class="apply-wizard-header">
+            <button type="button" id="wizardHeaderBack" class="apply-wizard-header-back" aria-label="Go back">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h1>Apply Visa</h1>
+            <ol class="apply-stepper" aria-label="Application progress">
+                <li class="is-active" data-step-indicator="0"><span class="apply-stepper-icon"><i class="far fa-user"></i></span>Personal<br>Details</li>
+                <li data-step-indicator="1"><span class="apply-stepper-icon"><i class="far fa-id-card"></i></span>Additional<br>Details</li>
+                <li data-step-indicator="2"><span class="apply-stepper-icon">3</span>Destination &amp;<br>Profession</li>
+            </ol>
+        </header>
 
-        <!-- Sub-Banner Header -->
-        <div class="visa-hero-section" style="min-height: 350px; padding: 40px 5%; background-position: top center;">
-            <div class="hero-overlay-content reveal reveal-left" style="max-width: 100%;">
-                <p class="mb-1 reveal reveal-down delay-1" style="font-size: 0.85rem; color: var(--accent-color); font-weight: 600;"><a href="{{ url('/') }}" style="color: var(--accent-color); text-decoration: none;">Home</a> &nbsp;&raquo;&nbsp; Apply for Visa</p>
-                <h2 class="reveal reveal-up delay-2" style="font-size: 2.2rem; margin-bottom: 8px;">Apply for Visa</h2>
-                <p class="mb-0 reveal reveal-up delay-3" style="font-size: 0.95rem;">Fill in your details and submit your application. It's fast, secure and easy.</p>
-            </div>
-        </div>
-
-        <div class="section-wrapper-global" style="padding-top: 40px; padding-bottom: 60px;">
+        <main class="apply-wizard-page">
+        <div class="apply-wizard-content">
 
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
@@ -100,15 +322,23 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
+            @if($errors->any())
+                <div class="alert alert-danger mb-3" role="alert">
+                    {{ $errors->first() }}
+                </div>
+            @endif
 
-            <!-- Form & Sidebar Dual Layout Grid -->
-            <div class="form-sidebar-grid">
-                <!-- Left Side: Form Block -->
-                <div class="premium-dark-box reveal reveal-up delay-1">
-                    <h4 class="fw-bold mb-4" style="font-size: 1.25rem; color: var(--text-main); border-left: 3px solid var(--btn-primary); padding-left: 12px; line-height: 1.2;">Personal Details<br><small style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">Please provide your personal information as per your passport.</small></h4>
-
-                    <form action="{{ route('travel.apply.post') }}" method="POST" enctype="multipart/form-data">
+            <div class="apply-wizard-card">
+                    <div class="apply-step-heading">
+                        <span class="apply-step-heading-icon" id="applyStepIcon"><i class="far fa-user"></i></span>
+                        <div>
+                            <h2 id="applyStepTitle">Personal Details</h2>
+                            <p id="applyStepDescription">Please provide your personal information as per your passport.</p>
+                        </div>
+                    </div>
+                    <form id="visaApplicationForm" action="{{ route('travel.apply.post') }}" method="POST" enctype="multipart/form-data" novalidate>
                         @csrf
+                        <section class="apply-wizard-step" data-wizard-step="0">
                         <div class="form-group">
                             <label>NATIONALITY *</label>
                             <div class="input-with-icon">
@@ -166,6 +396,8 @@
                             </div>
                         </div>
 
+                        </section>
+                        <section class="apply-wizard-step d-none" data-wizard-step="1">
                         <div class="form-row">
                             <div class="form-group">
                                 <label>DATE OF BIRTH *</label>
@@ -222,6 +454,8 @@
                             </div>
                         </div>
 
+                        </section>
+                        <section class="apply-wizard-step d-none" data-wizard-step="2">
                         <div class="form-group">
                             <label>SELECT DESTINATION COUNTRY *</label>
                             <div class="input-with-icon">
@@ -285,7 +519,7 @@
                             <div class="terms-box">
                                 I agree that the above information is correct and complete to the best of my knowledge and belief. I understand that in the event of any information being found false/incorrect, my application is liable to be rejected.
                             </div>
-                            <div class="form-check p-3 px-5 rounded border d-flex align-items-center gap-2" style="background-color: var(--input-bg); border-color: var(--border-color) !important;">
+                            <div class="form-check apply-terms-check p-3 px-5 rounded border d-flex align-items-center gap-2" style="background-color: var(--input-bg); border-color: var(--border-color) !important;">
                                 <input class="form-check-input m-0" type="checkbox" value="1" id="agree" required style="accent-color: var(--btn-primary);">
                                 <label class="form-check-label fw-bold text-uppercase text-white" for="agree" style="font-size: 0.8rem; cursor: pointer;">
                                     YES, I AGREE TO THE TERMS & CONDITIONS *
@@ -293,40 +527,16 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn-submit mt-4 py-3" style="border-radius: 50px;">
-                            Submit Application <i class="fas fa-paper-plane ms-2"></i>
-                        </button>
+                        </section>
+                        <div class="apply-wizard-navigation">
+                            <button type="button" id="wizardBack" class="d-none"><i class="fas fa-arrow-left me-1"></i> Back</button>
+                            <button type="button" id="wizardNext">Next <i class="fas fa-arrow-right ms-1"></i></button>
+                            <button type="submit" id="wizardSubmit" class="btn-submit d-none">Submit Application <i class="fas fa-paper-plane ms-1"></i></button>
+                        </div>
                     </form>
-                </div>
-
-                <!-- Right Side: Sticky Info Widget Panels -->
-                <div class="sidebar-sticky-panel reveal reveal-up delay-2">
-                    <div class="sidebar-widget-card mt-4">
-                        <h4>Need Help?</h4>
-                        <p class="text-muted mb-4" style="font-size: 0.85rem; line-height: 1.5;">Our support team is available 24/7 to assist you with your visa application.</p>
-
-                        <div class="help-contact-row">
-                            <i class="fas fa-phone-alt"></i>
-                            <div>
-                                <p>24/7 Support Helpline</p>
-                                <h5>{{ $settings->phone ?? '+92 300 123 4567' }}</h5>
-                            </div>
-                        </div>
-                        <div class="help-contact-row">
-                            <i class="far fa-envelope"></i>
-                            <div>
-                                <p>Email Support</p>
-                                <h5>{{ $settings->email ?? 'info@visabook.com' }}</h5>
-                            </div>
-                        </div>
-
-                        <a href="#" class="btn-submit mt-3 py-2" style="background: transparent; border: 1px solid var(--btn-primary); color: var(--primary-color); font-size: 0.9rem;"><i class="far fa-comments"></i> Live Chat</a>
-                    </div>
-                </div>
             </div>
         </div>
-
-        @include('partials.footer')
+        </main>
     </div>
 
     <script>
@@ -353,6 +563,99 @@
             const availableJobs = @json($jobs);
             const visaCategories = @json($categories);
             const selectedJobIds = new Set();
+            const applicationForm = document.getElementById('visaApplicationForm');
+            const wizardSteps = Array.from(applicationForm.querySelectorAll('[data-wizard-step]'));
+            const wizardIndicators = Array.from(document.querySelectorAll('[data-step-indicator]'));
+            const wizardTitle = document.getElementById('applyStepTitle');
+            const wizardDescription = document.getElementById('applyStepDescription');
+            const wizardIcon = document.getElementById('applyStepIcon');
+            const wizardBack = document.getElementById('wizardBack');
+            const wizardHeaderBack = document.getElementById('wizardHeaderBack');
+            const wizardNext = document.getElementById('wizardNext');
+            const wizardSubmit = document.getElementById('wizardSubmit');
+            const wizardCopy = [
+                {
+                    title: 'Personal Details',
+                    description: 'Please provide your personal information as per your passport.',
+                    icon: '<i class="far fa-user"></i>',
+                },
+                {
+                    title: 'Additional Details',
+                    description: 'Add your passport details and upload your passport-size photo.',
+                    icon: '<i class="far fa-id-card"></i>',
+                },
+                {
+                    title: 'Destination & Profession',
+                    description: 'Please select your destination country and profession details.',
+                    icon: '<i class="fas fa-globe"></i>',
+                },
+            ];
+            let activeWizardStep = @json(
+                $errors->has('destination_country') || $errors->has('visa_type') || $errors->has('selected_job_ids') || $errors->has('driving_license_available')
+                    ? 2
+                    : ($errors->has('passport_number') || $errors->has('passport_expiry') ? 1 : 0)
+            );
+
+            function showWizardStep(stepIndex) {
+                activeWizardStep = stepIndex;
+                wizardSteps.forEach((step, index) => step.classList.toggle('d-none', index !== stepIndex));
+                wizardIndicators.forEach((indicator, index) => {
+                    indicator.classList.toggle('is-active', index === stepIndex);
+                    indicator.classList.toggle('is-complete', index < stepIndex);
+                    const icon = indicator.querySelector('.apply-stepper-icon');
+                    if (index < stepIndex) {
+                        icon.innerHTML = '<i class="fas fa-check"></i>';
+                    } else if (index === stepIndex) {
+                        icon.innerHTML = wizardCopy[index].icon;
+                    } else {
+                        icon.textContent = String(index + 1);
+                    }
+                });
+
+                wizardTitle.textContent = wizardCopy[stepIndex].title;
+                wizardDescription.textContent = wizardCopy[stepIndex].description;
+                wizardIcon.innerHTML = wizardCopy[stepIndex].icon;
+                wizardBack.classList.toggle('d-none', stepIndex === 0);
+                wizardNext.classList.toggle('d-none', stepIndex === wizardSteps.length - 1);
+                wizardSubmit.classList.toggle('d-none', stepIndex !== wizardSteps.length - 1);
+            }
+
+            function validateWizardStep(stepIndex) {
+                const invalidField = wizardSteps[stepIndex].querySelector(':invalid');
+                if (!invalidField) return true;
+                invalidField.reportValidity();
+                invalidField.focus();
+                return false;
+            }
+
+            wizardNext.addEventListener('click', function() {
+                if (validateWizardStep(activeWizardStep)) {
+                    showWizardStep(Math.min(activeWizardStep + 1, wizardSteps.length - 1));
+                }
+            });
+            wizardBack.addEventListener('click', function() {
+                showWizardStep(Math.max(activeWizardStep - 1, 0));
+            });
+            wizardHeaderBack.addEventListener('click', function() {
+                if (activeWizardStep > 0) {
+                    showWizardStep(activeWizardStep - 1);
+                    return;
+                }
+                window.location.href = @json(url('/'));
+            });
+            applicationForm.addEventListener('submit', function(event) {
+                for (let stepIndex = 0; stepIndex < wizardSteps.length; stepIndex += 1) {
+                    const invalidField = wizardSteps[stepIndex].querySelector(':invalid');
+                    if (invalidField) {
+                        event.preventDefault();
+                        showWizardStep(stepIndex);
+                        invalidField.reportValidity();
+                        invalidField.focus();
+                        return;
+                    }
+                }
+            });
+            showWizardStep(activeWizardStep);
 
             function updateVisaCategory() {
                 const selectedProfession = typeSelect.options[typeSelect.selectedIndex];

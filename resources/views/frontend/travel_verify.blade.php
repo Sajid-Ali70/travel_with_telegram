@@ -22,84 +22,149 @@
             color: #1f2937;
         }
 
+        .visa-status-header {
+            align-items: center;
+            background: #fff;
+            border-bottom: 1px solid #e6eaf0;
+            display: flex;
+            height: 44px;
+            justify-content: space-between;
+            padding: 0 14px;
+        }
+        .visa-status-header a,
+        .visa-status-header span {
+            color: #17253d !important;
+            font-size: 1rem;
+            text-decoration: none;
+        }
+        .visa-status-header span {
+            font-weight: 700;
+        }
+        .status-result-page {
+            flex: 1;
+            padding: 10px 10px 24px !important;
+        }
+        .status-result-page .form-sidebar-grid {
+            display: block;
+        }
+        .status-result-page .premium-dark-box {
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            padding: 0;
+        }
+        .status-result-page .status-search-intro,
+        .status-result-page .status-lookup-form,
+        .status-result-page .sidebar-sticky-panel {
+            display: none;
+        }
+        .status-result-page .status-result-wrapper {
+            margin-top: 0 !important;
+        }
         .status-result-wrapper {
             /* max-width: 460px; */
             margin: 0 auto;
-            padding: 12px 0 0;
+            padding: 0;
         }
 
         .status-result-card {
             background: #ffffff;
-            border-radius: 18px;
+            border-radius: 12px;
             border: 1px solid #dfe7f3;
-            box-shadow: 0 18px 32px rgba(17, 24, 39, 0.08);
+            box-shadow: 0 5px 15px rgba(17, 24, 39, 0.08);
             overflow: hidden;
         }
 
         .status-result-header {
-            text-align: center;
-            padding: 26px 22px 14px;
-            background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+            align-items: center;
+            background: #fff;
+            display: flex;
+            gap: 10px;
+            padding: 12px 12px;
             border-bottom: 1px solid #edf2f7;
         }
 
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.10em;
-            color: #0f9f6e;
-            background: #ebfff7;
-            border: 1px solid #bcecd4;
-            border-radius: 999px;
-            padding: 9px 16px;
-            margin-bottom: 18px;
+        .status-result-header.is-approved {
+            border-color: #d8eadc;
         }
-
-        .status-badge i {
-            font-size: 0.72rem;
+        .status-result-header.is-rejected {
+            border-color: #f2d5d5;
+        }
+        .status-result-icon {
+            align-items: center;
+            background: #e8f5eb;
+            border-radius: 50%;
+            color: #fff;
+            display: flex;
+            flex: 0 0 40px;
+            font-size: 1.2rem;
+            height: 40px;
+            justify-content: center;
+            width: 40px;
+        }
+        .is-approved .status-result-icon { background: #39a65a; }
+        .is-rejected .status-result-icon { background: #d64545; }
+        .is-pending .status-result-icon { background: #2879d0; }
+        .status-result-copy { min-width: 0; }
+        .status-badge {
+            display: none;
         }
 
         .status-title {
-            font-size: 1.8rem;
+            color: #31915a;
+            font-size: 1.2rem;
             font-weight: 800;
-            margin-bottom: 10px;
+            line-height: 1.2;
+            margin: 0;
+            overflow-wrap: anywhere;
+            text-transform: uppercase;
+        }
+        .is-rejected .status-title { color: #ba3434; }
+        .is-pending .status-title { color: #2563a9; }
+        .status-reference {
+            color: #64748b;
+            display: block;
+            font-size: .78rem;
+            margin-top: 2px;
+        }
+        .status-result-message {
+            color: #1f2937;
+            padding: 10px 12px 6px;
+            text-align: center;
+        }
+        .status-result-message strong {
             color: #111827;
+            display: block;
+            font-size: .92rem;
+            margin-bottom: 2px;
         }
-
-        .status-subtitle {
-            font-size: 1rem;
-            color: #5f6f89;
-            line-height: 1.6;
-            margin: 0 auto;
-            max-width: 320px;
+        .status-result-message p {
+            color: #374151;
+            font-size: .86rem;
+            line-height: 1.45;
+            margin: 0;
         }
-
         .status-body {
-            padding: 18px 18px 14px;
+            background: #f2f5f8 !important;
+            padding: 8px 10px 12px;
         }
 
         .field-group {
-            margin-bottom: 18px;
+            margin-bottom: 10px;
         }
 
         .field-title {
-            font-size: 0.84rem;
-            font-weight: 800;
-            letter-spacing: 0.12em;
-            color: #475569;
-            margin-bottom: 10px;
-            text-transform: uppercase;
+            color: #1f2937;
+            font-size: .9rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-align: center;
         }
 
         .detail-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
         .client-details-layout {
@@ -127,35 +192,217 @@
         }
 
         .detail-item {
-            background: #f8fafc;
-            border: 1px solid #edf2f7;
-            border-radius: 10px;
-            padding: 10px 12px;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 5px;
+            display: grid;
+            grid-template-columns: minmax(0, 43%) minmax(0, 1fr);
+            gap: 8px;
+            min-height: 36px;
+            padding: 6px 9px;
         }
 
         .detail-label {
-            display: block;
-            font-size: 0.76rem;
-            color: #67758b;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 6px;
+            color: #475569;
+            font-size: .78rem;
+            margin: 0;
         }
 
         .detail-value {
-            font-size: 0.88rem;
             color: #111827;
-            font-weight: 700;
-            line-height: 1.5;
-            word-break: break-word;
+            font-size: .82rem;
+            font-weight: 600;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
         }
-
-        .amount-box {
-            background: #fbfdff;
-            border: 1px solid #e7edf7;
-            border-radius: 12px;
-            padding: 14px 14px 10px;
-            margin-top: 4px;
+        .status-detail-next {
+            background: #1682bf;
+            border-radius: 5px;
+            color: #fff !important;
+            display: block;
+            font-size: .9rem;
+            font-weight: 700;
+            margin: 8px 0;
+            padding: 8px 10px;
+            text-align: center;
+            text-decoration: none;
+        }
+        .status-result-step.d-none {
+            display: none !important;
+        }
+        .payment-document-card,
+        .payment-bank-card,
+        .payment-receipt-card {
+            background: #fff;
+            border: 1px solid #dce7f3;
+            border-radius: 10px;
+            margin-bottom: 9px;
+            padding: 10px;
+        }
+        .payment-document-card {
+            align-items: center;
+            display: flex;
+            gap: 9px;
+        }
+        .payment-card-icon {
+            align-items: center;
+            background: #eef4fb;
+            border-radius: 8px;
+            color: #1765a8;
+            display: flex;
+            flex: 0 0 32px;
+            height: 32px;
+            justify-content: center;
+        }
+        .payment-card-title {
+            color: #1f2937;
+            font-size: .9rem;
+            font-weight: 800;
+            margin: 0 0 2px;
+        }
+        .payment-card-note {
+            color: #526174;
+            font-size: .78rem;
+            line-height: 1.35;
+            margin: 0;
+        }
+        .payment-download-link {
+            background: #0875db;
+            border-radius: 6px;
+            color: #fff !important;
+            display: block;
+            font-size: .82rem;
+            font-weight: 700;
+            margin-top: 7px;
+            padding: 7px 9px;
+            text-align: center;
+            text-decoration: none;
+        }
+        .payment-amount-card {
+            align-items: center;
+            background: #eaf4ff;
+            border: 1px solid #d4e8ff;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 9px;
+            padding: 11px 10px;
+        }
+        .payment-amount-card .amount-title {
+            color: #18365b;
+            font-size: .82rem;
+            margin: 0;
+        }
+        .payment-amount-card .amount-value {
+            color: #102c50;
+            font-size: 1rem;
+        }
+        .payment-bank-card .field-title,
+        .payment-receipt-card .field-title {
+            align-items: center;
+            display: flex;
+            gap: 7px;
+            justify-content: flex-start;
+            margin-bottom: 7px;
+            text-align: left;
+        }
+        .payment-bank-row {
+            align-items: center;
+            border-top: 1px solid #edf1f5;
+            color: #44546a;
+            display: flex;
+            font-size: .82rem;
+            gap: 8px;
+            justify-content: space-between;
+            padding: 7px 0;
+        }
+        .payment-bank-row strong {
+            color: #1e293b;
+            text-align: right;
+        }
+        .payment-receipt-card .result-action-form {
+            border: 0;
+            margin: 7px 0 0;
+            padding: 0;
+        }
+        .payment-receipt-card .action-submit {
+            background: #eaf3ff;
+            border: 1px dashed #7ca9dd;
+            color: #185a9d;
+            margin: 0;
+        }
+        .payment-receipt-status {
+            background: #effaf3;
+            border: 1px solid #ccebd5;
+            border-radius: 6px;
+            color: #27643b;
+            font-size: .78rem;
+            margin-top: 7px;
+            padding: 7px 8px;
+        }
+        .payment-step-navigation {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .payment-step-navigation button {
+            border: 0;
+            border-radius: 7px;
+            font-size: .86rem;
+            font-weight: 700;
+            min-height: 38px;
+        }
+        .payment-step-back {
+            background: #e8edf3;
+            color: #22364f;
+            flex: 0 0 34%;
+        }
+        .payment-step-next {
+            background: #0756a8;
+            color: #fff;
+            flex: 1;
+        }
+        .payment-step-error {
+            color: #b42318;
+            font-size: .78rem;
+            margin: 7px 0 0;
+        }
+        .payment-verification-step {
+            padding: 20px 14px;
+            text-align: center;
+        }
+        .payment-verification-step .payment-card-icon {
+            background: #e8f7ee;
+            color: #28814a;
+            font-size: 1.2rem;
+            height: 48px;
+            margin: 0 auto 10px;
+            width: 48px;
+        }
+        .payment-verification-step h2 {
+            color: #193a60;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+        .payment-verification-step p {
+            color: #526174;
+            font-size: .78rem;
+            line-height: 1.45;
+        }
+        .status-download-note {
+            color: #1f2937;
+            font-size: .8rem;
+            font-weight: 600;
+            line-height: 1.3;
+            margin: 4px auto 8px;
+            max-width: 260px;
+            text-align: center;
+        }
+        .detail-label i {
+            color: #64748b;
+            margin-right: 4px;
+            width: 11px;
         }
 
         .amount-title {
@@ -175,23 +422,6 @@
             font-weight: 800;
             color: #111827;
             text-align: right;
-        }
-
-        .ticket-box {
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid #edf2f7;
-        }
-
-        .ticket-note {
-            font-size: 0.86rem;
-            color: #475569;
-            line-height: 1.6;
-            margin-top: 8px;
-        }
-
-        .ticket-note strong {
-            color: #111827;
         }
 
         .result-action-form {
@@ -259,6 +489,14 @@
                 font-size: 1.5rem;
             }
 
+            .status-result-page .status-title {
+                font-size: 1.08rem;
+            }
+
+            .status-result-page .detail-item {
+                grid-template-columns: minmax(0, 43%) minmax(0, 1fr);
+            }
+
             .amount-title {
                 flex-wrap: nowrap;
                 gap: 6px;
@@ -304,33 +542,36 @@
                 white-space: nowrap;
             }
 
-            .amount-box .detail-item > div {
-                max-width: 100%;
-                overflow-x: auto;
-                white-space: nowrap;
-            }
         }
     </style>
 </head>
 <body>
     <div class="mobile-container">
-        @include('partials.nav')
+        @if($visaRequest)
+            <header class="visa-status-header">
+                <a href="{{ url('/') }}" aria-label="Back to home"><i class="fas fa-arrow-left"></i></a>
+                <span>Visa Status</span>
+                <a href="{{ route('travel.verify') }}" aria-label="Search another visa status"><i class="fas fa-search"></i></a>
+            </header>
+        @else
+            @include('partials.nav')
 
-        <!-- Sub-Banner Header -->
-        <div class="visa-hero-section" style="min-height: 350px; padding: 40px 5%; background-position: top center;">
-            <div class="hero-overlay-content reveal reveal-left" style="max-width: 100%;">
-                <p class="mb-1 reveal reveal-down delay-1" style="font-size: 0.85rem; color: var(--accent-color); font-weight: 600;"><a href="{{ url('/') }}" style="color: var(--accent-color); text-decoration: none;">Home</a> &nbsp;&raquo;&nbsp; Check Status</p>
-                <h2 class="reveal reveal-up delay-2" style="font-size: 2.2rem; margin-bottom: 8px;">Check Visa Status</h2>
-                <p class="mb-0 reveal reveal-up delay-3" style="font-size: 0.95rem;">Track your visa application using your reference number or passport number.</p>
+            <!-- Sub-Banner Header -->
+            <div class="visa-hero-section" style="min-height: 350px; padding: 40px 5%; background-position: top center;">
+                <div class="hero-overlay-content reveal reveal-left" style="max-width: 100%;">
+                    <p class="mb-1 reveal reveal-down delay-1" style="font-size: 0.85rem; color: var(--accent-color); font-weight: 600;"><a href="{{ url('/') }}" style="color: var(--accent-color); text-decoration: none;">Home</a> &nbsp;&raquo;&nbsp; Check Status</p>
+                    <h2 class="reveal reveal-up delay-2" style="font-size: 2.2rem; margin-bottom: 8px;">Check Visa Status</h2>
+                    <p class="mb-0 reveal reveal-up delay-3" style="font-size: 0.95rem;">Track your visa application using your reference number or passport number.</p>
+                </div>
             </div>
-        </div>
+        @endif
 
-        <div class="section-wrapper-global" style="padding-top: 40px; padding-bottom: 60px;">
+        <div class="section-wrapper-global {{ $visaRequest ? 'status-result-page' : '' }}" style="padding-top: {{ $visaRequest ? '10px' : '40px' }}; padding-bottom: {{ $visaRequest ? '24px' : '60px' }};">
             <!-- Form & Sidebar Dual Layout Grid -->
             <div class="form-sidebar-grid">
                 <!-- Left Side: Verification Box -->
                 <div class="premium-dark-box reveal reveal-up delay-1">
-                    <div class="text-center mb-4">
+                    <div class="status-search-intro text-center mb-4">
                         <div class="card-icon-circle reveal reveal-fade" style="width: 56px; height: 56px; font-size: 22px; background-color: #e8f5eb; margin-bottom: 12px;">
                             <i class="fas fa-search text-primary"></i>
                         </div>
@@ -342,7 +583,7 @@
                         <div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>{{ $statusError }}</div>
                     @endif
 
-                    <form action="{{ route('travel.verify') }}" method="POST">
+                    <form class="status-lookup-form" action="{{ route('travel.verify') }}" method="POST">
                         @csrf
                         <div class="form-group">
                             <label for="visa_lookup_type">Search Using *</label>
@@ -371,187 +612,213 @@
                     @if($visaRequest)
                         <div class="status-result-wrapper mt-4">
                             <div class="status-result-card">
-                                <div class="status-result-header">
-                                    <div class="status-badge">
-                                        <i class="fas fa-check-circle"></i>
-                                        {{ $visaRequest->flight_ticket_requested_at ? 'Ticket Status: ' . ($visaRequest->ticket_status ?? 'Requested') : $statusText }}
-                                    </div>
-                                    <div class="status-title">{{ $visaRequest->flight_ticket_requested_at ? 'Ticket Status: ' . ($visaRequest->ticket_status ?? 'Requested') : $statusText }}</div>
-                                    <p class="status-subtitle">{{ $visaRequest->flight_ticket_requested_at ? 'Your flight ticket request is currently ' . strtolower($visaRequest->ticket_status ?? 'Requested') . '.' : $statusMessage }}</p>
-                                </div>
-
-                                @if(session('result_notice'))
-                                    <div class="result-alert alert alert-success">{{ session('result_notice') }}</div>
-                                @endif
-                                @if($errors->any())
-                                    <div class="result-alert alert alert-danger">{{ $errors->first() }}</div>
-                                @endif
-                                @if($visaRequest->status === 'Visa Issued' && !empty($visaRequest->issued_visa_document))
-                                    <div class="alert alert-success">
-                                        Your visa has been issued.
-                                        <a class="btn btn-success btn-sm ms-2" href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('travel.visa_document.download', now()->addMinutes(30), ['id' => $visaRequest->id]) }}">
-                                            <i class="fas fa-download me-1"></i>Download Visa Document
-                                        </a>
-                                    </div>
-                                @endif
-
-                                <div class="status-body" style="background-color: #c8d3de; color: white">
-                                    <div class="field-group">
-                                        <div class="field-title">Client Details</div>
-                                        <div class="client-details-layout">
-                                            <div class="detail-grid">
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Applicant</span>
-                                                    <div class="detail-value">{{ $visaRequest->first_name ?? '' }} {{ $visaRequest->last_name ?? '' }}</div>
-                                                </div>
-                                                <div class="detail-item">
-                                                            <span class="detail-label">Application Reference</span>
-                                                            <div class="detail-value">{{ $visaRequest->reference_number ?: \App\Http\Controllers\AdminController::formatVisaReference($visaRequest->id, $visaRequest->created_at) }}</div>
-                                                        </div>
-                                                        <div class="detail-item">
-                                                            <span class="detail-label">Visa Type</span>
-                                                    <div class="detail-value">{{ $visaRequest->visa_type ?? ($visaRequest->visa_category ?? 'N/A') }}</div>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Passport</span>
-                                                    <div class="detail-value">{{ $visaRequest->passport_number ?? 'N/A' }}</div>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Mobile</span>
-                                                    <div class="detail-value">{{ $visaRequest->mobile_number ?? 'N/A' }}</div>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Email</span>
-                                                    <div class="detail-value">{{ $visaRequest->email ?? 'N/A' }}</div>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <span class="detail-label">Country</span>
-                                                    <div class="detail-value">{{ $visaRequest->destination_country ?? 'N/A' }}</div>
-                                                </div>
-                                            </div>
-                                            @if(!empty($visaRequest->passport_photo))
-                                                <img src="{{ $visaRequest->passport_photo }}" alt="Applicant passport photo" class="client-photo">
-                                            @else
-                                                <div class="client-photo client-photo-placeholder" role="img" aria-label="No applicant photo"><i class="fas fa-user"></i></div>
-                                            @endif
+                                @php
+                                    $resultApproved = in_array($visaRequest->status, ['Visa Approved from Embassy', 'Visa Approved', 'Payment Verified', 'Visa Issued', 'Flight Ticket Booked', 'approved'], true);
+                                    $resultRejected = in_array($visaRequest->status, ['Visa Rejected - Document Verification Failed', 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected - Fee Not Paid', 'Visa Rejected due to Non Payment of Fee', 'Application Rejected', 'rejected'], true);
+                                    $resultStatusClass = $resultApproved ? 'is-approved' : ($resultRejected ? 'is-rejected' : 'is-pending');
+                                    $hasVisaDocument = !empty($visaRequest->issued_visa_document)
+                                        && \Illuminate\Support\Facades\Storage::disk('local')->exists($visaRequest->issued_visa_document);
+                                    $resultHasPaymentStep = $statusText === 'Visa Approved from Embassy';
+                                    $resultHasDocumentStep = $visaRequest->status === 'Visa Issued' && $hasVisaDocument;
+                                    $resultHasNext = $resultHasPaymentStep || $resultHasDocumentStep;
+                                @endphp
+                                <div id="visa-details-step" class="status-result-step">
+                                    <div class="status-result-header {{ $resultStatusClass }}">
+                                        <div class="status-result-icon">
+                                            <i class="fas {{ $resultApproved ? 'fa-check' : ($resultRejected ? 'fa-times' : 'fa-clock') }}"></i>
+                                        </div>
+                                        <div class="status-result-copy">
+                                            <div class="status-title">{{ $statusText }}</div>
+                                            <span class="status-reference">Ref: {{ $visaRequest->reference_number ?: \App\Http\Controllers\AdminController::formatVisaReference($visaRequest->id, $visaRequest->created_at) }}</span>
                                         </div>
                                     </div>
+                                    <div class="status-result-message">
+                                        @if($resultApproved)
+                                            <strong>CONGRATULATIONS!</strong>
+                                        @endif
+                                        <p>{{ $statusMessage }}</p>
+                                    </div>
 
-                                    @if($visaRequest->status === 'Documents Verification')
+                                    @if(session('result_notice'))
+                                        <div class="result-alert alert alert-success">{{ session('result_notice') }}</div>
+                                    @endif
+                                    @if($errors->any())
+                                        <div class="result-alert alert alert-danger">{{ $errors->first() }}</div>
+                                    @endif
+                                    <div class="status-body">
                                         <div class="field-group">
-                                            <div class="field-title">Verification Agent Details</div>
+                                            <div class="field-title">Visa Holder Details</div>
                                             <div class="detail-grid">
-                                                @if(!empty($visaRequest->agent_name))
-                                                    <div class="detail-item">
-                                                        <span class="detail-label">Agent Name</span>
-                                                        <div class="detail-value">{{ $visaRequest->agent_name }}</div>
-                                                    </div>
-                                                @endif
-                                                @if(!empty($visaRequest->agent_contact_number))
-                                                    <div class="detail-item">
-                                                        <span class="detail-label">Agent Contact Number</span>
-                                                        <div class="detail-value">{{ $visaRequest->agent_contact_number }}</div>
-                                                    </div>
-                                                @endif
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-user"></i> Full Name</span>
+                                                <div class="detail-value">{{ trim(($visaRequest->first_name ?? '') . ' ' . ($visaRequest->last_name ?? '')) ?: 'N/A' }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-passport"></i> Passport Number</span>
+                                                <div class="detail-value">{{ $visaRequest->passport_number ?? 'N/A' }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-flag"></i> Nationality</span>
+                                                <div class="detail-value">{{ $visaRequest->nationality ?? 'N/A' }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-user-tie"></i> Profession</span>
+                                                <div class="detail-value">{{ $visaRequest->profession ?? $visaRequest->visa_type ?? 'N/A' }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-globe"></i> Destination Country</span>
+                                                <div class="detail-value">{{ $visaRequest->destination_country ?? 'N/A' }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-map-marker-alt"></i> Job Location</span>
+                                                <div class="detail-value">{{ $visaRequest->job_location ?? $visaRequest->destination_country ?? 'N/A' }}</div>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="fas fa-file-alt"></i> Visa Type</span>
+                                                <div class="detail-value">{{ $visaRequest->visa_category ?? 'N/A' }}</div>
+                                            </div>
+                                            @if(!empty($visaRequest->job_title))
+                                                <div class="detail-item">
+                                                    <span class="detail-label"><i class="fas fa-briefcase"></i> Job Title</span>
+                                                    <div class="detail-value">{{ $visaRequest->job_title }}</div>
+                                                </div>
+                                            @endif
                                             </div>
                                         </div>
-                                    @endif
 
-                                    @if($statusText === 'Visa Approved from Embassy')
-                                    <div class="amount-box">
-                                        <div class="amount-title">
-                                            <span>Payment Details</span>
-                                            <span>Amount Payable</span>
-                                        </div>
-                                        <div class="amount-value">
-                                            {{ $visaFee !== null ? ($visaFeeCurrency ?? 'PKR') . ' ' . number_format((float) $visaFee, 2) : 'Not set' }}
-                                        </div>
-                                        <div class="ticket-note mt-3">
-                                            <strong>Bank Account Details</strong>
-                                            @if(!empty($visaRequest->bank_name))
-                                                <div class="detail-item mt-2">
-                                                    <div class="detail-value">{{ $visaRequest->bank_name }}</div>
-                                                    <div>Account Holder: {{ $visaRequest->account_holder_name }}</div>
-                                                    <div>Account Number: {{ $visaRequest->account_number }}</div>
+                                        @if($visaRequest->status === 'Documents Verification')
+                                            <div class="field-group">
+                                                <div class="field-title">Verification Agent Details</div>
+                                                <div class="detail-grid">
+                                                    @if(!empty($visaRequest->agent_name))
+                                                        <div class="detail-item">
+                                                            <span class="detail-label">Agent Name</span>
+                                                            <div class="detail-value">{{ $visaRequest->agent_name }}</div>
+                                                        </div>
+                                                    @endif
+                                                    @if(!empty($visaRequest->agent_contact_number))
+                                                        <div class="detail-item">
+                                                            <span class="detail-label">Agent Contact Number</span>
+                                                            <div class="detail-value">{{ $visaRequest->agent_contact_number }}</div>
+                                                        </div>
+                                                    @endif
                                                 </div>
-                                            @elseif($bankAccounts->isNotEmpty())
-                                                @foreach($bankAccounts as $bankAccount)
-                                                    <div class="detail-item mt-2">
-                                                        <div class="detail-value">{{ $bankAccount->bank_name }}</div>
-                                                        <div>Account Holder: {{ $bankAccount->account_name }}</div>
-                                                        <div>Account Number: {{ $bankAccount->account_number }}</div>
-                                                        @if($bankAccount->iban)<div>IBAN: {{ $bankAccount->iban }}</div>@endif
-                                                        @if($bankAccount->branch)<div>Branch: {{ $bankAccount->branch }}</div>@endif
-                                                        @if($bankAccount->swift_code)<div>SWIFT / BIC: {{ $bankAccount->swift_code }}</div>@endif
-                                                        <div>Currency: {{ $bankAccount->currency }}</div>
-                                                    </div>
-                                                @endforeach
-                                            @else
-                                                <div class="mt-2">Bank details are not available yet.</div>
-                                            @endif
-                                            @if($visaRequest->payment_receipt)
-                                                <div class="mt-2"><strong>Uploaded Receipt:</strong> <a href="{{ $visaRequest->payment_receipt }}" target="_blank" rel="noopener">View payment receipt</a></div>
-                                            @endif
-                                            <form id="verify-payment-receipt-form" action="{{ route('travel.apply.payment_receipt', $visaRequest->id) }}" method="POST" enctype="multipart/form-data" class="result-action-form">
-                                                @csrf
-                                                <input type="hidden" name="email" value="{{ $visaRequest->email }}">
-                                                <input type="hidden" name="return_to" value="verify">
-                                                <label for="verify_payment_receipt">Upload Payment Receipt / Screenshot</label>
-                                                <input id="verify_payment_receipt" class="visually-hidden" type="file" name="payment_receipt" accept="image/jpeg,image/png,image/webp" required>
-                                                <button id="verify-payment-receipt-picker" type="button" class="action-submit"><i class="fas fa-camera me-2"></i>Upload Payment Receipt / Screenshot</button>
-                                                <div id="verify-payment-receipt-preview" class="mt-2" hidden>
-                                                    <img id="verify-payment-receipt-image" alt="Selected payment receipt preview" style="display:block;max-width:100%;max-height:240px;border:1px solid #dfe7f3;border-radius:7px;">
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-
-                                    <div class="ticket-box">
-                                        <div class="field-title">Flight Ticket Booking Time Slot</div>
-                                        <div class="ticket-note">Please share your preferred dates and time for ticket booking.</div>
-                                        @if($visaRequest->flight_ticket_requested_at)
-                                            <div class="ticket-note">
-                                                <strong>Request submitted:</strong> {{ \Carbon\Carbon::parse($visaRequest->flight_ticket_requested_at)->format('d/m/Y, h:i A') }}<br>
-                                                <strong>Requested dates:</strong> {{ \Carbon\Carbon::parse($visaRequest->preferred_date_start)->format('d M Y') }} - {{ \Carbon\Carbon::parse($visaRequest->preferred_date_end)->format('d M Y') }}<br>
-                                                <strong>Preferred airport:</strong> {{ $flightAirports[$visaRequest->preferred_airport] ?? $visaRequest->preferred_airport }}
-                                                @if($visaRequest->ticket_status)
-                                                    <br><strong>Ticket status:</strong> {{ $visaRequest->ticket_status }}
-                                                @endif
-                                                @if($visaRequest->ticket_details)
-                                                    <br><strong>Ticket details:</strong><br>{!! nl2br(e($visaRequest->ticket_details)) !!}
-                                                @endif
                                             </div>
                                         @endif
-                                        @if($ticketRequest)
-                                            <button type="button" id="showVerifyTicketReapplyForm" class="action-submit" aria-controls="verifyTicketReapplyForm" aria-expanded="{{ $errors->any() ? 'true' : 'false' }}">
-                                                <i class="fas fa-redo me-2"></i>Reapply for Ticket
+
+                                        @if($resultHasNext)
+                                            <button type="button" id="visa-details-next" class="status-detail-next border-0 w-100">
+                                                Next <i class="fas fa-arrow-right ms-1"></i>
                                             </button>
-                                        @endif
-                                        <form id="verifyTicketReapplyForm" action="{{ route('travel.apply.flight_ticket', $visaRequest->id) }}" method="POST" class="result-action-form {{ $ticketRequest && !$errors->any() ? 'd-none' : '' }}">
-                                            @csrf
-                                            <input type="hidden" name="email" value="{{ $visaRequest->email }}">
-                                            <div class="action-grid">
-                                                <div>
-                                                    <label for="verify_preferred_date_start">Preferred date from</label>
-                                                    <input id="verify_preferred_date_start" type="date" name="preferred_date_start" min="{{ now()->toDateString() }}" value="{{ old('preferred_date_start', $visaRequest->preferred_date_start) }}" required>
-                                                </div>
-                                                <div>
-                                                    <label for="verify_preferred_date_end">Preferred date to</label>
-                                                    <input id="verify_preferred_date_end" type="date" name="preferred_date_end" min="{{ now()->toDateString() }}" value="{{ old('preferred_date_end', $visaRequest->preferred_date_end) }}" required>
-                                                </div>
-                                            </div>
-                                            <label for="verify_preferred_airport" class="mt-3">Preferred Airport</label>
-                                            <select id="verify_preferred_airport" name="preferred_airport" required>
-                                                <option value="">Select preferred airport</option>
-                                                @foreach($flightAirports as $code => $airport)
-                                                    <option value="{{ $code }}" {{ old('preferred_airport', $visaRequest->preferred_airport) === $code ? 'selected' : '' }}>{{ $airport }}</option>
-                                                @endforeach
-                                            </select>
-                                            <button type="submit" class="action-submit"><i class="fas fa-paper-plane me-2"></i>{{ $ticketRequest ? 'Submit Ticket Reapplication' : 'Submit Flight Ticket Request' }}</button>
-                                        </form>
-                                    </div>
+                                            <p class="status-download-note">Continue to your payment details or visa approval letter.</p>
+                                        </div>
+                                    @else
+                                        </div>
                                     @endif
                                 </div>
+
+                                @if($resultHasNext)
+                                    <div id="visa-payment-step" class="status-result-step d-none">
+                                        @if($resultHasPaymentStep)
+                                            <div class="status-body">
+                                                <div class="payment-document-card">
+                                                    <div class="payment-card-icon"><i class="fas fa-file-pdf"></i></div>
+                                                    <div>
+                                                        <h2 class="payment-card-title">Visa Approval Letter</h2>
+                                                        <p class="payment-card-note">Download your visa approval letter.</p>
+                                                        @if($hasVisaDocument)
+                                                            <a class="payment-download-link" href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('travel.visa_document.download', now()->addMinutes(30), ['id' => $visaRequest->id]) }}">
+                                                                <i class="fas fa-download me-1"></i>Download Visa Approval Letter
+                                                            </a>
+                                                        @else
+                                                            <p class="payment-card-note mt-1">Your approval letter is not available yet. Please check back later.</p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                <div class="payment-amount-card">
+                                                    <div class="amount-title"><span>Amount Payable</span></div>
+                                                    <div class="amount-value">{{ $visaFee !== null ? ($visaFeeCurrency ?? 'PKR') . ' ' . number_format((float) $visaFee, 2) : 'Not set' }}</div>
+                                                </div>
+
+                                                <div class="payment-bank-card">
+                                                    <div class="field-title"><i class="fas fa-university"></i> Bank Account Details</div>
+                                                    @if(!empty($visaRequest->bank_name))
+                                                        <div class="payment-bank-row"><span>Bank Name</span><strong>{{ $visaRequest->bank_name }}</strong></div>
+                                                        <div class="payment-bank-row"><span>Account Holder</span><strong>{{ $visaRequest->account_holder_name ?: 'N/A' }}</strong></div>
+                                                        <div class="payment-bank-row"><span>Account Number</span><strong>{{ $visaRequest->account_number ?: 'N/A' }}</strong></div>
+                                                    @elseif($bankAccounts->isNotEmpty())
+                                                        @foreach($bankAccounts as $bankAccount)
+                                                            <div class="payment-bank-row"><span>Bank Name</span><strong>{{ $bankAccount->bank_name }}</strong></div>
+                                                            <div class="payment-bank-row"><span>Account Holder</span><strong>{{ $bankAccount->account_name }}</strong></div>
+                                                            <div class="payment-bank-row"><span>Account Number</span><strong>{{ $bankAccount->account_number }}</strong></div>
+                                                            @if($bankAccount->iban)<div class="payment-bank-row"><span>IBAN</span><strong>{{ $bankAccount->iban }}</strong></div>@endif
+                                                            @if($bankAccount->branch)<div class="payment-bank-row"><span>Branch</span><strong>{{ $bankAccount->branch }}</strong></div>@endif
+                                                            @if($bankAccount->swift_code)<div class="payment-bank-row"><span>SWIFT / BIC</span><strong>{{ $bankAccount->swift_code }}</strong></div>@endif
+                                                            <div class="payment-bank-row"><span>Currency</span><strong>{{ $bankAccount->currency }}</strong></div>
+                                                        @endforeach
+                                                    @else
+                                                        <p class="payment-card-note">Bank details are not available yet.</p>
+                                                    @endif
+                                                </div>
+
+                                                <div class="payment-receipt-card">
+                                                    <div class="field-title"><i class="fas fa-receipt"></i> Payment Receipt</div>
+                                                    @if($visaRequest->payment_receipt)
+                                                        <div class="payment-receipt-status">
+                                                            <i class="fas fa-check-circle me-1"></i>
+                                                            Receipt uploaded. <a href="{{ $visaRequest->payment_receipt }}" target="_blank" rel="noopener">View payment receipt</a>
+                                                        </div>
+                                                    @endif
+                                                    <form id="verify-payment-receipt-form" action="{{ route('travel.apply.payment_receipt', $visaRequest->id) }}" method="POST" enctype="multipart/form-data" class="result-action-form">
+                                                        @csrf
+                                                        <input type="hidden" name="email" value="{{ $visaRequest->email }}">
+                                                        <input type="hidden" name="return_to" value="verify">
+                                                        <label for="verify_payment_receipt">Upload payment receipt or screenshot</label>
+                                                        <input id="verify_payment_receipt" class="visually-hidden" type="file" name="payment_receipt" accept="image/jpeg,image/png,image/webp" required>
+                                                        <button id="verify-payment-receipt-picker" type="button" class="action-submit"><i class="fas fa-camera me-2"></i>Upload Payment Receipt / Screenshot</button>
+                                                        <div id="verify-payment-receipt-preview" class="mt-2" hidden>
+                                                            <img id="verify-payment-receipt-image" alt="Selected payment receipt preview" style="display:block;max-width:100%;max-height:240px;border:1px solid #dfe7f3;border-radius:7px;">
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                                <p id="payment-step-error" class="payment-step-error" role="alert" hidden>Upload your payment receipt before continuing for verification.</p>
+                                                <div class="payment-step-navigation">
+                                                    <button type="button" class="payment-step-back" id="visa-payment-back"><i class="fas fa-arrow-left me-1"></i>Back</button>
+                                                    <button type="button" class="payment-step-next" id="visa-payment-next">Next for verification <i class="fas fa-arrow-right ms-1"></i></button>
+                                                </div>
+                                            </div>
+                                        @elseif($resultHasDocumentStep)
+                                            <div class="status-body">
+                                                <div class="payment-document-card">
+                                                    <div class="payment-card-icon"><i class="fas fa-file-pdf"></i></div>
+                                                    <div>
+                                                        <h2 class="payment-card-title">Visa Document</h2>
+                                                        <p class="payment-card-note">Your issued visa document is ready to download.</p>
+                                                        <a class="payment-download-link" href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('travel.visa_document.download', now()->addMinutes(30), ['id' => $visaRequest->id]) }}">
+                                                            <i class="fas fa-download me-1"></i>Download Visa Document
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                <div class="payment-step-navigation">
+                                                    <button type="button" class="payment-step-back" id="visa-payment-back"><i class="fas fa-arrow-left me-1"></i>Back</button>
+                                                </div>
+                                            </div>
+                                        @endif
+                                        @endif
+                                    </div>
+                                    @if($resultHasPaymentStep)
+                                        <div id="visa-verification-step" class="status-result-step d-none" data-has-receipt="{{ $visaRequest->payment_receipt ? 'true' : 'false' }}">
+                                            <div class="status-body payment-verification-step">
+                                                <div class="payment-card-icon"><i class="fas fa-check"></i></div>
+                                                <h2>Receipt Submitted</h2>
+                                                <p>Your payment receipt has been submitted. Please allow our team to review it. You can check this page again for status updates.</p>
+                                                <div class="payment-step-navigation">
+                                                    <button type="button" class="payment-step-back" id="visa-verification-back"><i class="fas fa-arrow-left me-1"></i>Back</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                             </div>
                         </div>
                     @endif
@@ -573,19 +840,52 @@
             </div>
         </div>
 
-        @include('partials.footer')
+        @if(!$visaRequest)
+            @include('partials.footer')
+        @endif
     </div>
     <script src="{{ asset('js/app.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const verifyDateStart = document.getElementById('verify_preferred_date_start');
-        const verifyDateEnd = document.getElementById('verify_preferred_date_end');
-        const verifyTicketReapplyButton = document.getElementById('showVerifyTicketReapplyForm');
-        const verifyTicketReapplyForm = document.getElementById('verifyTicketReapplyForm');
+        const visaDetailsStep = document.getElementById('visa-details-step');
+        const visaPaymentStep = document.getElementById('visa-payment-step');
+        const visaVerificationStep = document.getElementById('visa-verification-step');
+        const visaDetailsNext = document.getElementById('visa-details-next');
+        const visaPaymentBack = document.getElementById('visa-payment-back');
+        const visaPaymentNext = document.getElementById('visa-payment-next');
+        const visaVerificationBack = document.getElementById('visa-verification-back');
+        const paymentStepError = document.getElementById('payment-step-error');
         const receiptInput = document.getElementById('verify_payment_receipt');
         const receiptPicker = document.getElementById('verify-payment-receipt-picker');
         const receiptPreview = document.getElementById('verify-payment-receipt-preview');
         const receiptImage = document.getElementById('verify-payment-receipt-image');
+
+        visaDetailsNext?.addEventListener('click', () => {
+            visaDetailsStep.classList.add('d-none');
+            visaPaymentStep.classList.remove('d-none');
+            visaPaymentStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        visaPaymentBack?.addEventListener('click', () => {
+            visaPaymentStep.classList.add('d-none');
+            visaDetailsStep.classList.remove('d-none');
+            visaDetailsStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        visaPaymentNext?.addEventListener('click', () => {
+            if (visaVerificationStep.dataset.hasReceipt !== 'true') {
+                paymentStepError.hidden = false;
+                receiptPicker?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            visaPaymentStep.classList.add('d-none');
+            visaVerificationStep.classList.remove('d-none');
+            visaVerificationStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        visaVerificationBack?.addEventListener('click', () => {
+            visaVerificationStep.classList.add('d-none');
+            visaPaymentStep.classList.remove('d-none');
+            visaPaymentStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
 
         receiptPicker?.addEventListener('click', () => receiptInput?.click());
         receiptInput?.addEventListener('change', () => {
@@ -601,18 +901,6 @@
             receiptPicker.disabled = true;
             receiptPicker.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading Payment Receipt / Screenshot';
             receiptInput.form?.requestSubmit();
-        });
-
-        verifyDateStart?.addEventListener('change', () => {
-            verifyDateEnd.min = verifyDateStart.value || verifyDateEnd.min;
-            if (verifyDateEnd.value && verifyDateEnd.value < verifyDateStart.value) {
-                verifyDateEnd.value = verifyDateStart.value;
-            }
-        });
-        verifyTicketReapplyButton?.addEventListener('click', () => {
-            const isHidden = verifyTicketReapplyForm.classList.toggle('d-none');
-            verifyTicketReapplyButton.setAttribute('aria-expanded', String(!isHidden));
-            if (!isHidden) verifyTicketReapplyForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
     </script>
 </body>

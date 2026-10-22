@@ -2232,6 +2232,38 @@ class AdminController extends Controller
         if ($visaRequest) {
             $ticketRequest = DB::table('app_ticket_requests')->where('visa_request_id', $visaRequest->id)->first();
             $this->attachTicketRequestDetails($visaRequest, $ticketRequest);
+            $visaRequest->job_location = $visaRequest->destination_country ?? null;
+            $selectedJobIds = json_decode($visaRequest->selected_job_ids ?? '[]', true);
+            if (is_array($selectedJobIds)) {
+                $selectedJobIds = collect($selectedJobIds)
+                    ->filter(fn ($jobId) => filter_var($jobId, FILTER_VALIDATE_INT) !== false)
+                    ->map(fn ($jobId) => (int) $jobId)
+                    ->all();
+                $selectedJob = $selectedJobIds
+                    ? DB::table('app_jobs')->whereIn('id', $selectedJobIds)->orderBy('id')->first(['country_location', 'city_locations'])
+                    : null;
+
+                if ($selectedJob) {
+                    $countryId = DB::table('app_countries')
+                        ->where('name', $visaRequest->destination_country)
+                        ->value('id');
+                    $cityLocations = json_decode($selectedJob->city_locations ?? '{}', true);
+                    $selectedCities = is_array($cityLocations) && $countryId
+                        ? ($cityLocations[(string) $countryId] ?? [])
+                        : [];
+                    $selectedCities = is_array($selectedCities)
+                        ? array_values(array_filter($selectedCities, fn ($city) => is_string($city) && trim($city) !== ''))
+                        : [];
+                    $jobCountry = trim((string) ($selectedJob->country_location ?? ''));
+
+                    $visaRequest->job_location = $selectedCities
+                        ? implode(', ', $selectedCities)
+                        : ($jobCountry && mb_strtolower($jobCountry) !== mb_strtolower('All Country (Global multi-select)')
+                            ? $jobCountry
+                            : $visaRequest->destination_country);
+                }
+            }
+
             $countryPayment = DB::table('app_countries')
                 ->where('name', $visaRequest->destination_country)
                 ->first(['visa_fee', 'currency']);
