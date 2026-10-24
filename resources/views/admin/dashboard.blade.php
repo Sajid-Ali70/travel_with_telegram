@@ -669,7 +669,6 @@
                                     @endphp
                                     <button type="button" class="btn btn-sm btn-outline-info me-1" title="View and update status" aria-label="View and update status for request {{ $req->id }}"
                                         data-id="{{ $req->id }}"
-                                        data-pdf-url="{{ route('admin.requests.pdf', $req->id) }}"
                                         data-status="{{ $req->status }}"
                                         data-fee="{{ $req->visa_fee ?? '' }}"
                                         data-currency="{{ $req->visa_fee_currency ?? $requestNationalityCurrency }}"
@@ -678,6 +677,9 @@
                                         data-account-holder="{{ $req->account_holder_name ?? '' }}"
                                         data-agent-name="{{ $req->agent_name ?? '' }}"
                                         data-agent-contact-number="{{ $req->agent_contact_number ?? '' }}"
+                                        data-approval-agent-name="{{ $req->approval_agent_name ?? '' }}"
+                                        data-approval-agent-contact-number="{{ $req->approval_agent_contact_number ?? '' }}"
+                                        data-required-documents="{{ $req->required_documents ?? '[]' }}"
                                         data-has-issued-document="{{ !empty($req->issued_visa_document) ? '1' : '0' }}"
                                         data-issued-document-url="{{ !empty($req->issued_visa_document) ? route('admin.requests.visa_document', $req->id) : '' }}"
                                         onclick="openRequestStatusModal(this)">
@@ -718,12 +720,13 @@
                         </select>
                     </div>
                     <div id="requestIssuedVisaDocumentFields" class="mb-3 d-none">
-                        <label class="form-label" for="requestIssuedVisaDocument">Attach Approval Letter</label>
+                        <label id="requestIssuedVisaDocumentLabel" class="form-label" for="requestIssuedVisaDocument">Attach Approval Letter</label>
                         <input id="requestIssuedVisaDocument" type="file" name="issued_visa_document" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
                         <div id="requestIssuedVisaDocumentHelp" class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div>
                         <a id="requestIssuedVisaDocumentCurrent" class="btn btn-sm btn-outline-info mt-2 d-none" href="#" target="_blank" rel="noopener">View current document</a>
                     </div>
                     <div id="requestVerificationAgentFields" class="row g-3 d-none">
+                        <div class="col-12"><h6 class="mb-0">Document Verification Agent Details</h6></div>
                         <div class="col-md-6">
                             <label class="form-label" for="requestAgentName">Agent Name</label>
                             <input id="requestAgentName" type="text" name="agent_name" class="form-control" maxlength="255">
@@ -731,6 +734,35 @@
                         <div class="col-md-6">
                             <label class="form-label" for="requestAgentContactNumber">Agent Contact Number</label>
                             <input id="requestAgentContactNumber" type="text" name="agent_contact_number" class="form-control" maxlength="50">
+                        </div>
+                    </div>
+                    <div id="requestApprovalAgentFields" class="row g-3 d-none">
+                        <div class="col-12"><h6 class="mb-0">Official Agent Details</h6></div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="requestApprovalAgentName">Agent Name</label>
+                            <input id="requestApprovalAgentName" type="text" name="approval_agent_name" class="form-control" maxlength="255">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="requestApprovalAgentContactNumber">Agent Contact Number</label>
+                            <input id="requestApprovalAgentContactNumber" type="text" name="approval_agent_contact_number" class="form-control" maxlength="50">
+                        </div>
+                    </div>
+                    <div id="requestVerificationDocumentFields" class="row g-3 d-none">
+                        <div class="col-12">
+                            <fieldset>
+                                <legend class="form-label mb-1">Documents to send for verification <span class="text-danger">*</span></legend>
+                                <p class="form-text mt-0">Select the documents the applicant must send to the agent. Select at least one.</p>
+                                <div class="row g-2">
+                                    @foreach(\App\Http\Controllers\AdminController::REQUIRED_VERIFICATION_DOCUMENTS as $index => $document)
+                                        <div class="col-sm-6 col-lg-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input required-verification-document" type="checkbox" name="required_documents[]" id="requestRequiredDocument{{ $index }}" value="{{ $document }}">
+                                                <label class="form-check-label" for="requestRequiredDocument{{ $index }}">{{ $document }}</label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </fieldset>
                         </div>
                     </div>
                     <div id="requestApprovalPaymentFields" class="row g-3 d-none">
@@ -762,7 +794,6 @@
                     </div>
                     <div id="requestStatusError" class="alert alert-danger d-none mt-3 mb-0" role="alert"></div>
                     <div class="d-flex justify-content-between gap-2 mt-4">
-                        <a id="requestStatusPdf" href="#" target="_blank" rel="noopener" class="btn btn-outline-success"><i class="fas fa-file-pdf me-1"></i>Download PDF</a>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-outline-light" onclick="closeRequestStatusModal()">Cancel</button>
                             <button type="submit" id="requestStatusSave" class="btn btn-primary">Save Status</button>
@@ -1270,9 +1301,12 @@
         const requestStatusForm = document.getElementById('requestStatusForm');
         const requestStatusValue = document.getElementById('requestStatusValue');
         const requestVerificationAgentFields = document.getElementById('requestVerificationAgentFields');
+        const requestApprovalAgentFields = document.getElementById('requestApprovalAgentFields');
+        const requestVerificationDocumentFields = document.getElementById('requestVerificationDocumentFields');
         const requestApprovalPaymentFields = document.getElementById('requestApprovalPaymentFields');
         const requestIssuedVisaDocumentFields = document.getElementById('requestIssuedVisaDocumentFields');
         const requestIssuedVisaDocumentInput = document.getElementById('requestIssuedVisaDocument');
+        const requestIssuedVisaDocumentLabel = document.getElementById('requestIssuedVisaDocumentLabel');
         const requestIssuedVisaDocumentCurrent = document.getElementById('requestIssuedVisaDocumentCurrent');
         let requestHasIssuedVisaDocument = false;
 
@@ -1280,25 +1314,35 @@
             const isApproved = requestStatusValue.value === 'Visa Approved from Embassy';
             const isVerification = requestStatusValue.value === 'Documents Verification';
             const isVisaIssued = requestStatusValue.value === 'Visa Issued';
+            const needsVisaDocument = isApproved || isVisaIssued;
 
+            requestIssuedVisaDocumentLabel.textContent = isApproved ? 'Attach Approval Letter' : 'Attach Issued Visa Document';
             requestVerificationAgentFields.classList.toggle('d-none', !isVerification);
             requestVerificationAgentFields.querySelectorAll('input').forEach(field => {
                 field.required = isVerification;
             });
+            requestApprovalAgentFields.classList.toggle('d-none', !isApproved);
+            requestApprovalAgentFields.querySelectorAll('input').forEach(field => {
+                field.required = isApproved;
+            });
+            requestVerificationDocumentFields.classList.toggle('d-none', !isVerification);
 
             requestApprovalPaymentFields.classList.toggle('d-none', !isApproved);
             requestApprovalPaymentFields.querySelectorAll('input, select').forEach(field => {
                 field.required = isApproved;
             });
 
-            requestIssuedVisaDocumentFields.classList.toggle('d-none', !isVisaIssued);
-            requestIssuedVisaDocumentInput.required = isVisaIssued && !requestHasIssuedVisaDocument;
+            requestIssuedVisaDocumentFields.classList.toggle('d-none', !needsVisaDocument);
+            requestIssuedVisaDocumentInput.required = needsVisaDocument && !requestHasIssuedVisaDocument;
         }
 
         function openRequestStatusModal(button) {
             requestStatusForm.reset();
             document.getElementById('requestStatusId').value = button.dataset.id;
-            document.getElementById('requestStatusPdf').href = button.dataset.pdfUrl;
+            const requiredDocuments = JSON.parse(button.dataset.requiredDocuments || '[]');
+            requestStatusForm.querySelectorAll('.required-verification-document').forEach(checkbox => {
+                checkbox.checked = requiredDocuments.includes(checkbox.value);
+            });
             requestHasIssuedVisaDocument = button.dataset.hasIssuedDocument === '1';
             requestIssuedVisaDocumentCurrent.href = button.dataset.issuedDocumentUrl || '#';
             requestIssuedVisaDocumentCurrent.classList.toggle('d-none', !requestHasIssuedVisaDocument);
@@ -1320,6 +1364,8 @@
             document.getElementById('requestAccountHolder').value = button.dataset.accountHolder;
             document.getElementById('requestAgentName').value = button.dataset.agentName || '';
             document.getElementById('requestAgentContactNumber').value = button.dataset.agentContactNumber || '';
+            document.getElementById('requestApprovalAgentName').value = button.dataset.approvalAgentName || '';
+            document.getElementById('requestApprovalAgentContactNumber').value = button.dataset.approvalAgentContactNumber || '';
 
             const currencySelect = document.getElementById('requestVisaCurrency');
             const currency = (button.dataset.currency || '').toUpperCase();

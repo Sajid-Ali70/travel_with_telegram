@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application Submitted - {{ $settings->app_name ?? 'VisaBook' }}</title>
+    <title>{{ session('payment_receipt_submitted') ? 'Payment Receipt Submitted' : 'Application Submitted' }} - {{ $settings->app_name ?? 'VisaBook' }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/travel.css') }}">
@@ -263,6 +263,315 @@
             border-color: #116b3f;
         }
 
+        .receipt-success-shell {
+            background: #f3f9fd;
+            display: flex;
+            justify-content: center;
+            min-height: calc(100vh - 44px);
+            padding: 10px 12px 14px;
+        }
+
+        .receipt-status-header {
+            align-items: center;
+            background: #fff;
+            border-bottom: 1px solid #e6edf3;
+            display: flex;
+            height: 44px;
+            justify-content: space-between;
+            padding: 0 14px;
+        }
+
+        .receipt-status-header a,
+        .receipt-status-header span {
+            color: #17253d !important;
+            font-size: .9rem;
+            text-decoration: none;
+        }
+
+        .receipt-status-header span {
+            font-weight: 700;
+        }
+
+        .receipt-success-card {
+            align-self: flex-start;
+            background: #fff;
+            border: 1px solid #e1edf4;
+            border-radius: 14px;
+            box-shadow: 0 8px 22px rgba(20, 51, 77, .07);
+            margin: 0 auto;
+            max-width: 430px;
+            overflow: hidden;
+            padding: 16px 11px 11px;
+            width: 100%;
+        }
+
+        .receipt-success-icon {
+            align-items: center;
+            background: #22ad69;
+            border: 6px solid #dcf5e8;
+            border-radius: 50%;
+            box-shadow: 0 0 0 5px #f0fbf5;
+            color: #fff;
+            display: flex;
+            font-size: 1.3rem;
+            height: 52px;
+            justify-content: center;
+            margin: 0 auto 12px;
+            width: 52px;
+        }
+
+        .receipt-success-title {
+            color: #126b43;
+            font-size: 1.12rem;
+            font-weight: 800;
+            margin: 0;
+            text-align: center;
+        }
+
+        .receipt-success-subtitle {
+            color: #617184;
+            font-size: .82rem;
+            line-height: 1.45;
+            margin: 5px auto 13px;
+            max-width: 330px;
+            text-align: center;
+        }
+
+        .receipt-reference-card {
+            align-items: center;
+            background: #eaf7f1;
+            border: 1px solid #d7eee3;
+            border-radius: 9px;
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 11px;
+        }
+
+        .receipt-agent-card {
+            background: #edf6fc;
+            border: 1px solid #dcecf7;
+            border-radius: 9px;
+            margin-top: 10px;
+            padding: 11px;
+        }
+
+        .receipt-reference-icon {
+            align-items: center;
+            background: #fff;
+            border-radius: 8px;
+            color: #148c58;
+            display: flex;
+            flex: 0 0 34px;
+            font-size: 1rem;
+            height: 34px;
+            justify-content: center;
+            position: relative;
+        }
+
+        .receipt-card-label {
+            color: #516577;
+            font-size: .76rem;
+            margin: 0 0 3px;
+        }
+
+        .receipt-reference-number {
+            color: #183956;
+            font-size: .96rem;
+            font-weight: 800;
+            letter-spacing: .02em;
+            overflow-wrap: anywhere;
+        }
+
+        .receipt-agent-heading {
+            align-items: center;
+            color: #173d63;
+            display: flex;
+            font-size: .86rem;
+            font-weight: 800;
+            gap: 7px;
+            justify-content: center;
+            margin: 0 0 3px;
+        }
+
+        .receipt-agent-intro {
+            color: #617184;
+            font-size: .76rem;
+            line-height: 1.45;
+            margin: 0 auto 9px;
+            max-width: 330px;
+            text-align: center;
+        }
+
+        .receipt-agent-details {
+            align-items: center;
+            background: #fff;
+            border: 1px solid #e2edf4;
+            border-radius: 8px;
+            display: flex;
+            gap: 9px;
+            min-width: 0;
+            padding: 9px;
+        }
+
+        .receipt-agent-avatar {
+            align-items: center;
+            background: #dbeafe;
+            border-radius: 50%;
+            color: #315b8d;
+            display: flex;
+            flex: 0 0 34px;
+            font-size: 1rem;
+            height: 34px;
+            justify-content: center;
+        }
+
+        .receipt-agent-copy {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .receipt-agent-name {
+            color: #1d3249;
+            font-size: .84rem;
+            font-weight: 800;
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .receipt-agent-role,
+        .receipt-agent-company {
+            color: #5c6f81;
+            font-size: .74rem;
+            line-height: 1.35;
+            margin: 2px 0 0;
+        }
+
+        .receipt-agent-whatsapp {
+            align-items: center;
+            color: #119447 !important;
+            display: flex;
+            flex: 0 0 auto;
+            flex-direction: column;
+            font-size: .68rem;
+            gap: 3px;
+            text-decoration: none;
+        }
+
+        .receipt-agent-whatsapp i {
+            color: #12a756 !important;
+            font-size: 1.35rem;
+        }
+
+        .receipt-whatsapp-link {
+            align-items: center;
+            background: #fff;
+            border: 1px solid #a8e5be;
+            border-radius: 7px;
+            color: #127b49 !important;
+            display: flex;
+            font-size: .8rem;
+            font-weight: 700;
+            gap: 7px;
+            justify-content: flex-start;
+            margin-top: 9px;
+            padding: 9px 10px;
+            text-decoration: none;
+        }
+
+        .receipt-whatsapp-link .fa-whatsapp {
+            color: #18a85b;
+            font-size: 1.05rem;
+        }
+
+        .receipt-whatsapp-link .fa-chevron-right {
+            font-size: .74rem;
+        }
+
+        .receipt-support-card {
+            background: #f5f9fc;
+            border: 1px solid #e2edf4;
+            border-radius: 9px;
+            margin-top: 10px;
+            padding: 9px 11px;
+        }
+
+        .receipt-support-row {
+            align-items: flex-start;
+            color: #526578;
+            display: flex;
+            font-size: .76rem;
+            gap: 8px;
+            line-height: 1.4;
+            padding: 5px 0;
+        }
+
+        .receipt-support-row + .receipt-support-row {
+            border-top: 1px solid #e6edf3;
+        }
+
+        .receipt-support-row i {
+            color: #4284cf;
+            margin-top: 2px;
+            text-align: center;
+            width: 15px;
+        }
+
+        .receipt-support-row strong {
+            color: #304459;
+            display: block;
+            font-size: .74rem;
+        }
+
+        .receipt-support-row a {
+            color: #2865a3 !important;
+            overflow-wrap: anywhere;
+            text-decoration: none;
+        }
+
+        .approved-contact-panel {
+            background: #f0faf5;
+            border: 1px solid #d8eee2;
+            border-radius: 10px;
+            margin: 12px 16px;
+            padding: 12px;
+        }
+
+        .approved-contact-title {
+            color: #126b43;
+            font-size: .94rem;
+            font-weight: 800;
+            margin: 0;
+            text-align: center;
+        }
+
+        .approved-contact-message {
+            color: #526578;
+            font-size: .76rem;
+            line-height: 1.45;
+            margin: 5px 0 10px;
+            text-align: center;
+        }
+
+        .approved-contact-agent {
+            align-items: center;
+            display: flex;
+            gap: 9px;
+        }
+
+        .approved-contact-agent-name {
+            color: #1d3249;
+            font-size: .8rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .approved-contact-phone {
+            color: #526578;
+            font-size: .72rem;
+            margin: 2px 0 0;
+        }
+
         @media (max-width: 480px) {
             .success-card {
                 border-radius: 12px;
@@ -283,11 +592,125 @@
     </style>
 </head>
 <body>
-    @php($hasTicketRequest = $ticketRequest !== null || !empty($visaRequest->flight_ticket_requested_at))
+    @php
+        $hasTicketRequest = $ticketRequest !== null || !empty($visaRequest->flight_ticket_requested_at);
+        $paymentReceiptSubmitted = session('payment_receipt_submitted', false);
+    @endphp
     <div class="mobile-container">
-        @include('partials.nav')
+        @if($paymentReceiptSubmitted)
+            @php
+                $receiptAgentName = trim((string) ($visaRequest->approval_agent_name ?? '')) ?: 'Visa Consultant';
+                $receiptAgentPhone = trim((string) ($visaRequest->approval_agent_contact_number ?? ''));
+                $receiptWhatsappNumber = preg_replace('/\D+/', '', $receiptAgentPhone);
+                $receiptSupportPhone = trim((string) ($settings->phone ?? ''));
+                $receiptSupportTelephone = preg_replace('/[^0-9+]/', '', $receiptSupportPhone);
+                $receiptSupportEmail = trim((string) ($settings->email ?? ''));
+                $receiptSupportAddress = trim((string) ($settings->address ?? ''));
+                $receiptWhatsappUrl = $receiptWhatsappNumber
+                    ? 'https://wa.me/' . $receiptWhatsappNumber . '?text=' . rawurlencode('Hello, I have submitted my payment receipt. Application reference: ' . $referenceNumber)
+                    : null;
+            @endphp
+            <header class="receipt-status-header">
+                <a href="{{ url('/') }}" aria-label="Back to home"><i class="fas fa-arrow-left"></i></a>
+                <span>Visa Status</span>
+                <a href="{{ route('travel.verify') }}" aria-label="Check another application"><i class="fas fa-search"></i></a>
+            </header>
+            <main class="receipt-success-shell">
+                <section class="receipt-success-card" aria-labelledby="receipt-success-title">
+                    <div class="receipt-success-icon"><i class="fas fa-check"></i></div>
+                    <h1 id="receipt-success-title" class="receipt-success-title">Payment Receipt Submitted</h1>
+                    <p class="receipt-success-subtitle">Your payment receipt has been successfully submitted. Our team will review it shortly.</p>
 
-        <div class="success-shell">
+                    <div class="receipt-reference-card">
+                        <div class="receipt-reference-icon"><i class="fas fa-file-invoice"></i></div>
+                        <div>
+                            <p class="receipt-card-label">Application Reference Number</p>
+                            <div class="receipt-reference-number">{{ $referenceNumber }}</div>
+                            <p class="receipt-card-label mt-1 mb-0">Please keep this reference number for your communication.</p>
+                        </div>
+                    </div>
+
+                    <div class="receipt-agent-card">
+                        <h2 class="receipt-agent-heading"><i class="fas fa-headset"></i> Your Official Agent</h2>
+                        <p class="receipt-agent-intro">For further updates, please contact your official agent who is handling your application.</p>
+                        <div class="receipt-agent-details">
+                            <div class="receipt-agent-avatar"><i class="fas fa-user"></i></div>
+                            <div class="receipt-agent-copy">
+                                <p class="receipt-agent-name">{{ $receiptAgentName }}</p>
+                                <p class="receipt-agent-role">Visa Consultant</p>
+                                <p class="receipt-agent-company">{{ $settings->app_name ?? 'Travel & Visa Processing Team' }}</p>
+                            </div>
+                            @if($receiptWhatsappUrl)
+                                <a class="receipt-agent-whatsapp" href="{{ $receiptWhatsappUrl }}" target="_blank" rel="noopener" aria-label="WhatsApp {{ $receiptAgentName }}">
+                                    <i class="fab fa-whatsapp"></i><span>WhatsApp</span>
+                                </a>
+                            @endif
+                        </div>
+                        @if($receiptWhatsappUrl)
+                            <a class="receipt-whatsapp-link" href="{{ $receiptWhatsappUrl }}" target="_blank" rel="noopener">
+                                <i class="fab fa-whatsapp"></i> Contact on WhatsApp <i class="fas fa-chevron-right ms-auto"></i>
+                            </a>
+                        @endif
+                    </div>
+
+                    <div class="receipt-support-card">
+                        <div class="receipt-support-row">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span><strong>Office Address</strong>{{ $receiptSupportAddress ?: 'Not available' }}</span>
+                        </div>
+                        <div class="receipt-support-row">
+                            <i class="fas fa-phone-alt"></i>
+                            <span>
+                                <strong>Call Center</strong>
+                                @if($receiptSupportPhone)
+                                    <a href="tel:{{ $receiptSupportTelephone }}">{{ $receiptSupportPhone }}</a>
+                                @else
+                                    Not available
+                                @endif
+                            </span>
+                        </div>
+                        <div class="receipt-support-row">
+                            <i class="fas fa-envelope"></i>
+                            <span>
+                                <strong>Email</strong>
+                                @if($receiptSupportEmail)
+                                    <a href="mailto:{{ $receiptSupportEmail }}">{{ $receiptSupportEmail }}</a>
+                                @else
+                                    Not available
+                                @endif
+                            </span>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        @else
+            @include('partials.nav')
+
+            @if(in_array($visaRequest->status, ['Visa Approved from Embassy', 'Visa Approved', 'approved'], true))
+                @php
+                    $approvedContactName = trim((string) ($visaRequest->approval_agent_name ?? '')) ?: ($settings->app_name ?? 'Rainbow Travels & Tours');
+                    $approvedContactPhone = trim((string) ($visaRequest->approval_agent_contact_number ?? '')) ?: trim((string) ($settings->phone ?? ''));
+                    $approvedWhatsappNumber = preg_replace('/\D+/', '', $approvedContactPhone);
+                @endphp
+                <section class="approved-contact-panel" aria-labelledby="approved-contact-title">
+                    <h1 id="approved-contact-title" class="approved-contact-title"><i class="fas fa-check-circle me-1"></i> Visa Approved from Embassy</h1>
+                    <p class="approved-contact-message">Congratulations! Contact your official agent for the next steps in your application.</p>
+                    <div class="approved-contact-agent">
+                        <div class="receipt-agent-avatar"><i class="fas fa-user"></i></div>
+                        <div>
+                            <p class="approved-contact-agent-name">{{ $approvedContactName }}</p>
+                            <p class="approved-contact-phone">{{ $approvedContactPhone ?: 'Contact information is not available yet.' }}</p>
+                        </div>
+                    </div>
+                    @if($approvedWhatsappNumber)
+                        <a class="receipt-whatsapp-link" href="https://wa.me/{{ $approvedWhatsappNumber }}?text={{ rawurlencode('Hello, my visa application was approved by the embassy. Application reference: ' . $referenceNumber) }}" target="_blank" rel="noopener">
+                            <i class="fab fa-whatsapp"></i> Contact your agent on WhatsApp <i class="fas fa-chevron-right ms-auto"></i>
+                        </a>
+                    @endif
+                </section>
+            @endif
+
+            <div class="success-shell">
             <div class="success-card">
                 <div class="success-header">
                     <div class="success-top-label"><i class="fas fa-check"></i></div>
@@ -315,11 +738,33 @@
                 @if($errors->any())
                     <div class="result-alert alert alert-danger">{{ $errors->first() }}</div>
                 @endif
-                @if($visaRequest->status === 'Visa Issued' && !empty($visaRequest->issued_visa_document))
+                @if($visaRequest->status === 'Documents Verification')
+                    @php($requiredVerificationDocuments = json_decode($visaRequest->required_documents ?? '[]', true))
+                    <div class="summary-box">
+                        <div class="summary-title"><i class="fas fa-file-alt me-1"></i> Documents to Send for Verification</div>
+                        <p>Please send these documents to the agent for verification:</p>
+                        @if(is_array($requiredVerificationDocuments) && count($requiredVerificationDocuments))
+                            <ol class="mb-3">
+                                @foreach($requiredVerificationDocuments as $document)
+                                    <li>{{ $document }}</li>
+                                @endforeach
+                            </ol>
+                        @else
+                            <p>No specific document list is available yet. Please contact the agent for instructions.</p>
+                        @endif
+                        @if(!empty($visaRequest->agent_name))
+                            <div class="summary-row"><span>Agent Name</span><strong>{{ $visaRequest->agent_name }}</strong></div>
+                        @endif
+                        @if(!empty($visaRequest->agent_contact_number))
+                            <div class="summary-row"><span>Agent Contact Number</span><strong>{{ $visaRequest->agent_contact_number }}</strong></div>
+                        @endif
+                    </div>
+                @endif
+                @if(in_array($visaRequest->status, ['Visa Approved from Embassy', 'Visa Issued'], true) && !empty($visaRequest->issued_visa_document))
                     <div class="alert alert-success">
-                        Your visa has been issued.
+                        {{ $visaRequest->status === 'Visa Issued' ? 'Your visa has been issued.' : 'Your visa approval letter is ready.' }}
                         <a class="btn btn-success btn-sm ms-2" href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('travel.visa_document.download', now()->addMinutes(30), ['id' => $visaRequest->id]) }}">
-                            <i class="fas fa-download me-1"></i>Download Visa Document
+                            <i class="fas fa-download me-1"></i>{{ $visaRequest->status === 'Visa Issued' ? 'Download Visa Document' : 'Download Approval Letter' }}
                         </a>
                     </div>
                 @endif
@@ -435,6 +880,7 @@
         </div>
 
         @include('partials.footer')
+        @endif
     </div>
 
     <script src="{{ asset('js/app.js') }}"></script>

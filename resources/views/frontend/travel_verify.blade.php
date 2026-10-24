@@ -77,55 +77,68 @@
 
         .status-result-header {
             align-items: center;
-            background: #fff;
+            background: #eef6fb;
             display: flex;
-            gap: 10px;
-            padding: 12px 12px;
-            border-bottom: 1px solid #edf2f7;
+            gap: 12px;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid #dcebf4;
         }
 
         .status-result-header.is-approved {
-            border-color: #d8eadc;
+            border-color: #dcebf4;
         }
         .status-result-header.is-rejected {
-            border-color: #f2d5d5;
+            border-color: #f2dada;
         }
-        .status-result-icon {
-            align-items: center;
-            background: #e8f5eb;
-            border-radius: 50%;
-            color: #fff;
+        .status-reference-copy,
+        .visa-status-display {
             display: flex;
-            flex: 0 0 40px;
-            font-size: 1.2rem;
-            height: 40px;
-            justify-content: center;
-            width: 40px;
+            flex-direction: column;
+            gap: 4px;
         }
-        .is-approved .status-result-icon { background: #39a65a; }
-        .is-rejected .status-result-icon { background: #d64545; }
-        .is-pending .status-result-icon { background: #2879d0; }
-        .status-result-copy { min-width: 0; }
-        .status-badge {
-            display: none;
+        .status-reference-copy {
+            min-width: 0;
         }
-
-        .status-title {
-            color: #31915a;
-            font-size: 1.2rem;
+        .visa-status-display {
+            align-items: flex-end;
+            flex: 0 0 auto;
+        }
+        .visa-status-label {
+            color: #526273 !important;
+            font-size: .84rem;
+            line-height: 1.2;
+        }
+        .visa-status-pill {
+            background: #138a18;
+            border-radius: 8px;
+            color: #fff !important;
+            display: inline-block;
+            font-size: .94rem;
             font-weight: 800;
             line-height: 1.2;
-            margin: 0;
+            max-width: 210px;
             overflow-wrap: anywhere;
-            text-transform: uppercase;
+            padding: 8px 14px;
+            text-align: center;
         }
-        .is-rejected .status-title { color: #ba3434; }
-        .is-pending .status-title { color: #2563a9; }
+        .status-result-header.is-rejected .visa-status-pill {
+            background: #c93535;
+        }
+        .status-result-header.is-pending .visa-status-pill {
+            background: #f4c542;
+            color: #243449 !important;
+        }
         .status-reference {
-            color: #64748b;
+            color: #2865a3 !important;
             display: block;
-            font-size: .78rem;
-            margin-top: 2px;
+            font-size: .88rem;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+        .status-reference-label {
+            color: #526273 !important;
+            font-size: .82rem;
         }
         .status-result-message {
             color: #1f2937;
@@ -279,6 +292,31 @@
             text-align: center;
             text-decoration: none;
         }
+        .verification-whatsapp-link {
+            background: #18a558;
+            border-radius: 8px;
+            color: #fff !important;
+            display: flex;
+            font-size: .82rem;
+            font-weight: 700;
+            gap: 7px;
+            justify-content: center;
+            margin: 10px auto 0;
+            max-width: 300px;
+            padding: 10px 12px;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color .2s ease;
+        }
+        .verification-whatsapp-link:hover,
+        .verification-whatsapp-link:focus {
+            background: #128747;
+            color: #fff !important;
+        }
+        .verification-whatsapp-link i {
+            color: #fff !important;
+            font-size: 1rem;
+        }
         .payment-amount-card {
             align-items: center;
             background: #eaf4ff;
@@ -390,6 +428,53 @@
             font-size: .78rem;
             line-height: 1.45;
         }
+        .approved-contact-panel {
+            background: #f0faf5;
+            border: 1px solid #d8eee2;
+            border-radius: 9px;
+            margin: 8px 10px;
+            padding: 10px;
+        }
+        .approved-contact-title {
+            color: #126b43;
+            font-size: .88rem;
+            font-weight: 800;
+            margin: 0;
+            text-align: center;
+        }
+        .approved-contact-message {
+            color: #526578;
+            font-size: .74rem;
+            line-height: 1.4;
+            margin: 4px 0 9px;
+            text-align: center;
+        }
+        .approved-contact-agent {
+            align-items: center;
+            display: flex;
+            gap: 8px;
+        }
+        .approved-contact-agent .receipt-agent-avatar {
+            align-items: center;
+            background: #dbeafe;
+            border-radius: 50%;
+            color: #315b8d;
+            display: flex;
+            flex: 0 0 36px;
+            height: 36px;
+            justify-content: center;
+        }
+        .approved-contact-agent-name {
+            color: #1d3249;
+            font-size: .78rem;
+            font-weight: 800;
+            margin: 0;
+        }
+        .approved-contact-phone {
+            color: #526578;
+            font-size: .72rem;
+            margin: 2px 0 0;
+        }
         .status-download-note {
             color: #1f2937;
             font-size: .8rem;
@@ -485,14 +570,6 @@
         }
 
         @media (max-width: 480px) {
-            .status-title {
-                font-size: 1.5rem;
-            }
-
-            .status-result-page .status-title {
-                font-size: 1.08rem;
-            }
-
             .status-result-page .detail-item {
                 grid-template-columns: minmax(0, 43%) minmax(0, 1fr);
             }
@@ -624,12 +701,13 @@
                                 @endphp
                                 <div id="visa-details-step" class="status-result-step">
                                     <div class="status-result-header {{ $resultStatusClass }}">
-                                        <div class="status-result-icon">
-                                            <i class="fas {{ $resultApproved ? 'fa-check' : ($resultRejected ? 'fa-times' : 'fa-clock') }}"></i>
+                                        <div class="status-reference-copy">
+                                            <span class="status-reference-label">Application Number</span>
+                                            <span class="status-reference">{{ $visaRequest->reference_number ?: \App\Http\Controllers\AdminController::formatVisaReference($visaRequest->id, $visaRequest->created_at) }}</span>
                                         </div>
-                                        <div class="status-result-copy">
-                                            <div class="status-title">{{ $statusText }}</div>
-                                            <span class="status-reference">Ref: {{ $visaRequest->reference_number ?: \App\Http\Controllers\AdminController::formatVisaReference($visaRequest->id, $visaRequest->created_at) }}</span>
+                                        <div class="visa-status-display">
+                                            <span class="visa-status-label">Visa Status</span>
+                                            <span class="visa-status-pill">{{ in_array($visaRequest->status, ['Visa Approved from Embassy', 'Visa Approved', 'approved'], true) ? 'Approved' : $statusText }}</span>
                                         </div>
                                     </div>
                                     <div class="status-result-message">
@@ -638,7 +716,6 @@
                                         @endif
                                         <p>{{ $statusMessage }}</p>
                                     </div>
-
                                     @if(session('result_notice'))
                                         <div class="result-alert alert alert-success">{{ session('result_notice') }}</div>
                                     @endif
@@ -647,7 +724,7 @@
                                     @endif
                                     <div class="status-body">
                                         <div class="field-group">
-                                            <div class="field-title">Visa Holder Details</div>
+                                            <div class="field-title">{{ $visaRequest->status === 'Documents Verification' ? 'Applicant Details' : 'Visa Holder Details' }}</div>
                                             <div class="detail-grid">
                                             <div class="detail-item">
                                                 <span class="detail-label"><i class="fas fa-user"></i> Full Name</span>
@@ -661,6 +738,7 @@
                                                 <span class="detail-label"><i class="fas fa-flag"></i> Nationality</span>
                                                 <div class="detail-value">{{ $visaRequest->nationality ?? 'N/A' }}</div>
                                             </div>
+                                            @if($visaRequest->status !== 'Documents Verification')
                                             <div class="detail-item">
                                                 <span class="detail-label"><i class="fas fa-user-tie"></i> Profession</span>
                                                 <div class="detail-value">{{ $visaRequest->profession ?? $visaRequest->visa_type ?? 'N/A' }}</div>
@@ -683,10 +761,20 @@
                                                     <div class="detail-value">{{ $visaRequest->job_title }}</div>
                                                 </div>
                                             @endif
+                                            @endif
                                             </div>
                                         </div>
 
                                         @if($visaRequest->status === 'Documents Verification')
+                                            @php
+                                                $verificationWhatsappNumber = preg_replace('/\D+/', '', (string) ($visaRequest->agent_contact_number ?? ''));
+                                                $verificationWhatsappUrl = $verificationWhatsappNumber
+                                                    ? 'https://wa.me/' . $verificationWhatsappNumber . '?text=' . rawurlencode(
+                                                        'Hello, I need assistance with document verification. Application reference: '
+                                                        . ($visaRequest->reference_number ?: \App\Http\Controllers\AdminController::formatVisaReference($visaRequest->id, $visaRequest->created_at))
+                                                    )
+                                                    : null;
+                                            @endphp
                                             <div class="field-group">
                                                 <div class="field-title">Verification Agent Details</div>
                                                 <div class="detail-grid">
@@ -696,13 +784,28 @@
                                                             <div class="detail-value">{{ $visaRequest->agent_name }}</div>
                                                         </div>
                                                     @endif
-                                                    @if(!empty($visaRequest->agent_contact_number))
-                                                        <div class="detail-item">
-                                                            <span class="detail-label">Agent Contact Number</span>
-                                                            <div class="detail-value">{{ $visaRequest->agent_contact_number }}</div>
-                                                        </div>
-                                                    @endif
                                                 </div>
+                                                @if($verificationWhatsappUrl)
+                                                    <a class="verification-whatsapp-link" href="{{ $verificationWhatsappUrl }}" target="_blank" rel="noopener">
+                                                        <i class="fab fa-whatsapp me-1"></i>Contact verification agent on WhatsApp
+                                                    </a>
+                                                @endif
+                                            </div>
+                                            @php
+                                                $requiredVerificationDocuments = json_decode($visaRequest->required_documents ?? '[]', true);
+                                            @endphp
+                                            <div class="field-group">
+                                                <div class="field-title">Documents to Send for Verification</div>
+                                                @if(is_array($requiredVerificationDocuments) && count($requiredVerificationDocuments))
+                                                    <p class="payment-card-note mb-2">Please send these documents to the agent for verification:</p>
+                                                    <ol class="mb-0 ps-4">
+                                                        @foreach($requiredVerificationDocuments as $document)
+                                                            <li class="detail-value mb-1">{{ $document }}</li>
+                                                        @endforeach
+                                                    </ol>
+                                                @else
+                                                    <p class="payment-card-note">No specific document list is available yet. Please contact the agent for instructions.</p>
+                                                @endif
                                             </div>
                                         @endif
 
@@ -773,7 +876,6 @@
                                                     <form id="verify-payment-receipt-form" action="{{ route('travel.apply.payment_receipt', $visaRequest->id) }}" method="POST" enctype="multipart/form-data" class="result-action-form">
                                                         @csrf
                                                         <input type="hidden" name="email" value="{{ $visaRequest->email }}">
-                                                        <input type="hidden" name="return_to" value="verify">
                                                         <label for="verify_payment_receipt">Upload payment receipt or screenshot</label>
                                                         <input id="verify_payment_receipt" class="visually-hidden" type="file" name="payment_receipt" accept="image/jpeg,image/png,image/webp" required>
                                                         <button id="verify-payment-receipt-picker" type="button" class="action-submit"><i class="fas fa-camera me-2"></i>Upload Payment Receipt / Screenshot</button>

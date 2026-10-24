@@ -220,10 +220,10 @@
                 </div>
             </div>
 
-            <div id="issuedVisaDocumentFields" class="row g-3 mt-1 {{ $selectedStatus === 'Visa Issued' ? '' : 'd-none' }}">
+            <div id="issuedVisaDocumentFields" class="row g-3 mt-1 {{ in_array($selectedStatus, ['Visa Approved from Embassy', 'Visa Issued'], true) ? '' : 'd-none' }}">
                 <div class="col-md-6">
-                    <label class="form-label" for="issued_visa_document">Issued Visa Document</label>
-                    <input id="issued_visa_document" type="file" name="issued_visa_document" class="form-control" accept=".pdf,.jpg,.jpeg,.png" {{ $selectedStatus === 'Visa Issued' && empty($visaRequest->issued_visa_document) ? 'required' : '' }}>
+                    <label class="form-label" for="issued_visa_document">{{ $selectedStatus === 'Visa Approved from Embassy' ? 'Approval Letter' : 'Issued Visa Document' }}</label>
+                    <input id="issued_visa_document" type="file" name="issued_visa_document" class="form-control" accept=".pdf,.jpg,.jpeg,.png" {{ in_array($selectedStatus, ['Visa Approved from Embassy', 'Visa Issued'], true) && empty($visaRequest->issued_visa_document) ? 'required' : '' }}>
                     <div class="form-text">PDF, JPG, JPEG, or PNG; maximum 10 MB.</div>
                     @if(!empty($visaRequest->issued_visa_document))
                         <a href="{{ route('admin.requests.visa_document', $visaRequest->id) }}" target="_blank" rel="noopener" class="btn btn-outline-info btn-sm mt-2">View current document</a>
@@ -233,6 +233,7 @@
             </div>
 
             <div id="verificationAgentFields" class="row g-3 mt-1 {{ $selectedStatus === 'Documents Verification' ? '' : 'd-none' }}">
+                <div class="col-12"><h2 class="section-title">Document Verification Agent Details</h2></div>
                 <div class="col-md-6">
                     <label class="form-label" for="agent_name">Agent Name <span class="text-danger">*</span></label>
                     <input id="agent_name" type="text" name="agent_name" class="form-control" maxlength="255" value="{{ old('agent_name', $visaRequest->agent_name ?? '') }}" {{ $selectedStatus === 'Documents Verification' ? 'required' : '' }}>
@@ -240,6 +241,41 @@
                 <div class="col-md-6">
                     <label class="form-label" for="agent_contact_number">Agent Contact Number <span class="text-danger">*</span></label>
                     <input id="agent_contact_number" type="text" name="agent_contact_number" class="form-control" maxlength="50" value="{{ old('agent_contact_number', $visaRequest->agent_contact_number ?? '') }}" {{ $selectedStatus === 'Documents Verification' ? 'required' : '' }}>
+                </div>
+                <div id="verificationDocumentFields" class="col-12 {{ $selectedStatus === 'Documents Verification' ? '' : 'd-none' }}">
+                    @php
+                        $selectedRequiredDocuments = old(
+                            'required_documents',
+                            json_decode($visaRequest->required_documents ?? '[]', true) ?: []
+                        );
+                        $selectedRequiredDocuments = is_array($selectedRequiredDocuments) ? $selectedRequiredDocuments : [];
+                    @endphp
+                    <fieldset>
+                        <legend class="form-label mb-1">Documents to send for verification <span class="text-danger">*</span></legend>
+                        <p class="form-text">Select the documents the applicant must send to the agent. Select at least one.</p>
+                        <div class="row g-2">
+                            @foreach(\App\Http\Controllers\AdminController::REQUIRED_VERIFICATION_DOCUMENTS as $index => $document)
+                                <div class="col-sm-6 col-lg-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="required_documents[]" id="editRequiredDocument{{ $index }}" value="{{ $document }}" {{ in_array($document, $selectedRequiredDocuments, true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="editRequiredDocument{{ $index }}">{{ $document }}</label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+
+            <div id="approvalAgentFields" class="row g-3 mt-1 {{ $selectedStatus === 'Visa Approved from Embassy' ? '' : 'd-none' }}">
+                <div class="col-12"><h2 class="section-title">Embassy Approval Agent Details</h2></div>
+                <div class="col-md-6">
+                    <label class="form-label" for="approval_agent_name">Agent Name <span class="text-danger">*</span></label>
+                    <input id="approval_agent_name" type="text" name="approval_agent_name" class="form-control" maxlength="255" value="{{ old('approval_agent_name', $visaRequest->approval_agent_name ?? '') }}" {{ $selectedStatus === 'Visa Approved from Embassy' ? 'required' : '' }}>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="approval_agent_contact_number">Agent Contact Number <span class="text-danger">*</span></label>
+                    <input id="approval_agent_contact_number" type="text" name="approval_agent_contact_number" class="form-control" maxlength="50" value="{{ old('approval_agent_contact_number', $visaRequest->approval_agent_contact_number ?? '') }}" {{ $selectedStatus === 'Visa Approved from Embassy' ? 'required' : '' }}>
                 </div>
             </div>
 
@@ -301,16 +337,25 @@
     <script>
         const requestStatus = document.getElementById('request_status');
         const verificationAgentFields = document.getElementById('verificationAgentFields');
+        const verificationDocumentFields = document.getElementById('verificationDocumentFields');
+        const approvalAgentFields = document.getElementById('approvalAgentFields');
         const approvedPaymentFields = document.getElementById('approvedPaymentFields');
         const issuedVisaDocumentFields = document.getElementById('issuedVisaDocumentFields');
         const issuedVisaDocumentInput = document.getElementById('issued_visa_document');
         const hasIssuedVisaDocument = {{ !empty($visaRequest->issued_visa_document) ? 'true' : 'false' }};
+        const issuedVisaDocumentLabel = document.querySelector('label[for="issued_visa_document"]');
 
         function toggleVerificationAgentFields() {
             const isVerification = requestStatus.value === 'Documents Verification';
+            const isApproved = requestStatus.value === 'Visa Approved from Embassy';
             verificationAgentFields.classList.toggle('d-none', !isVerification);
-            verificationAgentFields.querySelectorAll('input').forEach(field => {
+            verificationDocumentFields.classList.toggle('d-none', !isVerification);
+            verificationAgentFields.querySelectorAll('input[name="agent_name"], input[name="agent_contact_number"]').forEach(field => {
                 field.required = isVerification;
+            });
+            approvalAgentFields.classList.toggle('d-none', !isApproved);
+            approvalAgentFields.querySelectorAll('input').forEach(field => {
+                field.required = isApproved;
             });
         }
 
@@ -324,8 +369,11 @@
 
         function toggleIssuedVisaDocumentFields() {
             const isVisaIssued = requestStatus.value === 'Visa Issued';
-            issuedVisaDocumentFields.classList.toggle('d-none', !isVisaIssued);
-            issuedVisaDocumentInput.required = isVisaIssued && !hasIssuedVisaDocument;
+            const isApproved = requestStatus.value === 'Visa Approved from Embassy';
+            const needsVisaDocument = isVisaIssued || isApproved;
+            issuedVisaDocumentFields.classList.toggle('d-none', !needsVisaDocument);
+            issuedVisaDocumentInput.required = needsVisaDocument && !hasIssuedVisaDocument;
+            issuedVisaDocumentLabel.textContent = isApproved ? 'Approval Letter' : 'Issued Visa Document';
         }
 
         requestStatus.addEventListener('change', () => {

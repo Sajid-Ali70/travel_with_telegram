@@ -15,6 +15,22 @@ use Illuminate\Database\Schema\Blueprint;
 
 class AdminController extends Controller
 {
+    public const REQUIRED_VERIFICATION_DOCUMENTS = [
+        'Passport Copy',
+        'Recent Passport-Size Photograph',
+        'National Identity Card (NIC)',
+        'Aadhaar Card (India)',
+        'Bank Statement',
+        'Police Clearance Certificate',
+        'Medical Certificate',
+        'Experience Certificate',
+        'Educational Certificates',
+        'Employment Certificate',
+        'Birth Certificate',
+        'Marriage Certificate',
+        'Driving License',
+    ];
+
     private const VISA_STATUSES = [
         'Visa Application Submitted',
         'Documents Verification',
@@ -47,6 +63,22 @@ class AdminController extends Controller
         'LHE' => 'Allama Iqbal International Airport, Lahore (LHE)',
         'KHI' => 'Jinnah International Airport, Karachi (KHI)',
     ];
+
+    private function normalizeRequiredVerificationDocuments($documents): array
+    {
+        if (is_string($documents)) {
+            $documents = json_decode($documents, true);
+        }
+
+        if (!is_array($documents)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            self::REQUIRED_VERIFICATION_DOCUMENTS,
+            fn ($document) => in_array($document, $documents, true)
+        ));
+    }
 
     private function getFlightAirports(?string $nationality = null): array
     {
@@ -302,6 +334,9 @@ class AdminController extends Controller
                     $table->string('account_holder_name')->nullable();
                     $table->string('agent_name')->nullable();
                     $table->string('agent_contact_number', 50)->nullable();
+                    $table->string('approval_agent_name')->nullable();
+                    $table->string('approval_agent_contact_number', 50)->nullable();
+                    $table->text('required_documents')->nullable();
                     $table->string('payment_receipt')->nullable();
                     $table->timestamp('payment_receipt_uploaded_at')->nullable();
                     $table->date('preferred_date_start')->nullable();
@@ -343,6 +378,9 @@ class AdminController extends Controller
                     'account_holder_name' => "ALTER TABLE `app_visa_requests` ADD `account_holder_name` VARCHAR(255) NULL DEFAULT NULL ",
                     'agent_name' => "ALTER TABLE `app_visa_requests` ADD `agent_name` VARCHAR(255) NULL DEFAULT NULL ",
                     'agent_contact_number' => "ALTER TABLE `app_visa_requests` ADD `agent_contact_number` VARCHAR(50) NULL DEFAULT NULL ",
+                    'approval_agent_name' => "ALTER TABLE `app_visa_requests` ADD `approval_agent_name` VARCHAR(255) NULL DEFAULT NULL ",
+                    'approval_agent_contact_number' => "ALTER TABLE `app_visa_requests` ADD `approval_agent_contact_number` VARCHAR(50) NULL DEFAULT NULL ",
+                    'required_documents' => "ALTER TABLE `app_visa_requests` ADD `required_documents` TEXT NULL DEFAULT NULL ",
                     'payment_receipt' => "ALTER TABLE `app_visa_requests` ADD `payment_receipt` VARCHAR(255) NULL DEFAULT NULL ",
                     'payment_receipt_uploaded_at' => "ALTER TABLE `app_visa_requests` ADD `payment_receipt_uploaded_at` TIMESTAMP NULL DEFAULT NULL ",
                     'preferred_date_start' => "ALTER TABLE `app_visa_requests` ADD `preferred_date_start` DATE NULL DEFAULT NULL ",
@@ -1840,6 +1878,10 @@ class AdminController extends Controller
             'status' => 'required|in:' . implode(',', array_merge(self::VISA_STATUSES, self::LEGACY_VISA_STATUSES)),
             'agent_name' => 'required_if:status,Documents Verification|nullable|string|max:255',
             'agent_contact_number' => 'required_if:status,Documents Verification|nullable|string|max:50',
+            'approval_agent_name' => 'required_if:status,Visa Approved from Embassy|required_if:status,Visa Approved|nullable|string|max:255',
+            'approval_agent_contact_number' => 'required_if:status,Visa Approved from Embassy|required_if:status,Visa Approved|nullable|string|max:50',
+            'required_documents' => 'required_if:status,Documents Verification|array|min:1',
+            'required_documents.*' => 'required|string|in:' . implode(',', self::REQUIRED_VERIFICATION_DOCUMENTS),
             'visa_fee' => 'required_if:status,Visa Approved from Embassy|required_if:status,Visa Approved|nullable|numeric|min:0',
             'visa_fee_currency' => 'required_if:status,Visa Approved from Embassy|required_if:status,Visa Approved|nullable|string|max:20',
             'bank_name' => 'required_if:status,Visa Approved from Embassy|required_if:status,Visa Approved|nullable|string|max:255',
@@ -1848,13 +1890,28 @@ class AdminController extends Controller
             'passport_photo_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'issued_visa_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
-        if ($data['status'] === 'Visa Issued' && !$request->hasFile('issued_visa_document') && empty($existingRequest->issued_visa_document)) {
+        if (in_array($data['status'], ['Visa Approved from Embassy', 'Visa Issued'], true)
+            && !$request->hasFile('issued_visa_document')
+            && empty($existingRequest->issued_visa_document)) {
             $request->validate(['issued_visa_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240']);
         }
 
         if (($data['status'] ?? null) === 'Documents Verification') {
             $data['agent_name'] = trim((string) ($data['agent_name'] ?? ''));
             $data['agent_contact_number'] = trim((string) ($data['agent_contact_number'] ?? ''));
+        } else {
+            unset($data['agent_name'], $data['agent_contact_number']);
+        }
+        if (in_array($data['status'] ?? null, ['Visa Approved from Embassy', 'Visa Approved'], true)) {
+            $data['approval_agent_name'] = trim((string) ($data['approval_agent_name'] ?? ''));
+            $data['approval_agent_contact_number'] = trim((string) ($data['approval_agent_contact_number'] ?? ''));
+        } else {
+            unset($data['approval_agent_name'], $data['approval_agent_contact_number']);
+        }
+        if (($data['status'] ?? null) === 'Documents Verification') {
+            $data['required_documents'] = json_encode($this->normalizeRequiredVerificationDocuments($data['required_documents']));
+        } else {
+            unset($data['required_documents']);
         }
 
         unset($data['passport_photo_file'], $data['issued_visa_document']);
@@ -1875,7 +1932,16 @@ class AdminController extends Controller
         $updatedRequest = DB::table('app_visa_requests')->where('id', $id)->first();
         if (
             $existingRequest->status !== $updatedRequest->status
-            || ($updatedRequest->status === 'Visa Issued' && $request->hasFile('issued_visa_document'))
+            || ($updatedRequest->status === 'Documents Verification'
+                && $this->normalizeRequiredVerificationDocuments($existingRequest->required_documents ?? null)
+                    !== $this->normalizeRequiredVerificationDocuments($updatedRequest->required_documents ?? null))
+            || (in_array($updatedRequest->status, ['Visa Approved from Embassy', 'Visa Issued'], true)
+                && $request->hasFile('issued_visa_document'))
+            || (in_array($updatedRequest->status, ['Visa Approved from Embassy', 'Visa Approved'], true)
+                && (
+                    trim((string) ($existingRequest->approval_agent_name ?? '')) !== trim((string) ($updatedRequest->approval_agent_name ?? ''))
+                    || trim((string) ($existingRequest->approval_agent_contact_number ?? '')) !== trim((string) ($updatedRequest->approval_agent_contact_number ?? ''))
+                ))
         ) {
             $this->sendVisaStatusEmail($updatedRequest);
         }
@@ -2006,8 +2072,10 @@ class AdminController extends Controller
         $statusText = $this->visaStatusTitle($visaRequest->status);
         $statusMessage = $this->visaStatusMessage($visaRequest->status);
         $flightAirports = $this->getFlightAirports($visaRequest->nationality ?? null);
+        $referenceNumber = $visaRequest->reference_number
+            ?: self::formatVisaReference($visaRequest->id, $visaRequest->created_at);
 
-        return view('frontend.travel_success', compact('settings', 'visaRequest', 'ticketRequest', 'visaFee', 'visaFeeCurrency', 'bankAccounts', 'statusText', 'statusMessage', 'flightAirports'));
+        return view('frontend.travel_success', compact('settings', 'visaRequest', 'ticketRequest', 'visaFee', 'visaFeeCurrency', 'bankAccounts', 'statusText', 'statusMessage', 'flightAirports', 'referenceNumber'));
     }
 
     private function attachTicketRequestDetails($visaRequest, $ticketRequest): void
@@ -2039,11 +2107,6 @@ class AdminController extends Controller
         if (!$this->isVisaApproved($visaRequest)) {
             abort(403);
         }
-        $returnToVerify = $request->input('return_to') === 'verify';
-        if ($returnToVerify) {
-            session()->flash('verified_status_request_id', (int) $id);
-        }
-
         $request->validate([
             'payment_receipt' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
@@ -2060,11 +2123,10 @@ class AdminController extends Controller
             'updated_at' => now(),
         ]);
 
-        if ($returnToVerify) {
-            return redirect()->route('travel.verify')->with('verified_status_request_id', (int) $id)->with('result_notice', 'Payment receipt uploaded successfully.');
-        }
-
-        return redirect()->route('travel.apply.success', $id)->with('result_notice', 'Payment receipt uploaded successfully.');
+        return redirect()
+            ->route('travel.apply.success', $id)
+            ->with('payment_receipt_submitted', true)
+            ->with('result_notice', 'Your payment receipt has been successfully submitted. Our team will review it shortly.');
     }
 
     public function submitFlightTicketRequest(Request $request, $id)
@@ -2272,6 +2334,9 @@ class AdminController extends Controller
             $bankAccounts = DB::table('app_bank_accounts')->orderBy('bank_name')->get();
             $statusText = $this->visaStatusTitle($visaRequest->status);
             $statusMessage = $this->visaStatusMessage($visaRequest->status);
+            $visaRequest->required_documents = json_encode(
+                $this->normalizeRequiredVerificationDocuments($visaRequest->required_documents ?? null)
+            );
         }
 
         $flightAirports = $this->getFlightAirports($visaRequest->nationality ?? null);
@@ -2322,8 +2387,17 @@ class AdminController extends Controller
 
         try {
             $contactNumber = DB::table('app_settings')->where('id', 1)->value('phone') ?: 'Please contact our support team';
-            $agentName = trim((string) ($visaRequest->agent_name ?? '')) ?: 'Rainbow Travels & Tours';
-            $agentContactNumber = trim((string) ($visaRequest->agent_contact_number ?? '')) ?: $contactNumber;
+            $isEmbassyApproved = in_array($visaRequest->status, ['Visa Approved from Embassy', 'Visa Approved', 'approved'], true);
+            $agentName = trim((string) ($isEmbassyApproved
+                ? ($visaRequest->approval_agent_name ?? '')
+                : ($visaRequest->agent_name ?? ''))) ?: 'Rainbow Travels & Tours';
+            $agentContactNumber = trim((string) ($isEmbassyApproved
+                ? ($visaRequest->approval_agent_contact_number ?? '')
+                : ($visaRequest->agent_contact_number ?? ''))) ?: $contactNumber;
+            $requiredDocuments = $this->normalizeRequiredVerificationDocuments($visaRequest->required_documents ?? null);
+            $requiredDocumentsText = $requiredDocuments
+                ? implode("\n", array_map(fn ($document) => '- ' . $document, $requiredDocuments))
+                : '- Please contact our team for the required document list.';
             $signature = "Regards,\nRainbow Travels & Tours";
             $email = match ($visaRequest->status) {
                 'Visa Application Submitted' => [
@@ -2332,7 +2406,7 @@ class AdminController extends Controller
                 ],
                 'Documents Verification' => [
                     'Documents Required for Verification',
-                    "Dear Applicant,\n\nTo support your visa application, please send the following documents via WhatsApp to our official agent:\n\n- Passport\n- NIC / Aadhaar Card\n\nOfficial Agent Name: {$agentName}\nContact Number: {$agentContactNumber}\n\nPlease ensure that the documents are clear and complete.\n\n{$signature}",
+                    "Dear Applicant,\n\nTo support your visa application, please send the following documents via WhatsApp to our official agent:\n\n{$requiredDocumentsText}\n\nOfficial Agent Name: {$agentName}\nContact Number: {$agentContactNumber}\n\nPlease ensure that the documents are clear and complete.\n\n{$signature}",
                 ],
                 'Documents Verification Completed, Request Submitted to Embassy', 'Verification of Documents Successful' => [
                     'Visa Sent to Embassy for Approval',
@@ -2340,7 +2414,7 @@ class AdminController extends Controller
                 ],
                 'Visa Approved from Embassy', 'Visa Approved', 'approved' => [
                     'Visa Approved by Embassy',
-                    "Dear Applicant,\n\nWe are pleased to inform you that your visa has been approved by the Embassy.\n\n{$signature}",
+                    "Dear Applicant,\n\nWe are pleased to inform you that your visa has been approved by the Embassy.\n\nOfficial Agent Name: {$agentName}\nContact Number: {$agentContactNumber}\n\nPlease contact your official agent for the next steps.\n\n{$signature}",
                 ],
                 'Visa Rejected due to Documents Verification Failed', 'Visa Rejected - Document Verification Failed', 'Application Rejected', 'rejected' => [
                     'Visa Rejected due to Documents Verification Failed',
@@ -2377,10 +2451,14 @@ class AdminController extends Controller
                 ?? self::formatVisaReference($visaRequest->id, $visaRequest->created_at ?? null);
             $emailBody = $email[1] . "\n\nApplication Reference: {$referenceNumber}";
             $issuedVisaDocument = null;
-            if ($visaRequest->status === 'Visa Issued' && !empty($visaRequest->issued_visa_document)) {
+            if (in_array($visaRequest->status, ['Visa Approved from Embassy', 'Visa Issued'], true)
+                && !empty($visaRequest->issued_visa_document)) {
                 if (Storage::disk('local')->exists($visaRequest->issued_visa_document)) {
                     $issuedVisaDocument = Storage::disk('local')->path($visaRequest->issued_visa_document);
-                    $emailBody .= "\n\nYour issued visa document is attached to this email.";
+                    $attachmentLabel = $visaRequest->status === 'Visa Approved from Embassy'
+                        ? 'approval letter'
+                        : 'issued visa document';
+                    $emailBody .= "\n\nYour {$attachmentLabel} is attached to this email.";
                 } else {
                     Log::error('Issued visa document is missing while preparing status email', [
                         'request_id' => $visaRequest->id,
@@ -2473,6 +2551,10 @@ class AdminController extends Controller
             'status' => 'required|in:' . implode(',', array_merge(self::VISA_STATUSES, self::LEGACY_VISA_STATUSES)),
             'agent_name' => 'required_if:status,Documents Verification|nullable|string|max:255',
             'agent_contact_number' => 'required_if:status,Documents Verification|nullable|string|max:50',
+            'approval_agent_name' => 'required_if:status,Visa Approved from Embassy|required_if:status,Visa Approved|nullable|string|max:255',
+            'approval_agent_contact_number' => 'required_if:status,Visa Approved from Embassy|required_if:status,Visa Approved|nullable|string|max:50',
+            'required_documents' => 'required_if:status,Documents Verification|array|min:1',
+            'required_documents.*' => 'required|string|in:' . implode(',', self::REQUIRED_VERIFICATION_DOCUMENTS),
             'visa_fee' => 'required_if:status,Visa Approved from Embassy|required_if:status,Visa Approved|nullable|numeric|min:0',
             'visa_fee_currency' => 'required_if:status,Visa Approved from Embassy|required_if:status,Visa Approved|nullable|string|max:20',
             'bank_name' => 'required_if:status,Visa Approved from Embassy|required_if:status,Visa Approved|nullable|string|max:255',
@@ -2487,7 +2569,9 @@ class AdminController extends Controller
         $request->validate([
             'issued_visa_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
-        if ($validated['status'] === 'Visa Issued' && !$request->hasFile('issued_visa_document') && empty($existingRequest->issued_visa_document)) {
+        if (in_array($validated['status'], ['Visa Approved from Embassy', 'Visa Issued'], true)
+            && !$request->hasFile('issued_visa_document')
+            && empty($existingRequest->issued_visa_document)) {
             $request->validate(['issued_visa_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240']);
         }
 
@@ -2499,7 +2583,15 @@ class AdminController extends Controller
             if ($validated['status'] === 'Documents Verification') {
                 $updateData['agent_name'] = trim((string) ($validated['agent_name'] ?? ''));
                 $updateData['agent_contact_number'] = trim((string) ($validated['agent_contact_number'] ?? ''));
-            } elseif (isset($existingRequest->agent_name) || isset($existingRequest->agent_contact_number)) {
+            }
+            if (in_array($validated['status'], ['Visa Approved from Embassy', 'Visa Approved'], true)) {
+                $updateData['approval_agent_name'] = trim((string) ($validated['approval_agent_name'] ?? ''));
+                $updateData['approval_agent_contact_number'] = trim((string) ($validated['approval_agent_contact_number'] ?? ''));
+            }
+            if ($validated['status'] === 'Documents Verification') {
+                $updateData['required_documents'] = json_encode($this->normalizeRequiredVerificationDocuments($validated['required_documents']));
+            } elseif (!in_array($validated['status'], ['Visa Approved from Embassy', 'Visa Approved'], true)
+                && (isset($existingRequest->agent_name) || isset($existingRequest->agent_contact_number))) {
                 $updateData['agent_name'] = $existingRequest->agent_name ?? null;
                 $updateData['agent_contact_number'] = $existingRequest->agent_contact_number ?? null;
             }
@@ -2520,7 +2612,16 @@ class AdminController extends Controller
                 && $updatedRequest
                 && (
                     $existingRequest->status !== $updatedRequest->status
-                    || ($updatedRequest->status === 'Visa Issued' && $request->hasFile('issued_visa_document'))
+                    || ($updatedRequest->status === 'Documents Verification'
+                        && $this->normalizeRequiredVerificationDocuments($existingRequest->required_documents ?? null)
+                            !== $this->normalizeRequiredVerificationDocuments($updatedRequest->required_documents ?? null))
+                    || (in_array($updatedRequest->status, ['Visa Approved from Embassy', 'Visa Approved'], true)
+                        && (
+                            trim((string) ($existingRequest->approval_agent_name ?? '')) !== trim((string) ($updatedRequest->approval_agent_name ?? ''))
+                            || trim((string) ($existingRequest->approval_agent_contact_number ?? '')) !== trim((string) ($updatedRequest->approval_agent_contact_number ?? ''))
+                        ))
+                    || (in_array($updatedRequest->status, ['Visa Approved from Embassy', 'Visa Issued'], true)
+                        && $request->hasFile('issued_visa_document'))
                 )
             ) {
                 $this->sendVisaStatusEmail($updatedRequest);
