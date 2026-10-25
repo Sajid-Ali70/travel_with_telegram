@@ -6,6 +6,10 @@
     --bg-light: #f8f9fa;
 }
 
+html {
+    font-size: 18px;
+}
+
 body {
     font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--text-primary);

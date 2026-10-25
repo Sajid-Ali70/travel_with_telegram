@@ -49,6 +49,10 @@ html {
     font-size: 15px;
 }
 
+html {
+    font-size: 18px;
+}
+
 body {
     display: block;
 }

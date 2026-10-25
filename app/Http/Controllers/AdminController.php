@@ -324,6 +324,7 @@ class AdminController extends Controller
                     $table->string('visa_type')->nullable();
                     $table->text('job_title')->nullable();
                     $table->text('selected_job_ids')->nullable();
+                    $table->string('selected_job_city')->nullable();
                     $table->string('driving_license_available')->nullable();
                     $table->string('status')->default('Visa Application Submitted');
                     $table->string('issued_visa_document', 255)->nullable();
@@ -369,6 +370,7 @@ class AdminController extends Controller
                     'visa_type' => "ALTER TABLE `app_visa_requests` ADD `visa_type` VARCHAR(255) NULL DEFAULT NULL ",
                     'job_title' => "ALTER TABLE `app_visa_requests` ADD `job_title` TEXT NULL DEFAULT NULL ",
                     'selected_job_ids' => "ALTER TABLE `app_visa_requests` ADD `selected_job_ids` TEXT NULL DEFAULT NULL ",
+                    'selected_job_city' => "ALTER TABLE `app_visa_requests` ADD `selected_job_city` VARCHAR(255) NULL DEFAULT NULL ",
                     'driving_license_available' => "ALTER TABLE `app_visa_requests` ADD `driving_license_available` VARCHAR(10) NULL DEFAULT NULL ",
                     'issued_visa_document' => "ALTER TABLE `app_visa_requests` ADD `issued_visa_document` VARCHAR(255) NULL DEFAULT NULL ",
                     'visa_fee' => "ALTER TABLE `app_visa_requests` ADD `visa_fee` DECIMAL(12,2) NULL DEFAULT NULL ",
@@ -1957,8 +1959,10 @@ class AdminController extends Controller
             'nationality' => 'required|string|max:255|exists:app_nationalities,name',
             'national_identity' => 'required|string|max:100',
             'visa_type' => 'required|string|max:255',
-            'selected_job_ids' => 'nullable|array',
+            'destination_country' => 'required|string|max:255|exists:app_countries,name',
+            'selected_job_ids' => 'nullable|array|max:1',
             'selected_job_ids.*' => 'required|integer|exists:app_jobs,id',
+            'selected_job_city' => 'nullable|string|max:255',
             'driving_license_available' => 'nullable|in:yes,no',
         ]);
 
@@ -1985,6 +1989,7 @@ class AdminController extends Controller
 
         $selectedJobIds = collect($validated['selected_job_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
         $data['selected_job_ids'] = null;
+        $data['selected_job_city'] = null;
 
         if ($selectedJobIds) {
             $selectedProfession = mb_strtolower(trim((string) ($data['visa_type'] ?? '')));
@@ -1995,7 +2000,7 @@ class AdminController extends Controller
                     $query->whereRaw('LOWER(country_location) = ?', [mb_strtolower(trim((string) ($data['destination_country'] ?? '')))])
                         ->orWhereRaw('LOWER(country_location) = ?', [mb_strtolower('All Country (Global multi-select)')]);
                 })
-                ->get(['id', 'category', 'profession']);
+                ->get(['id', 'job_title', 'category', 'profession', 'city_locations']);
             $matchingJobIds = $matchingJobs
                 ->filter(function ($job) use ($selectedProfession) {
                     $hasSelectedProfession = mb_strtolower(trim((string) $job->profession)) === $selectedProfession;
@@ -2010,11 +2015,35 @@ class AdminController extends Controller
                 return back()->withErrors(['selected_job_ids' => 'One or more selected jobs are no longer available for this country and profession.'])->withInput();
             }
 
+            $selectedJob = $matchingJobs->firstWhere('id', $selectedJobIds[0]);
+            $destination = DB::table('app_countries')
+                ->where('name', $data['destination_country'])
+                ->first(['id', 'cities']);
+            $jobCityMap = json_decode($selectedJob->city_locations ?? '{}', true);
+            $availableCities = is_array($jobCityMap)
+                ? ($jobCityMap[(string) $destination->id] ?? $jobCityMap[$destination->id] ?? [])
+                : [];
+            if (!is_array($availableCities) || !$availableCities) {
+                $availableCities = json_decode($destination->cities ?? '[]', true);
+            }
+            $availableCities = collect(is_array($availableCities) ? $availableCities : [])
+                ->map(fn ($city) => trim((string) $city))
+                ->filter()
+                ->unique()
+                ->values();
+            $selectedCity = trim((string) ($validated['selected_job_city'] ?? ''));
+            if ($availableCities->isNotEmpty() && ($selectedCity === '' || !$availableCities->contains($selectedCity))) {
+                return back()->withErrors(['selected_job_city' => 'Select a city available for the chosen job.'])->withInput();
+            }
+            if ($availableCities->isEmpty() && $selectedCity !== '') {
+                return back()->withErrors(['selected_job_city' => 'No cities are configured for the selected destination.'])->withInput();
+            }
+            $data['selected_job_city'] = $selectedCity !== '' ? $selectedCity : null;
+
             if (!$data['visa_category']) {
-                $selectedJob = $matchingJobs->firstWhere('id', $selectedJobIds[0]);
                 $data['visa_category'] = $selectedJob->category ?? null;
             }
-            $data['job_title'] = DB::table('app_jobs')->where('id', $selectedJobIds[0])->value('job_title');
+            $data['job_title'] = $selectedJob->job_title;
             $data['selected_job_ids'] = json_encode($selectedJobIds);
         }
 
@@ -2318,11 +2347,14 @@ class AdminController extends Controller
                         : [];
                     $jobCountry = trim((string) ($selectedJob->country_location ?? ''));
 
-                    $visaRequest->job_location = $selectedCities
-                        ? implode(', ', $selectedCities)
+                    $selectedJobCity = trim((string) ($visaRequest->selected_job_city ?? ''));
+                    $visaRequest->job_location = $selectedJobCity !== ''
+                        ? $selectedJobCity
+                        : ($selectedCities
+                            ? implode(', ', $selectedCities)
                         : ($jobCountry && mb_strtolower($jobCountry) !== mb_strtolower('All Country (Global multi-select)')
                             ? $jobCountry
-                            : $visaRequest->destination_country);
+                            : $visaRequest->destination_country));
                 }
             }
 

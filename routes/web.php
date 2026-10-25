@@ -91,6 +91,10 @@ Route::get('/apply', function () {
     $jobs = [];
     try {
         $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+        foreach ($countries as $country) {
+            $cities = json_decode($country->cities ?? '[]', true);
+            $country->cities = is_array($cities) ? $cities : [];
+        }
         $nationalities = DB::table('app_nationalities')->orderBy('name', 'asc')->get();
         $categories = DB::table('app_categories')->orderBy('id', 'desc')->get();
         $professions = DB::table('app_profession_job_titles')->where('type', 'profession')->orderBy('name')->get();

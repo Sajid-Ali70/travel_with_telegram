@@ -562,7 +562,10 @@
             const availableJobsList = document.getElementById('availableJobsList');
             const availableJobs = @json($jobs);
             const visaCategories = @json($categories);
-            const selectedJobIds = new Set();
+            const countryCities = @json($countries->pluck('cities', 'id'));
+            const oldSelectedJobCity = @json(old('selected_job_city', ''));
+            const oldSelectedJobId = @json((string) (collect(old('selected_job_ids', []))->first() ?? ''));
+            const selectedJobIds = new Set(@json(array_map('strval', (array) old('selected_job_ids', []))));
             const applicationForm = document.getElementById('visaApplicationForm');
             const wizardSteps = Array.from(applicationForm.querySelectorAll('[data-wizard-step]'));
             const wizardIndicators = Array.from(document.querySelectorAll('[data-step-indicator]'));
@@ -591,7 +594,7 @@
                 },
             ];
             let activeWizardStep = @json(
-                $errors->has('destination_country') || $errors->has('visa_type') || $errors->has('selected_job_ids') || $errors->has('driving_license_available')
+                $errors->has('destination_country') || $errors->has('visa_type') || $errors->has('selected_job_ids') || $errors->has('selected_job_city') || $errors->has('driving_license_available')
                     ? 2
                     : ($errors->has('passport_number') || $errors->has('passport_expiry') ? 1 : 0)
             );
@@ -660,6 +663,49 @@
             function updateVisaCategory() {
                 const selectedProfession = typeSelect.options[typeSelect.selectedIndex];
                 visaCategoryInput.value = selectedProfession ? selectedProfession.dataset.categoryName || '' : '';
+            }
+
+            function getAvailableJobCities(job) {
+                const selectedCountryOption = destinationCountrySelect.options[destinationCountrySelect.selectedIndex];
+                const countryId = selectedCountryOption ? String(selectedCountryOption.dataset.id || '') : '';
+                let cities = [];
+                try {
+                    const cityMap = typeof job.city_locations === 'string'
+                        ? JSON.parse(job.city_locations || '{}')
+                        : job.city_locations;
+                    const jobCities = cityMap && typeof cityMap === 'object'
+                        ? cityMap[countryId] || cityMap[selectedCountryOption?.value] || []
+                        : [];
+                    cities = Array.isArray(jobCities) ? jobCities : [];
+                } catch (error) {
+                    console.error('Unable to read city locations for the selected job.', error);
+                }
+                if (!cities.length) {
+                    const countryCityList = countryCities[countryId] || [];
+                    cities = Array.isArray(countryCityList) ? countryCityList : [];
+                }
+                cities = [...new Set(cities
+                    .filter(city => typeof city === 'string' && city.trim() !== '')
+                    .map(city => city.trim()))];
+                return cities;
+            }
+
+            function updateJobCityField(job, cityField, citySelect, selectedCity = '') {
+                citySelect.replaceChildren(new Option('Select City', ''));
+                if (!job) {
+                    cityField.remove();
+                    return;
+                }
+
+                const cities = getAvailableJobCities(job);
+                citySelect.required = cities.length > 0;
+                cityField.querySelector('label').textContent = cities.length ? 'SELECT CITY *' : 'CITY UNAVAILABLE';
+                if (cities.length) {
+                    cities.forEach(city => citySelect.add(new Option(city, city)));
+                } else {
+                    citySelect.options[0].textContent = 'No cities available';
+                }
+                citySelect.value = cities.includes(selectedCity) ? selectedCity : '';
             }
 
             function renderAvailableJobs() {
@@ -845,6 +891,20 @@
                     appendJobText('Job description', job.job_description);
                     appendJobText('Requirements / qualifications', job.requirements);
 
+                    const cityField = document.createElement('div');
+                    cityField.className = 'form-group mt-3';
+                    cityField.innerHTML = '<label for="selected_job_city_' + String(job.id) + '">SELECT CITY *</label>';
+                    const cityInput = document.createElement('div');
+                    cityInput.className = 'input-with-icon';
+                    cityInput.innerHTML = '<i class="fas fa-map-marker-alt"></i>';
+                    const citySelect = document.createElement('select');
+                    citySelect.id = `selected_job_city_${job.id}`;
+                    citySelect.name = 'selected_job_city';
+                    citySelect.className = 'form-select';
+                    citySelect.style.paddingLeft = '48px';
+                    cityInput.appendChild(citySelect);
+                    cityField.appendChild(cityInput);
+
                     const applyCheckbox = document.createElement('input');
                     applyCheckbox.type = 'checkbox';
                     applyCheckbox.name = 'selected_job_ids[]';
@@ -863,6 +923,12 @@
                             selectedJobIds.add(String(job.id));
                         }
                         if (!this.checked) selectedJobIds.delete(String(job.id));
+                        const cityToKeep = citySelect.value
+                            || (oldSelectedJobId === String(job.id) ? oldSelectedJobCity : '');
+                        updateJobCityField(this.checked ? job : null, cityField, citySelect, cityToKeep);
+                        if (this.checked) {
+                            item.insertBefore(cityField, detailContent);
+                        }
                         selectButton.innerHTML = this.checked
                             ? '<i class="fas fa-check-circle"></i> Selected'
                             : '<i class="fas fa-check-circle"></i> Select Job';
@@ -897,7 +963,12 @@
                     const actions = document.createElement('div');
                     actions.className = 'job-card-actions';
                     actions.append(applyCheckbox, selectButton, descriptionButton);
-                    item.append(actions, detailContent);
+                    item.append(actions);
+                    if (applyCheckbox.checked) {
+                        updateJobCityField(job, cityField, citySelect, oldSelectedJobId === String(job.id) ? oldSelectedJobCity : '');
+                        item.appendChild(cityField);
+                    }
+                    item.appendChild(detailContent);
                     availableJobsList.appendChild(item);
                 });
             }
