@@ -13,17 +13,17 @@ function getAppSettings() {
 
     if (!$settings) {
         $settings = (object)[
-            'app_name' => 'Rainbow Travels & Tours',
-            'developer' => 'Rainbow Travels',
+            'app_name' => 'Hays Travel',
+            'developer' => 'Hays Travel',
             'category' => 'Travel',
-            'tags' => 'Visa Services · Tours',
-            'app_icon' => '',
+            'tags' => 'Visa • Work • Travel • Jobs',
+            'app_icon' => '/logo.png',
             'rating_score' => '4.8',
             'reviews_count' => '5K reviews',
             'downloads_count' => '10K+',
             'content_rating' => 'Rated for 3+',
             'updated_date' => 'Oct 20, 2023',
-            'description' => 'Journey Beyond Boundaries with Rainbow Travels & Tours.',
+            'description' => 'Journey Beyond Boundaries with Hays Travel.',
             'release_notes' => '• Improved visa tracking\r\n• Bug fixes',
             'screenshots' => '[]',
             'apk_url' => '/apk/app-release.apk',
@@ -63,7 +63,9 @@ Route::get('/', function () {
         return view('index', compact('settings', 'countries'));
     }
 
-    return view('frontend.travel', compact('settings', 'countries', 'categories'));
+    $reviews = app(AdminController::class)->homeReviews();
+
+    return view('frontend.travel_home', compact('settings', 'countries', 'categories', 'reviews'));
 });
 
 // Travel App Routes
@@ -110,10 +112,16 @@ Route::get('/about', function () {
     return view('frontend.travel_about', compact('settings'));
 })->name('travel.about');
 
-Route::get('/contact', function () {
+Route::get('/countries', function () {
     $settings = getAppSettings();
-    return view('frontend.travel_contact', compact('settings'));
-})->name('travel.contact');
+    $countries = DB::table('app_countries')->orderBy('name', 'asc')->get();
+
+    return view('frontend.travel_countries', compact('settings', 'countries'));
+})->name('travel.countries');
+
+Route::get('/services', [AdminController::class, 'servicesPage'])->name('travel.services');
+
+Route::get('/contact', [AdminController::class, 'supportPage'])->name('travel.contact');
 
 Route::get('/jobs', [AdminController::class, 'publicJobs'])->name('jobs.index');
 
@@ -138,6 +146,15 @@ Route::middleware(['admin.auth'])->group(function () {
 
     // Catalog management pages
     Route::get('/admin/catalog', [AdminController::class, 'catalogIndex'])->name('admin.catalog.index');
+    Route::get('/admin/services', [AdminController::class, 'manageServices'])->name('admin.services.index');
+    Route::post('/admin/services', [AdminController::class, 'saveService'])->name('admin.services.save');
+    Route::delete('/admin/services/{id}', [AdminController::class, 'deleteService'])->whereNumber('id')->name('admin.services.delete');
+    Route::get('/admin/support', [AdminController::class, 'manageSupport'])->name('admin.support.index');
+    Route::post('/admin/support/faqs', [AdminController::class, 'saveFaq'])->name('admin.support.faqs.save');
+    Route::delete('/admin/support/faqs/{id}', [AdminController::class, 'deleteFaq'])->whereNumber('id')->name('admin.support.faqs.delete');
+    Route::get('/admin/reviews', [AdminController::class, 'manageReviews'])->name('admin.reviews.index');
+    Route::post('/admin/reviews', [AdminController::class, 'saveReview'])->name('admin.reviews.save');
+    Route::delete('/admin/reviews/{id}', [AdminController::class, 'deleteReview'])->whereNumber('id')->name('admin.reviews.delete');
     Route::get('/admin/catalog/{type}/add', [AdminController::class, 'createCatalogItem'])->name('admin.catalog.create');
     Route::get('/admin/catalog/{type}/{id}/edit', [AdminController::class, 'editCatalogItem'])->whereNumber('id')->name('admin.catalog.edit');
     Route::put('/admin/catalog/{type}/{id}', [AdminController::class, 'updateCatalogItem'])->whereNumber('id')->name('admin.catalog.update');

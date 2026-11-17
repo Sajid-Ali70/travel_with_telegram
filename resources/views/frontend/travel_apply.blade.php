@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apply for Visa - {{ $settings->app_name ?? 'VisaBook' }}</title>
+    <meta name="theme-color" content="#073c87">
+    <title>Apply for a Job - {{ $settings->app_name ?? 'VisaBook' }}</title>
     <!-- Modern Plus Jakarta Sans Font & UI Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/travel.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/travel-home.css') }}">
     <style>
         .visa-hero-section {
             @php
@@ -290,21 +292,255 @@
             .apply-stepper li { font-size: .58rem; }
             .apply-wizard-card { padding: 12px 9px; }
         }
+        .job-application-page {
+            background: #e8f3ff;
+        }
+        .job-application-page .mobile-container {
+            background: #e8f3ff;
+        }
+        .job-application-page .apply-wizard-header {
+            align-items: center;
+            background: #fff;
+            color: #102b51;
+            display: flex;
+            flex-direction: row;
+            height: 82px;
+            justify-content: space-between;
+            min-height: 82px;
+            padding: 6px 12px;
+        }
+        .job-application-page .apply-wizard-header-back {
+            display: none;
+        }
+        .job-application-page .apply-page-title {
+            color: #102b51;
+            font-size: .78rem;
+            font-weight: 800;
+            margin: 0;
+            padding: 4px 8px 2px;
+            text-align: center;
+        }
+        .job-application-page .apply-wizard-content {
+            padding: 2px 8px 18px;
+        }
+        .job-application-page .apply-wizard-card {
+            background: #07477f;
+            border: 1px solid #0a3b6b;
+            border-radius: 8px;
+            box-shadow: 0 3px 8px rgba(11, 48, 86, .2);
+            padding: 9px 8px 10px;
+        }
+        .job-application-page .apply-step-heading {
+            margin-bottom: 9px;
+        }
+        .job-application-page .apply-step-heading-icon {
+            display: none;
+        }
+        .job-application-page .apply-step-heading h2 {
+            color: #fff !important;
+            font-size: .78rem;
+            margin: 0 0 2px;
+        }
+        .job-application-page .apply-step-heading p {
+            color: #e1edfa !important;
+            font-size: .56rem;
+            font-style: italic;
+            line-height: 1.25;
+        }
+        .job-application-page .apply-wizard-card .form-group {
+            margin-bottom: 7px;
+        }
+        .job-application-page .apply-wizard-card .form-group label {
+            color: #fff !important;
+            font-size: .53rem;
+            font-weight: 800;
+            margin-bottom: 3px;
+        }
+        .job-application-page .apply-wizard-card .input-with-icon i {
+            display: none;
+        }
+        .job-application-page .apply-wizard-card .input-with-icon input,
+        .job-application-page .apply-wizard-card .input-with-icon select {
+            background-color: #fff;
+            border: 1px solid #e2eaf4;
+            border-radius: 4px;
+            color: #19304d !important;
+            font-size: .63rem;
+            min-height: 29px;
+            padding: 5px 8px !important;
+        }
+        .job-application-page .apply-wizard-card .input-with-icon input::placeholder {
+            color: #7d8ba0 !important;
+        }
+        .job-application-page .apply-wizard-card .form-row {
+            gap: 0;
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .job-application-page .apply-wizard-card #national_identity_hint,
+        .job-application-page .apply-wizard-card #mobile_number_hint {
+            color: #e1edfa !important;
+            font-size: .55rem;
+        }
+        .job-application-page .apply-wizard-navigation {
+            margin-top: 8px;
+        }
+        .job-application-page #wizardNext {
+            align-items: center;
+            background: #ffc400;
+            border: 1px solid #ffc400;
+            border-radius: 4px !important;
+            color: #15375f !important;
+            display: flex;
+            font-size: .65rem !important;
+            font-weight: 800;
+            justify-content: center;
+            min-height: 29px;
+            position: relative;
+            text-align: center;
+        }
+        .job-application-page #wizardNext i {
+            color: #15375f !important;
+            position: absolute;
+            right: 10px;
+        }
+        .job-application-page.wizard-step-three .apply-wizard-card {
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            padding: 0;
+        }
+        .job-application-page.wizard-step-three .apply-step-heading {
+            margin: 0 0 5px;
+        }
+        .job-application-page.wizard-step-three .apply-step-heading h2 {
+            color: #102b51 !important;
+            font-size: .8rem;
+            margin: 0;
+        }
+        .job-application-page.wizard-step-three .apply-step-heading p {
+            display: none;
+        }
+        .job-application-page.wizard-step-three #visaApplicationForm {
+            background: #07477f;
+            border: 1px solid #0a3b6b;
+            border-radius: 8px;
+            box-shadow: 0 3px 8px rgba(11, 48, 86, .2);
+            padding: 8px 8px 9px;
+        }
+        .job-application-page.wizard-step-three #visaApplicationForm .mt-4 {
+            margin-top: 9px !important;
+        }
+        .job-application-page.wizard-step-three #visaApplicationForm .pt-2 {
+            padding-top: 0 !important;
+        }
+        .job-application-page.wizard-step-three #visaApplicationForm .terms-box {
+            color: #e1edfa;
+            font-size: .57rem;
+            line-height: 1.3;
+        }
+        .job-application-page.wizard-step-three #visaApplicationForm h6,
+        .job-application-page.wizard-step-three #visaApplicationForm .text-primary {
+            color: #fff !important;
+        }
+        .job-application-page.wizard-step-three #visaApplicationForm .apply-terms-check {
+            background: transparent !important;
+            border: 0 !important;
+            gap: 5px !important;
+            margin-top: 8px;
+            padding: 0 !important;
+        }
+        .job-application-page.wizard-step-three #visaApplicationForm .apply-terms-check input {
+            accent-color: #ffc400;
+            border: 1px solid #fff;
+            flex: 0 0 11px;
+            height: 11px;
+            width: 11px;
+        }
+        .job-application-page.wizard-step-three #visaApplicationForm .apply-terms-check label {
+            color: #fff !important;
+            font-size: .55rem !important;
+        }
+        .job-application-page.wizard-step-three .apply-wizard-navigation {
+            gap: 7px;
+            margin-top: 9px;
+        }
+        .job-application-page.wizard-step-three #wizardBack,
+        .job-application-page.wizard-step-three #wizardSubmit {
+            border-radius: 20px !important;
+            font-size: .58rem !important;
+            font-weight: 800;
+            min-height: 29px;
+            padding: 5px 8px !important;
+            text-transform: uppercase;
+        }
+        .job-application-page.wizard-step-three #wizardBack {
+            background: transparent;
+            border: 1px solid #fff;
+            color: #fff !important;
+            flex: 0 0 43%;
+        }
+        .job-application-page.wizard-step-three #wizardSubmit {
+            background: #ffc400;
+            border: 1px solid #ffc400;
+            color: #15375f !important;
+            flex: 1;
+        }
+        .job-application-page.wizard-step-three #wizardSubmit i {
+            color: #15375f !important;
+        }
     </style>
 </head>
-<body>
+<body class="job-application-page">
     <div class="mobile-container">
-        <header class="apply-wizard-header">
+        <header class="home-header apply-wizard-header">
             <button type="button" id="wizardHeaderBack" class="apply-wizard-header-back" aria-label="Go back">
                 <i class="fas fa-arrow-left"></i>
             </button>
-            <h1>Apply Visa</h1>
-            <ol class="apply-stepper" aria-label="Application progress">
+            <a class="home-brand" href="{{ url('/') }}" aria-label="{{ $settings->app_name ?? 'Hays Travel' }}">
+                @if(!empty($settings->app_icon))
+                    @php
+                        $applyAppIconUrl = str_starts_with($settings->app_icon, 'http') || str_starts_with($settings->app_icon, '//')
+                            ? $settings->app_icon
+                            : asset($settings->app_icon);
+                    @endphp
+                    <img class="home-brand-logo" src="{{ $applyAppIconUrl }}" alt="{{ $settings->app_name ?? 'Hays Travel' }}">
+                    <span class="home-brand-copy">
+                        <small>{{ $settings->tags ?? 'Visa • Work • Travel • Jobs' }}</small>
+                    </span>
+                @else
+                    <span class="home-brand-logo home-brand-logo-fallback"><i class="fas fa-plane"></i></span>
+                    <span class="home-brand-copy">
+                        <strong>{{ $settings->app_name ?? 'Hays Travel' }}</strong>
+                        <small>{{ $settings->tags ?? 'Visa • Work • Travel • Jobs' }}</small>
+                    </span>
+                @endif
+            </a>
+            <div class="home-header-actions">
+                <a class="home-header-action" href="{{ !empty($settings->phone) ? 'tel:' . preg_replace('/[^0-9+]/', '', $settings->phone) : route('travel.contact') }}" aria-label="Contact">
+                    <span class="home-header-icon"><i class="fas fa-phone-alt"></i></span>
+                    <span class="home-header-action-label">Contact</span>
+                </a>
+                <button class="home-header-action nav-toggle" id="nav-toggle" type="button" aria-controls="nav-menu" aria-expanded="false" aria-label="Menu">
+                    <span class="home-header-icon"><i class="fas fa-bars"></i></span>
+                    <span class="home-header-action-label">Menu</span>
+                </button>
+            </div>
+            <nav class="nav-links" id="nav-menu" aria-label="Main navigation">
+                <a class="nav-link-item" href="{{ url('/') }}">Home</a>
+                <a class="nav-link-item" href="{{ route('travel.apply') }}">Apply Visa</a>
+                <a class="nav-link-item" href="{{ route('travel.verify') }}">Check Status</a>
+                <a class="nav-link-item" href="{{ route('jobs.index') }}">Jobs Abroad</a>
+                <a class="nav-link-item" href="{{ route('travel.services') }}">Services</a>
+                <a class="nav-link-item" href="{{ route('travel.countries') }}">Countries</a>
+                <a class="nav-link-item" href="{{ route('travel.contact') }}">Contact Support</a>
+            </nav>
+            <ol class="apply-stepper visually-hidden" aria-label="Application progress">
                 <li class="is-active" data-step-indicator="0"><span class="apply-stepper-icon"><i class="far fa-user"></i></span>Personal<br>Details</li>
                 <li data-step-indicator="1"><span class="apply-stepper-icon"><i class="far fa-id-card"></i></span>Additional<br>Details</li>
                 <li data-step-indicator="2"><span class="apply-stepper-icon">3</span>Destination &amp;<br>Profession</li>
             </ol>
         </header>
+        <h1 class="apply-page-title">Apply for a Job</h1>
 
         <main class="apply-wizard-page">
         <div class="apply-wizard-content">
@@ -332,7 +568,7 @@
                     <div class="apply-step-heading">
                         <span class="apply-step-heading-icon" id="applyStepIcon"><i class="far fa-user"></i></span>
                         <div>
-                            <h2 id="applyStepTitle">Personal Details</h2>
+                            <h2 id="applyStepTitle">1. Personal details</h2>
                             <p id="applyStepDescription">Please provide your personal information as per your passport.</p>
                         </div>
                     </div>
@@ -352,15 +588,6 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>National Identity/Aadhaar Card *</label>
-                            <div class="input-with-icon">
-                                <i class="far fa-id-card"></i>
-                                <input id="national_identity_input" type="text" name="national_identity" value="{{ old('national_identity') }}" placeholder="National Identity/Aadhaar Card" maxlength="100" inputmode="numeric" pattern="[0-9]*" required>
-                            </div>
-                            <small id="national_identity_hint" class="form-text text-muted d-none mt-1"></small>
-                        </div>
-
                         <div class="form-row">
                             <div class="form-group">
                                 <label>FIRST NAME *</label>
@@ -376,6 +603,15 @@
                                     <input type="text" name="last_name" value="{{ old('last_name') }}" placeholder="Last Name" required>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>NATIONAL ID OR AADHAAR NO. *</label>
+                            <div class="input-with-icon">
+                                <i class="far fa-id-card"></i>
+                                <input id="national_identity_input" type="text" name="national_identity" value="{{ old('national_identity') }}" placeholder="National ID or Aadhaar No." maxlength="100" inputmode="numeric" pattern="[0-9]*" required>
+                            </div>
+                            <small id="national_identity_hint" class="form-text text-muted d-none mt-1"></small>
                         </div>
 
                         <div class="form-row">
@@ -530,14 +766,16 @@
                         </section>
                         <div class="apply-wizard-navigation">
                             <button type="button" id="wizardBack" class="d-none"><i class="fas fa-arrow-left me-1"></i> Back</button>
-                            <button type="button" id="wizardNext">Next <i class="fas fa-arrow-right ms-1"></i></button>
+                            <button type="button" id="wizardNext"><span>NEXT</span><i class="fas fa-arrow-right"></i></button>
                             <button type="submit" id="wizardSubmit" class="btn-submit d-none">Submit Application <i class="fas fa-paper-plane ms-1"></i></button>
                         </div>
                     </form>
             </div>
         </div>
         </main>
+
     </div>
+    @include('partials.footer')
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -578,7 +816,7 @@
             const wizardSubmit = document.getElementById('wizardSubmit');
             const wizardCopy = [
                 {
-                    title: 'Personal Details',
+                    title: '1. Personal details',
                     description: 'Please provide your personal information as per your passport.',
                     icon: '<i class="far fa-user"></i>',
                 },
@@ -588,7 +826,7 @@
                     icon: '<i class="far fa-id-card"></i>',
                 },
                 {
-                    title: 'Destination & Profession',
+                    title: '3. Destination & Profession',
                     description: 'Please select your destination country and profession details.',
                     icon: '<i class="fas fa-globe"></i>',
                 },
@@ -601,6 +839,7 @@
 
             function showWizardStep(stepIndex) {
                 activeWizardStep = stepIndex;
+                document.body.classList.toggle('wizard-step-three', stepIndex === 2);
                 wizardSteps.forEach((step, index) => step.classList.toggle('d-none', index !== stepIndex));
                 wizardIndicators.forEach((indicator, index) => {
                     indicator.classList.toggle('is-active', index === stepIndex);
@@ -1051,7 +1290,7 @@
                     nationalIdentityInput.removeAttribute('minlength');
                     nationalIdentityInput.removeAttribute('pattern');
                     nationalIdentityInput.removeAttribute('inputmode');
-                    nationalIdentityInput.placeholder = 'National Identity/Aadhaar Card';
+                    nationalIdentityInput.placeholder = 'National ID or Aadhaar No.';
                     nationalIdentityInput.removeAttribute('title');
                     nationalIdentityHint.textContent = '';
                     nationalIdentityHint.classList.add('d-none');

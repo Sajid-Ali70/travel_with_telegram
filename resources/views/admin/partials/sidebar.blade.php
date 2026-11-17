@@ -21,6 +21,15 @@
         <a href="{{ route('admin.catalog.index') }}" class="nav-link admin-nav-link {{ request()->routeIs('admin.catalog.*') ? 'active' : '' }}">
             <i class="fas fa-list-alt"></i> Manage Catalog
         </a>
+        <a href="{{ route('admin.services.index') }}" class="nav-link admin-nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
+            <i class="fas fa-concierge-bell"></i> Services
+        </a>
+        <a href="{{ route('admin.support.index') }}" class="nav-link admin-nav-link {{ request()->routeIs('admin.support.*') ? 'active' : '' }}">
+            <i class="fas fa-headset"></i> Support Content
+        </a>
+        <a href="{{ route('admin.reviews.index') }}" class="nav-link admin-nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">
+            <i class="fas fa-star"></i> Customer Reviews
+        </a>
         <a href="{{ route('admin.jobs.index') }}" id="nav-jobs" class="nav-link admin-nav-link {{ request()->routeIs('admin.jobs.index', 'admin.jobs.edit', 'admin.jobs.update') ? 'active' : '' }}">
             <i class="fas fa-briefcase"></i> Jobs
         </a>

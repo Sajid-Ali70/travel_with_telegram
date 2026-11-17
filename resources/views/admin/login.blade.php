@@ -30,12 +30,12 @@
             text-align: center;
         }
         .login-logo {
-            width: 70px;
-            height: 70px;
-            border-radius: 15px;
+            width: 220px;
+            max-width: 100%;
+            height: 46px;
+            border-radius: 0;
             margin-bottom: 20px;
-            object-fit: cover;
-            border: 1px solid #30363d;
+            object-fit: contain;
         }
         .form-control {
             background-color: #0d1117;

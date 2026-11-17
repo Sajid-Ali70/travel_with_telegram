@@ -3,87 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us - {{ $settings->app_name ?? 'VisaBook' }}</title>
-    <!-- Modern Plus Jakarta Sans Font & UI Stylesheets -->
+    <meta name="theme-color" content="#063b86">
+    <title>Support &amp; FAQs | {{ $settings->app_name ?? 'Travel & Visa Services' }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/travel.css') }}">
-    <style>
-        .visa-hero-section {
-            @php
-                $banner = !empty($settings->inner_banner) ? $settings->inner_banner : "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
-                $bannerUrl = (str_starts_with($banner, 'http') || str_starts_with($banner, '//')) ? $banner : asset($banner);
-            @endphp
-            background-image: url('{{ $bannerUrl }}') !important;
-        }
-        .contact-detail-card {
-            background-color: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 30px;
-            height: 100%;
-            transition: transform 0.3s;
-        }
-        .contact-detail-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--btn-primary);
-        }
-        .contact-icon {
-            width: 50px;
-            height: 50px;
-            background: #e8f5eb;
-            color: var(--btn-primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            margin-bottom: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/travel-home.css') }}">
 </head>
-<body>
-    <div class="mobile-container">
-        @include('partials.nav')
+<body class="travel-home-page travel-support-page">
+    @php
+        $phone = trim((string) ($settings->phone ?? ''));
+        $email = trim((string) ($settings->email ?? ''));
+        $phoneLink = preg_replace('/[^0-9+]/', '', $phone);
+    @endphp
 
-        <!-- Sub-Banner Header -->
-        <div class="visa-hero-section" style="min-height: 350px; padding: 40px 5%; background-position: top center;">
-            <div class="hero-overlay-content reveal reveal-left" style="max-width: 100%;">
-                <p class="mb-1 reveal reveal-down delay-1" style="font-size: 0.85rem; color: var(--accent-color); font-weight: 600;"><a href="{{ url('/') }}" style="color: var(--accent-color); text-decoration: none;">Home</a> &nbsp;&raquo;&nbsp; Contact Us</p>
-                <h2 class="reveal reveal-up delay-2" style="font-size: 2.2rem; margin-bottom: 8px;">Contact Us</h2>
-                <p class="mb-0 reveal reveal-up delay-3" style="font-size: 0.95rem;">Have questions? We're here to help you with your journey.</p>
+    <div class="travel-home-shell">
+        <header class="home-header">
+            <a class="home-brand" href="{{ url('/') }}" aria-label="{{ $settings->app_name ?? 'Hays Travel' }}">
+                @if(!empty($settings->app_icon))
+                    @php
+                        $appIconUrl = str_starts_with($settings->app_icon, 'http') || str_starts_with($settings->app_icon, '//')
+                            ? $settings->app_icon
+                            : asset($settings->app_icon);
+                    @endphp
+                    <img class="home-brand-logo" src="{{ $appIconUrl }}" alt="{{ $settings->app_name ?? 'Hays Travel' }}">
+                    <span class="home-brand-copy">
+                        <small>{{ $settings->tags ?? 'Visa • Work • Travel • Jobs' }}</small>
+                    </span>
+                @else
+                    <span class="home-brand-logo home-brand-logo-fallback"><i class="fas fa-plane"></i></span>
+                    <span class="home-brand-copy">
+                        <strong>{{ $settings->app_name ?? 'Hays Travel' }}</strong>
+                        <small>{{ $settings->tags ?? 'Visa • Work • Travel • Jobs' }}</small>
+                    </span>
+                @endif
+            </a>
+            <div class="home-header-actions">
+                <a class="home-header-action" href="{{ $phoneLink !== '' ? 'tel:' . $phoneLink : route('travel.contact') }}" aria-label="Contact">
+                    <span class="home-header-icon"><i class="fas fa-phone-alt"></i></span>
+                    <span class="home-header-action-label">Contact</span>
+                </a>
+                <button class="home-header-action nav-toggle" id="nav-toggle" type="button" aria-controls="nav-menu" aria-expanded="false" aria-label="Menu">
+                    <span class="home-header-icon"><i class="fas fa-bars"></i></span>
+                    <span class="home-header-action-label">Menu</span>
+                </button>
             </div>
-        </div>
+            <nav class="nav-links" id="nav-menu" aria-label="Main navigation">
+                <a class="nav-link-item" href="{{ url('/') }}">Home</a>
+                <a class="nav-link-item" href="{{ route('travel.apply') }}">Apply Visa</a>
+                <a class="nav-link-item" href="{{ route('travel.verify') }}">Check Status</a>
+                <a class="nav-link-item" href="{{ route('jobs.index') }}">Jobs Abroad</a>
+                <a class="nav-link-item" href="{{ route('travel.services') }}">Services</a>
+                <a class="nav-link-item" href="{{ route('travel.countries') }}">Countries</a>
+                <a class="nav-link-item active" href="{{ route('travel.contact') }}">Support</a>
+            </nav>
+        </header>
 
-        <div class="section-wrapper-global" style="padding-top: 60px; padding-bottom: 80px;">
-            <div class="row g-4 justify-content-center">
-                <div class="col-md-4 reveal reveal-up delay-1">
-                    <div class="contact-detail-card">
-                        <div class="contact-icon"><i class="fas fa-phone-alt"></i></div>
-                        <h4 class="text-white">Phone Number</h4>
-                        <p class="text-muted">{{ $settings->phone ?? '+92 300 123 4567' }}</p>
-                    </div>
-                </div>
-                <div class="col-md-4 reveal reveal-up delay-2">
-                    <div class="contact-detail-card">
-                        <div class="contact-icon"><i class="far fa-envelope"></i></div>
-                        <h4 class="text-white">Email Address</h4>
-                        <p class="text-muted">{{ $settings->email ?? 'info@visabook.com' }}</p>
-                    </div>
-                </div>
-                <div class="col-md-4 reveal reveal-up delay-3">
-                    <div class="contact-detail-card">
-                        <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
-                        <h4 class="text-white">Office Address</h4>
-                        <p class="text-muted">{{ $settings->address ?? '123 Travel Street, Islamabad' }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <main class="support-main">
+            <h1>Support &amp; FAQs</h1>
+            <p class="support-subtitle">We are here to help you 24/7</p>
 
-        @include('partials.footer')
+            <section class="support-contact-card" aria-label="Contact us">
+                <a href="{{ $phoneLink !== '' ? 'tel:' . $phoneLink : route('travel.contact') }}" class="support-contact-item">
+                    <span class="support-contact-button"><i class="fas fa-phone-alt"></i> Call Us</span>
+                    <small>{{ $phone !== '' ? $phone : 'Contact number not available' }}</small>
+                </a>
+                <a href="{{ $email !== '' ? 'mailto:' . $email : route('travel.contact') }}" class="support-contact-item">
+                    <span class="support-contact-button"><i class="far fa-envelope"></i> Email Us</span>
+                    <small>{{ $email !== '' ? $email : 'Email address not available' }}</small>
+                </a>
+            </section>
+
+            <section class="support-faq-section" aria-labelledby="support-faq-title">
+                <h2 id="support-faq-title">Frequently Asked Questions</h2>
+                <div class="support-faq-list">
+                    @forelse($faqs as $faq)
+                        <details class="support-faq">
+                            <summary>{{ $faq->question }}<i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
+                            <p>{{ $faq->answer }}</p>
+                        </details>
+                    @empty
+                        <p class="support-empty">There are no FAQs available right now. Please contact our team.</p>
+                    @endforelse
+                </div>
+            </section>
+
+        </main>
+
     </div>
+    @include('partials.footer')
+
     <script src="{{ asset('js/app.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

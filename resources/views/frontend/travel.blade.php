@@ -342,7 +342,7 @@
         <div class="visa-hero-section">
             <div class="hero-overlay-content">
                 <div class="tag-reliable">Your Dream Destination</div>
-                <h2>Our Priority<br><span>Get Your Visa With<br>Rainbow Travels Kuwait</span></h2>
+                <h2>Our Priority<br><span>Get Your Visa With<br>Hays Travel</span></h2>
                 <p>{{ $settings->description ?? 'Apply for your visa online with ease. Track your application status in real-time and step closer to your next adventure.' }}</p>
                 <div class="hero-btn-group">
                     <a href="{{ route('travel.apply') }}" class="btn-apply" style="margin:0; border-radius: 12px;">Apply Visa/Job Now <i class="fas fa-arrow-right ms-2"></i></a>

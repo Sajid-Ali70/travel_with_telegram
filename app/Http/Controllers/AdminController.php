@@ -514,7 +514,84 @@ class AdminController extends Controller
                     });
                 }
             }
+
+            if (!Schema::hasTable('app_services')) {
+                Schema::create('app_services', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('eyebrow', 100);
+                    $table->string('title', 255);
+                    $table->text('description');
+                    $table->string('icon', 255)->default('fas fa-plane');
+                    $table->string('link_label', 100)->default('Learn more');
+                    $table->string('link_url', 500)->default('/contact');
+                    $table->unsignedSmallInteger('sort_order')->default(0);
+                    $table->boolean('is_active')->default(true);
+                    $table->timestamps();
+                });
+
+                $defaultServices = [
+                    ['eyebrow' => 'WORK VISA', 'title' => 'Work Visa', 'description' => 'Explore employment and work visa opportunities.', 'icon' => 'fas fa-passport', 'link_label' => 'Apply now', 'link_url' => '/apply'],
+                    ['eyebrow' => 'OVERSEAS JOBS', 'title' => 'Overseas Jobs', 'description' => 'Find a job and start your career abroad.', 'icon' => 'fas fa-briefcase', 'link_label' => 'Browse jobs', 'link_url' => '/jobs'],
+                    ['eyebrow' => 'VISA ASSISTANCE', 'title' => 'Visa Assistance', 'description' => 'Get professional support with your application.', 'icon' => 'fas fa-file-signature', 'link_label' => 'Get assistance', 'link_url' => '/apply'],
+                    ['eyebrow' => 'TRAVEL SERVICES', 'title' => 'Travel Services', 'description' => 'Discover travel and holiday package options.', 'icon' => 'fas fa-umbrella-beach', 'link_label' => 'Learn more', 'link_url' => '/about'],
+                    ['eyebrow' => 'CHAT WITH OUR EXPERTS', 'title' => 'Chat with our Experts/Agents', 'description' => 'Get in touch with our team for assistance.', 'icon' => 'fas fa-comments', 'link_label' => 'Contact us', 'link_url' => '/contact'],
+                ];
+
+                foreach ($defaultServices as $order => $service) {
+                    DB::table('app_services')->insert($service + [
+                        'sort_order' => $order + 1,
+                        'is_active' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
         } catch (\Exception $e) {}
+    }
+
+    private function ensureSupportTables(): void
+    {
+        if (!Schema::hasTable('app_faqs')) {
+            Schema::create('app_faqs', function (Blueprint $table) {
+                $table->id();
+                $table->string('question', 500);
+                $table->text('answer');
+                $table->unsignedSmallInteger('sort_order')->default(0);
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+            });
+
+            foreach ([
+                ['How do I apply for a visa?', 'Choose your destination and visa type, complete the online application, and submit the required documents.'],
+                ['How can I check my application status?', 'Use the Check Status page and enter your application details to view the latest update.'],
+                ['Can I change my travel booking?', 'Contact our support team with your booking details so we can help you review available changes.'],
+            ] as $index => $faq) {
+                DB::table('app_faqs')->insert([
+                    'question' => $faq[0],
+                    'answer' => $faq[1],
+                    'sort_order' => $index + 1,
+                    'is_active' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    private function ensureTravelReviewsTable(): void
+    {
+        if (!Schema::hasTable('app_travel_reviews')) {
+            Schema::create('app_travel_reviews', function (Blueprint $table) {
+                $table->id();
+                $table->string('reviewer_name', 120);
+                $table->string('review_title', 180);
+                $table->text('review_text');
+                $table->unsignedTinyInteger('rating')->default(5);
+                $table->unsignedSmallInteger('sort_order')->default(0);
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+            });
+        }
     }
 
     public function showLogin()
@@ -697,6 +774,192 @@ class AdminController extends Controller
         $jobs = DB::table('app_jobs')->orderByDesc('id')->get();
 
         return view('admin.jobs.index', array_merge($pageData, compact('jobs')));
+    }
+
+    public function servicesPage()
+    {
+        $this->autoManageSettingsColumns();
+        $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'Travel Services', 'app_icon' => '', 'tags' => 'Your Journey. Your Visa.', 'phone' => null];
+        $services = DB::table('app_services')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        return view('frontend.travel_services', compact('settings', 'services'));
+    }
+
+    public function manageServices()
+    {
+        $this->autoManageSettingsColumns();
+        $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'Travel Services', 'app_icon' => ''];
+        $services = DB::table('app_services')->orderBy('sort_order')->orderBy('id')->get();
+        $editingService = request()->filled('edit')
+            ? $services->firstWhere('id', (int) request()->query('edit'))
+            : null;
+
+        return view('admin.services.index', compact('settings', 'services', 'editingService'));
+    }
+
+    public function saveService(Request $request)
+    {
+        $this->autoManageSettingsColumns();
+        $data = $request->validate([
+            'id' => 'nullable|integer|exists:app_services,id',
+            'eyebrow' => 'required|string|max:100',
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:2000',
+            'icon' => 'required|string|max:255|regex:/\A(?:fas|far|fab) fa-[a-z0-9-]+\z/',
+            'link_label' => 'required|string|max:100',
+            'link_url' => ['required', 'string', 'max:500', 'regex:/\A(?:\/(?!\/)|https:\/\/|mailto:|tel:)/i'],
+            'sort_order' => 'required|integer|min:0|max:65535',
+            'is_active' => 'sometimes|boolean',
+        ]);
+        $data['is_active'] = $request->boolean('is_active');
+        $data['updated_at'] = now();
+
+        if (!empty($data['id'])) {
+            $id = $data['id'];
+            unset($data['id']);
+            DB::table('app_services')->where('id', $id)->update($data);
+            $message = 'Service updated successfully.';
+        } else {
+            unset($data['id']);
+            $data['created_at'] = now();
+            DB::table('app_services')->insert($data);
+            $message = 'Service added successfully.';
+        }
+
+        return redirect()->route('admin.services.index')->with('success', $message);
+    }
+
+    public function deleteService(int $id)
+    {
+        $this->autoManageSettingsColumns();
+        $deleted = DB::table('app_services')->where('id', $id)->delete();
+        abort_unless($deleted, 404);
+
+        return redirect()->route('admin.services.index')->with('success', 'Service deleted successfully.');
+    }
+
+    public function supportPage()
+    {
+        $this->ensureSupportTables();
+        $settings = DB::table('app_settings')->where('id', 1)->first()
+            ?: (object) ['app_name' => 'Travel Services', 'app_icon' => '', 'tags' => '', 'phone' => '', 'email' => '', 'address' => ''];
+        $faqs = DB::table('app_faqs')->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get();
+
+        return view('frontend.travel_contact', compact('settings', 'faqs'));
+    }
+
+    public function manageSupport()
+    {
+        $this->ensureSupportTables();
+        $settings = DB::table('app_settings')->where('id', 1)->first() ?: (object) ['app_name' => 'Travel Services', 'app_icon' => ''];
+        $faqs = DB::table('app_faqs')->orderBy('sort_order')->orderBy('id')->get();
+        $editingFaq = request()->filled('edit_faq') ? $faqs->firstWhere('id', (int) request()->query('edit_faq')) : null;
+
+        return view('admin.support.index', compact('settings', 'faqs', 'editingFaq'));
+    }
+
+    public function saveFaq(Request $request)
+    {
+        $this->ensureSupportTables();
+        $data = $request->validate([
+            'id' => 'nullable|integer|exists:app_faqs,id',
+            'question' => 'required|string|max:500',
+            'answer' => 'required|string|max:5000',
+            'sort_order' => 'required|integer|min:0|max:65535',
+            'is_active' => 'sometimes|boolean',
+        ]);
+        $data['is_active'] = $request->boolean('is_active');
+        $data['updated_at'] = now();
+
+        if (!empty($data['id'])) {
+            $id = $data['id'];
+            unset($data['id']);
+            DB::table('app_faqs')->where('id', $id)->update($data);
+            $message = 'FAQ updated successfully.';
+        } else {
+            unset($data['id']);
+            $data['created_at'] = now();
+            DB::table('app_faqs')->insert($data);
+            $message = 'FAQ added successfully.';
+        }
+
+        return redirect()->route('admin.support.index')->with('success', $message);
+    }
+
+    public function deleteFaq(int $id)
+    {
+        $this->ensureSupportTables();
+        $deleted = DB::table('app_faqs')->where('id', $id)->delete();
+        abort_unless($deleted, 404);
+
+        return redirect()->route('admin.support.index')->with('success', 'FAQ deleted successfully.');
+    }
+
+    public function homeReviews()
+    {
+        $this->ensureTravelReviewsTable();
+
+        return DB::table('app_travel_reviews')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    public function manageReviews()
+    {
+        $this->ensureTravelReviewsTable();
+        $settings = DB::table('app_settings')->where('id', 1)->first()
+            ?: (object) ['app_name' => 'Travel Services', 'app_icon' => ''];
+        $reviews = DB::table('app_travel_reviews')->orderBy('sort_order')->orderByDesc('id')->get();
+        $editingReview = request()->filled('edit')
+            ? $reviews->firstWhere('id', (int) request()->query('edit'))
+            : null;
+
+        return view('admin.reviews.index', compact('settings', 'reviews', 'editingReview'));
+    }
+
+    public function saveReview(Request $request)
+    {
+        $this->ensureTravelReviewsTable();
+        $data = $request->validate([
+            'id' => 'nullable|integer|exists:app_travel_reviews,id',
+            'reviewer_name' => 'required|string|max:120',
+            'review_title' => 'required|string|max:180',
+            'review_text' => 'required|string|max:2000',
+            'rating' => 'required|integer|min:1|max:5',
+            'sort_order' => 'required|integer|min:0|max:65535',
+            'is_active' => 'sometimes|boolean',
+        ]);
+        $data['is_active'] = $request->boolean('is_active');
+        $data['updated_at'] = now();
+
+        if (!empty($data['id'])) {
+            $id = $data['id'];
+            unset($data['id']);
+            DB::table('app_travel_reviews')->where('id', $id)->update($data);
+            $message = 'Review updated successfully.';
+        } else {
+            unset($data['id']);
+            $data['created_at'] = now();
+            DB::table('app_travel_reviews')->insert($data);
+            $message = 'Review added successfully.';
+        }
+
+        return redirect()->route('admin.reviews.index')->with('success', $message);
+    }
+
+    public function deleteReview(int $id)
+    {
+        $this->ensureTravelReviewsTable();
+        $deleted = DB::table('app_travel_reviews')->where('id', $id)->delete();
+        abort_unless($deleted, 404);
+
+        return redirect()->route('admin.reviews.index')->with('success', 'Review deleted successfully.');
     }
 
     public function catalogIndex()
@@ -2422,7 +2685,7 @@ class AdminController extends Controller
             $isEmbassyApproved = in_array($visaRequest->status, ['Visa Approved from Embassy', 'Visa Approved', 'approved'], true);
             $agentName = trim((string) ($isEmbassyApproved
                 ? ($visaRequest->approval_agent_name ?? '')
-                : ($visaRequest->agent_name ?? ''))) ?: 'Rainbow Travels & Tours';
+                : ($visaRequest->agent_name ?? ''))) ?: 'Hays Travel';
             $agentContactNumber = trim((string) ($isEmbassyApproved
                 ? ($visaRequest->approval_agent_contact_number ?? '')
                 : ($visaRequest->agent_contact_number ?? ''))) ?: $contactNumber;
@@ -2430,7 +2693,7 @@ class AdminController extends Controller
             $requiredDocumentsText = $requiredDocuments
                 ? implode("\n", array_map(fn ($document) => '- ' . $document, $requiredDocuments))
                 : '- Please contact our team for the required document list.';
-            $signature = "Regards,\nRainbow Travels & Tours";
+            $signature = "Regards,\nHays Travel";
             $email = match ($visaRequest->status) {
                 'Visa Application Submitted' => [
                     'Visa Application Submitted',

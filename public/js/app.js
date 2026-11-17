@@ -8,10 +8,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const isExpanded = navToggle.getAttribute('aria-expanded') === 'true';
             navLinks.classList.toggle('show', !isExpanded);
             navToggle.setAttribute('aria-expanded', String(!isExpanded));
+            navToggle.setAttribute('aria-label', isExpanded ? 'Menu' : 'Close menu');
 
             const icon = navToggle.querySelector('i');
             icon?.classList.toggle('fa-bars', isExpanded);
             icon?.classList.toggle('fa-times', !isExpanded);
+
+            const label = navToggle.querySelector('.home-header-action-label');
+            if (label) {
+                label.textContent = isExpanded ? 'Menu' : 'Close';
+            }
         });
     }
 });

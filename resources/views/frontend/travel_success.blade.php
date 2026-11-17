@@ -267,7 +267,6 @@
             background: #f3f9fd;
             display: flex;
             justify-content: center;
-            min-height: calc(100vh - 44px);
             padding: 10px 12px 14px;
         }
 
@@ -688,7 +687,7 @@
 
             @if(in_array($visaRequest->status, ['Visa Approved from Embassy', 'Visa Approved', 'approved'], true))
                 @php
-                    $approvedContactName = trim((string) ($visaRequest->approval_agent_name ?? '')) ?: ($settings->app_name ?? 'Rainbow Travels & Tours');
+                    $approvedContactName = trim((string) ($visaRequest->approval_agent_name ?? '')) ?: ($settings->app_name ?? 'Hays Travel');
                     $approvedContactPhone = trim((string) ($visaRequest->approval_agent_contact_number ?? '')) ?: trim((string) ($settings->phone ?? ''));
                     $approvedWhatsappNumber = preg_replace('/\D+/', '', $approvedContactPhone);
                 @endphp
