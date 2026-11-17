@@ -10,11 +10,10 @@
     <link rel="stylesheet" href="{{ asset('css/travel.css') }}">
     <style>
         .visa-hero-section {
-            @php
-                $banner = !empty($settings->inner_banner) ? $settings->inner_banner : "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80";
-                $bannerUrl = (str_starts_with($banner, 'http') || str_starts_with($banner, '//')) ? $banner : asset($banner);
-            @endphp
-            background-image: url('{{ $bannerUrl }}') !important;
+            background: linear-gradient(135deg, #07477f, #0b5b95);
+        }
+        .visa-hero-section::before {
+            display: none;
         }
     </style>
 </head>

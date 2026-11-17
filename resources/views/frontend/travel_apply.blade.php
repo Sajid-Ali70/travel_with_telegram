@@ -314,7 +314,7 @@
         }
         .job-application-page .apply-page-title {
             color: #102b51;
-            font-size: .78rem;
+            font-size: 25px;
             font-weight: 800;
             margin: 0;
             padding: 4px 8px 2px;
