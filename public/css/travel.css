@@ -951,3 +951,103 @@ input[type="checkbox"] {
         box-shadow: none;
     }
 }
+
+@media (min-width: 768px) {
+    .mobile-container {
+        max-width: none;
+        box-shadow: none;
+    }
+
+    .main-navbar {
+        flex-wrap: nowrap;
+        padding: 10px clamp(24px, 4vw, 64px);
+    }
+
+    .main-navbar .nav-logo {
+        flex: 0 0 290px;
+    }
+
+    .main-navbar .nav-logo-icon {
+        width: 280px;
+    }
+
+    .main-navbar .main-header-actions {
+        margin-left: auto;
+    }
+
+    .main-navbar .main-header-action.nav-toggle {
+        display: flex;
+    }
+
+    .main-navbar .nav-links {
+        align-items: stretch;
+        background: #fff;
+        border: 1px solid #dfe9f9;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 14px 28px rgba(4, 37, 83, .16);
+        display: none;
+        flex: initial;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 0;
+        justify-content: flex-start;
+        left: auto;
+        padding: 10px;
+        position: absolute;
+        right: clamp(24px, 4vw, 64px);
+        text-align: left;
+        top: 100%;
+        width: min(420px, calc(100vw - 48px));
+        z-index: 1001;
+    }
+
+    .main-navbar .nav-links.show {
+        display: flex;
+    }
+
+    .main-navbar .nav-link-item {
+        color: #15385c !important;
+        border-bottom: 1px solid #e8eef5;
+        font-size: .9rem !important;
+        padding: 11px 12px;
+        text-align: left;
+        width: 100%;
+    }
+
+    .main-navbar .nav-link-item:last-child {
+        border-bottom: 0;
+    }
+
+    .main-navbar .nav-link-item:hover,
+    .main-navbar .nav-link-item.active {
+        background: #f0f6fc;
+        color: #0d4ed8 !important;
+    }
+
+    .section-wrapper-global {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 1280px;
+    }
+
+    .main-footer-global {
+        max-width: none;
+        padding: 40px clamp(24px, 5vw, 80px) 20px;
+    }
+
+    .footer-columns-wrapper {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .footer-bottom-copyright {
+        flex-direction: row;
+        justify-content: space-between;
+        text-align: left;
+    }
+}
+
+@media (min-width: 1100px) {
+    .footer-columns-wrapper {
+        grid-template-columns: 1.25fr 1fr 1fr 1.25fr;
+    }
+}

@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
             icon?.classList.toggle('fa-bars', isExpanded);
             icon?.classList.toggle('fa-times', !isExpanded);
 
-            const label = navToggle.querySelector('.home-header-action-label');
+            const label = navToggle.querySelector('.home-header-action-label, .main-header-action-label');
             if (label) {
                 label.textContent = isExpanded ? 'Menu' : 'Close';
             }

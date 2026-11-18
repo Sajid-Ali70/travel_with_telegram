@@ -11,12 +11,11 @@
                 <i class="fas fa-passport"></i>
             @endif
         </div>
-        <div class="nav-logo-text">
-            @if(empty($settings->app_icon))
+        @if(empty($settings->app_icon))
+            <div class="nav-logo-text">
                 <h1>{{ $settings->app_name ?? 'Hays Travel' }}</h1>
-            @endif
-            <p>{{ $settings->tags ?? 'Visa • Work • Travel • Jobs' }}</p>
-        </div>
+            </div>
+        @endif
     </a>
 
     <div class="main-header-actions">
@@ -26,7 +25,7 @@
         </a>
         <button class="main-header-action nav-toggle" id="nav-toggle" type="button" aria-controls="nav-menu" aria-expanded="false" aria-label="Menu">
             <span class="main-header-action-icon"><i class="fas fa-bars"></i></span>
-            <span>Menu</span>
+            <span class="main-header-action-label">Menu</span>
         </button>
     </div>
 

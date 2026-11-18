@@ -492,55 +492,12 @@
 </head>
 <body class="job-application-page">
     <div class="mobile-container">
-        <header class="home-header apply-wizard-header">
-            <button type="button" id="wizardHeaderBack" class="apply-wizard-header-back" aria-label="Go back">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-            <a class="home-brand" href="{{ url('/') }}" aria-label="{{ $settings->app_name ?? 'Hays Travel' }}">
-                @if(!empty($settings->app_icon))
-                    @php
-                        $applyAppIconUrl = str_starts_with($settings->app_icon, 'http') || str_starts_with($settings->app_icon, '//')
-                            ? $settings->app_icon
-                            : asset($settings->app_icon);
-                    @endphp
-                    <img class="home-brand-logo" src="{{ $applyAppIconUrl }}" alt="{{ $settings->app_name ?? 'Hays Travel' }}">
-                    <span class="home-brand-copy">
-                        <small>{{ $settings->tags ?? 'Visa • Work • Travel • Jobs' }}</small>
-                    </span>
-                @else
-                    <span class="home-brand-logo home-brand-logo-fallback"><i class="fas fa-plane"></i></span>
-                    <span class="home-brand-copy">
-                        <strong>{{ $settings->app_name ?? 'Hays Travel' }}</strong>
-                        <small>{{ $settings->tags ?? 'Visa • Work • Travel • Jobs' }}</small>
-                    </span>
-                @endif
-            </a>
-            <div class="home-header-actions">
-                <a class="home-header-action" href="{{ !empty($settings->phone) ? 'tel:' . preg_replace('/[^0-9+]/', '', $settings->phone) : route('travel.contact') }}" aria-label="Contact">
-                    <span class="home-header-icon"><i class="fas fa-phone-alt"></i></span>
-                    <span class="home-header-action-label">Contact</span>
-                </a>
-                <button class="home-header-action nav-toggle" id="nav-toggle" type="button" aria-controls="nav-menu" aria-expanded="false" aria-label="Menu">
-                    <span class="home-header-icon"><i class="fas fa-bars"></i></span>
-                    <span class="home-header-action-label">Menu</span>
-                </button>
-            </div>
-            <nav class="nav-links" id="nav-menu" aria-label="Main navigation">
-                <a class="nav-link-item" href="{{ url('/') }}">Home</a>
-                <a class="nav-link-item" href="{{ route('travel.apply') }}">Apply Visa</a>
-                <a class="nav-link-item" href="{{ route('travel.verify') }}">Check Status</a>
-                <a class="nav-link-item" href="{{ route('jobs.index') }}">Jobs Abroad</a>
-                <a class="nav-link-item" href="{{ route('travel.services') }}">Services</a>
-                <a class="nav-link-item" href="{{ route('travel.countries') }}">Countries</a>
-                <a class="nav-link-item" href="{{ route('travel.bank_guarantee') }}">Bank Guarantee &amp; Financial Verification</a>
-                <a class="nav-link-item" href="{{ route('travel.contact') }}">Contact Support</a>
-            </nav>
-            <ol class="apply-stepper visually-hidden" aria-label="Application progress">
-                <li class="is-active" data-step-indicator="0"><span class="apply-stepper-icon"><i class="far fa-user"></i></span>Personal<br>Details</li>
-                <li data-step-indicator="1"><span class="apply-stepper-icon"><i class="far fa-id-card"></i></span>Additional<br>Details</li>
-                <li data-step-indicator="2"><span class="apply-stepper-icon">3</span>Destination &amp;<br>Profession</li>
-            </ol>
-        </header>
+        @include('partials.home-header', [
+            'activePage' => 'apply',
+            'headerClass' => 'apply-wizard-header',
+            'showWizardBack' => true,
+            'showApplyStepper' => true,
+        ])
         <h1 class="apply-page-title">Apply for a Job</h1>
 
         <main class="apply-wizard-page">

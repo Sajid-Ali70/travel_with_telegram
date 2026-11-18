@@ -12,47 +12,7 @@
 </head>
 <body class="travel-home-page travel-services-page">
     <div class="travel-home-shell">
-        <header class="home-header">
-            <a class="home-brand" href="{{ url('/') }}" aria-label="{{ $settings->app_name ?? 'Hays Travel' }}">
-                @if(!empty($settings->app_icon))
-                    @php
-                        $appIconUrl = str_starts_with($settings->app_icon, 'http') || str_starts_with($settings->app_icon, '//')
-                            ? $settings->app_icon
-                            : asset($settings->app_icon);
-                    @endphp
-                    <img class="home-brand-logo" src="{{ $appIconUrl }}" alt="{{ $settings->app_name ?? 'Hays Travel' }}">
-                    <span class="home-brand-copy">
-                        <small>{{ $settings->tags ?? 'Visa • Work • Travel • Jobs' }}</small>
-                    </span>
-                @else
-                    <span class="home-brand-logo home-brand-logo-fallback"><i class="fas fa-plane"></i></span>
-                    <span class="home-brand-copy">
-                        <strong>{{ $settings->app_name ?? 'Hays Travel' }}</strong>
-                        <small>{{ $settings->tags ?? 'Visa • Work • Travel • Jobs' }}</small>
-                    </span>
-                @endif
-            </a>
-            <div class="home-header-actions">
-                <a class="home-header-action" href="{{ !empty($settings->phone) ? 'tel:' . preg_replace('/[^0-9+]/', '', $settings->phone) : route('travel.contact') }}" aria-label="Contact">
-                    <span class="home-header-icon"><i class="fas fa-phone-alt"></i></span>
-                    <span class="home-header-action-label">Contact</span>
-                </a>
-                <button class="home-header-action nav-toggle" id="nav-toggle" type="button" aria-controls="nav-menu" aria-expanded="false" aria-label="Menu">
-                    <span class="home-header-icon"><i class="fas fa-bars"></i></span>
-                    <span class="home-header-action-label">Menu</span>
-                </button>
-            </div>
-            <nav class="nav-links" id="nav-menu" aria-label="Main navigation">
-                <a class="nav-link-item" href="{{ url('/') }}">Home</a>
-                <a class="nav-link-item" href="{{ route('travel.apply') }}">Apply Visa</a>
-                <a class="nav-link-item" href="{{ route('travel.verify') }}">Check Status</a>
-                <a class="nav-link-item" href="{{ route('jobs.index') }}">Jobs Abroad</a>
-                <a class="nav-link-item active" href="{{ route('travel.services') }}">Services</a>
-                <a class="nav-link-item" href="{{ route('travel.countries') }}">Countries</a>
-                <a class="nav-link-item" href="{{ route('travel.bank_guarantee') }}">Bank Guarantee &amp; Financial Verification</a>
-                <a class="nav-link-item" href="{{ route('travel.contact') }}">Contact Support</a>
-            </nav>
-        </header>
+        @include('partials.home-header', ['activePage' => 'services'])
 
         <main class="services-main">
             <section class="services-list" aria-labelledby="services-title">
