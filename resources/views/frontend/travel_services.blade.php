@@ -49,6 +49,7 @@
                 <a class="nav-link-item" href="{{ route('jobs.index') }}">Jobs Abroad</a>
                 <a class="nav-link-item active" href="{{ route('travel.services') }}">Services</a>
                 <a class="nav-link-item" href="{{ route('travel.countries') }}">Countries</a>
+                <a class="nav-link-item" href="{{ route('travel.bank_guarantee') }}">Bank Guarantee &amp; Financial Verification</a>
                 <a class="nav-link-item" href="{{ route('travel.contact') }}">Contact Support</a>
             </nav>
         </header>

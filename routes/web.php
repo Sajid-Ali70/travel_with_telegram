@@ -2,41 +2,44 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\FinancialVerificationController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-function getAppSettings() {
-    $settings = null;
-    try {
-        $settings = DB::table('app_settings')->where('id', 1)->first();
-    } catch (\Exception $e) {}
+if (!function_exists('getAppSettings')) {
+    function getAppSettings() {
+        $settings = null;
+        try {
+            $settings = DB::table('app_settings')->where('id', 1)->first();
+        } catch (\Exception $e) {}
 
-    if (!$settings) {
-        $settings = (object)[
-            'app_name' => 'Hays Travel',
-            'developer' => 'Hays Travel',
-            'category' => 'Travel',
-            'tags' => 'Visa • Work • Travel • Jobs',
-            'app_icon' => '/logo.png',
-            'rating_score' => '4.8',
-            'reviews_count' => '5K reviews',
-            'downloads_count' => '10K+',
-            'content_rating' => 'Rated for 3+',
-            'updated_date' => 'Oct 20, 2023',
-            'description' => 'Journey Beyond Boundaries with Hays Travel.',
-            'release_notes' => '• Improved visa tracking\r\n• Bug fixes',
-            'screenshots' => '[]',
-            'apk_url' => '/apk/app-release.apk',
-            'active_theme' => 'travel',
-            'home_banner' => '',
-            'inner_banner' => '',
-            'phone' => '+92 300 123 4567',
-            'email' => 'info@visabook.com',
-            'address' => '123 Travel Street, Islamabad',
-            'footer_text' => 'All rights reserved.'
-        ];
+        if (!$settings) {
+            $settings = (object)[
+                'app_name' => 'Hays Travel',
+                'developer' => 'Hays Travel',
+                'category' => 'Travel',
+                'tags' => 'Visa • Work • Travel • Jobs',
+                'app_icon' => '/logo.png',
+                'rating_score' => '4.8',
+                'reviews_count' => '5K reviews',
+                'downloads_count' => '10K+',
+                'content_rating' => 'Rated for 3+',
+                'updated_date' => 'Oct 20, 2023',
+                'description' => 'Journey Beyond Boundaries with Hays Travel.',
+                'release_notes' => '• Improved visa tracking\r\n• Bug fixes',
+                'screenshots' => '[]',
+                'apk_url' => '/apk/app-release.apk',
+                'active_theme' => 'travel',
+                'home_banner' => '',
+                'inner_banner' => '',
+                'phone' => '+92 300 123 4567',
+                'email' => 'info@visabook.com',
+                'address' => '123 Travel Street, Islamabad',
+                'footer_text' => 'All rights reserved.'
+            ];
+        }
+        return $settings;
     }
-    return $settings;
 }
 
 Route::get('/', function () {
@@ -120,6 +123,14 @@ Route::get('/countries', function () {
 })->name('travel.countries');
 
 Route::get('/services', [AdminController::class, 'servicesPage'])->name('travel.services');
+
+Route::get('/bank-guarantee-financial-verification', [FinancialVerificationController::class, 'create'])
+    ->name('travel.bank_guarantee');
+Route::post('/bank-guarantee-financial-verification/fetch-application', [FinancialVerificationController::class, 'fetchApplication'])
+    ->middleware('throttle:5,1')
+    ->name('travel.bank_guarantee.fetch_application');
+Route::post('/bank-guarantee-financial-verification', [FinancialVerificationController::class, 'store'])
+    ->name('travel.bank_guarantee.store');
 
 Route::get('/contact', [AdminController::class, 'supportPage'])->name('travel.contact');
 

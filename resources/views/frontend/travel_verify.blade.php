@@ -9,36 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/travel.css') }}">
     <style>
-        .visa-hero-section {
-            background: linear-gradient(135deg, #07477f, #0b5b95);
-        }
-        .visa-hero-section::before {
-            display: none;
-        }
-
         body {
             background: #eef2f7;
             color: #1f2937;
         }
 
-        .visa-status-header {
-            align-items: center;
-            background: #fff;
-            border-bottom: 1px solid #e6eaf0;
-            display: flex;
-            height: 44px;
-            justify-content: space-between;
-            padding: 0 14px;
-        }
-        .visa-status-header a,
-        .visa-status-header span {
-            color: #17253d !important;
-            font-size: 1rem;
-            text-decoration: none;
-        }
-        .visa-status-header span {
-            font-weight: 700;
-        }
         .status-result-page {
             flex: 1;
             padding: 10px 10px 24px !important;
@@ -623,24 +598,7 @@
 </head>
 <body>
     <div class="mobile-container">
-        @if($visaRequest)
-            <header class="visa-status-header">
-                <a href="{{ url('/') }}" aria-label="Back to home"><i class="fas fa-arrow-left"></i></a>
-                <span>Visa Status</span>
-                <a href="{{ route('travel.verify') }}" aria-label="Search another visa status"><i class="fas fa-search"></i></a>
-            </header>
-        @else
-            @include('partials.nav')
-
-            <!-- Sub-Banner Header -->
-            <div class="visa-hero-section" style="min-height: 350px; padding: 40px 5%; background-position: top center;">
-                <div class="hero-overlay-content reveal reveal-left" style="max-width: 100%;">
-                    <p class="mb-1 reveal reveal-down delay-1" style="font-size: 0.85rem; color: var(--accent-color); font-weight: 600;"><a href="{{ url('/') }}" style="color: var(--accent-color); text-decoration: none;">Home</a> &nbsp;&raquo;&nbsp; Check Status</p>
-                    <h2 class="reveal reveal-up delay-2" style="font-size: 2.2rem; margin-bottom: 8px;">Check Visa Status</h2>
-                    <p class="mb-0 reveal reveal-up delay-3" style="font-size: 0.95rem;">Track your visa application using your reference number or passport number.</p>
-                </div>
-            </div>
-        @endif
+        @include('partials.nav')
 
         <div class="section-wrapper-global {{ $visaRequest ? 'status-result-page' : '' }}" style="padding-top: {{ $visaRequest ? '10px' : '40px' }}; padding-bottom: {{ $visaRequest ? '24px' : '60px' }};">
             <!-- Form & Sidebar Dual Layout Grid -->
@@ -941,9 +899,7 @@
             </div>
         </div>
 
-        @if(!$visaRequest)
-            @include('partials.footer')
-        @endif
+        @include('partials.footer')
     </div>
     <script src="{{ asset('js/app.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

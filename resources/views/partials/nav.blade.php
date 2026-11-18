@@ -37,6 +37,7 @@
         <a href="{{ route('jobs.index') }}" class="nav-link-item {{ Request::is('jobs*') ? 'active' : '' }}">Jobs Abroad</a>
         <a href="{{ route('travel.services') }}" class="nav-link-item {{ Request::is('services*') ? 'active' : '' }}">Services</a>
         <a href="{{ route('travel.countries') }}" class="nav-link-item {{ Request::is('countries*') ? 'active' : '' }}">Countries</a>
+        <a href="{{ route('travel.bank_guarantee') }}" class="nav-link-item {{ Request::is('bank-guarantee-financial-verification*') ? 'active' : '' }}">Bank Guarantee &amp; Financial Verification</a>
         <a href="{{ route('travel.contact') }}" class="nav-link-item {{ Request::is('contact*') ? 'active' : '' }}">Contact Support</a>
     </nav>
 </header>
