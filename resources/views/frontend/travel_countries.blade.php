@@ -58,6 +58,13 @@
         <main class="countries-main">
             <section class="countries-section" aria-labelledby="countries-title">
                 <h1 id="countries-title">Our Services for Top Destinations</h1>
+                <section class="popular-destinations" aria-labelledby="popular-destinations-title">
+                    <h2 id="popular-destinations-title">Popular Destinations</h2>
+                    <form class="destination-search" role="search" onsubmit="return false">
+                        <span class="destination-search-icon" aria-hidden="true"><i class="fas fa-search"></i></span>
+                        <input type="search" id="destination-search-input" placeholder="Search destinations..." aria-label="Search destinations">
+                    </form>
+                </section>
                 <div class="countries-grid" id="countries-grid">
                     @foreach($countries as $country)
                         @php
@@ -84,14 +91,6 @@
                     @endforeach
                 </div>
                 <p class="countries-empty" id="countries-empty" hidden>No destinations match your search.</p>
-            </section>
-
-            <section class="popular-destinations" aria-labelledby="popular-destinations-title">
-                <h2 id="popular-destinations-title">Popular Destinations</h2>
-                <form class="destination-search" role="search" onsubmit="return false">
-                    <span class="destination-search-icon" aria-hidden="true"><i class="fas fa-search"></i></span>
-                    <input type="search" id="destination-search-input" placeholder="Search destinations..." aria-label="Search destinations">
-                </form>
             </section>
         </main>
 

@@ -328,7 +328,7 @@
             border: 1px solid #0a3b6b;
             border-radius: 8px;
             box-shadow: 0 3px 8px rgba(11, 48, 86, .2);
-            padding: 9px 8px 10px;
+            padding: 16px 14px;
         }
         .job-application-page .apply-step-heading {
             margin-bottom: 9px;
@@ -348,13 +348,13 @@
             line-height: 1.25;
         }
         .job-application-page .apply-wizard-card .form-group {
-            margin-bottom: 7px;
+            margin-bottom: 12px;
         }
         .job-application-page .apply-wizard-card .form-group label {
             color: #fff !important;
-            font-size: .53rem;
+            font-size: .68rem;
             font-weight: 800;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
         }
         .job-application-page .apply-wizard-card .input-with-icon i {
             display: none;
@@ -365,15 +365,20 @@
             border: 1px solid #e2eaf4;
             border-radius: 4px;
             color: #19304d !important;
-            font-size: .63rem;
-            min-height: 29px;
-            padding: 5px 8px !important;
+            font-size: .8rem;
+            min-height: 42px;
+            padding: 9px 12px !important;
         }
         .job-application-page .apply-wizard-card .input-with-icon input::placeholder {
             color: #7d8ba0 !important;
         }
         .job-application-page .apply-wizard-card .form-row {
-            gap: 0;
+            gap: 12px;
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .job-application-page .apply-field-row {
+            display: grid;
+            gap: 12px;
             grid-template-columns: minmax(0, 1fr);
         }
         .job-application-page .apply-wizard-card #national_identity_hint,
@@ -425,7 +430,7 @@
             border: 1px solid #0a3b6b;
             border-radius: 8px;
             box-shadow: 0 3px 8px rgba(11, 48, 86, .2);
-            padding: 8px 8px 9px;
+            padding: 14px;
         }
         .job-application-page.wizard-step-three #visaApplicationForm .mt-4 {
             margin-top: 9px !important;
@@ -488,9 +493,36 @@
         .job-application-page.wizard-step-three #wizardSubmit i {
             color: #15375f !important;
         }
+        @media (min-width: 768px) {
+            .job-application-page .apply-wizard-content {
+                max-width: 1100px;
+                padding: 20px 24px 32px;
+            }
+            .job-application-page .apply-wizard-card {
+                padding: 24px;
+            }
+            .job-application-page .apply-wizard-card .form-row,
+            .job-application-page .apply-field-row {
+                gap: 16px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .job-application-page .apply-wizard-card .input-with-icon input,
+            .job-application-page .apply-wizard-card .input-with-icon select {
+                min-height: 48px;
+            }
+            .job-application-page.wizard-step-three #visaApplicationForm {
+                padding: 24px;
+            }
+        }
+        @media (max-width: 420px) {
+            .job-application-page .apply-field-row {
+                gap: 0;
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
     </style>
 </head>
-<body class="job-application-page">
+<body class="job-application-page travel-home-page">
     <div class="mobile-container">
         @include('partials.home-header', [
             'activePage' => 'apply',
@@ -650,39 +682,41 @@
 
                         </section>
                         <section class="apply-wizard-step d-none" data-wizard-step="2">
-                        <div class="form-group">
-                            <label>SELECT DESTINATION COUNTRY *</label>
-                            <div class="input-with-icon">
-                                <i class="fas fa-globe"></i>
-                                <select id="destination_country_select" name="destination_country" class="form-select" required style="padding-left: 48px;">
-                                    <option value="" selected disabled>Select Country</option>
-                                    @foreach($countries as $country)
-                                        <option value="{{ $country->name }}" data-id="{{ $country->id }}" {{ old('destination_country') == $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
-                                    @endforeach
-                                    @if(count($countries) == 0)
-                                        <option>United Arab Emirates</option>
-                                        <option>Saudi Arabia</option>
-                                        <option>Qatar</option>
-                                    @endif
-                                </select>
-                            </div>
-                        </div>
-
                         <input id="visa_category_input" type="hidden" name="visa_category" value="{{ old('visa_category') }}">
 
-                        <div class="form-group">
-                            <label>PROFESSION *</label>
-                            <div class="input-with-icon">
-                                <i class="fas fa-user-tie"></i>
-                                <select id="visa_type_select" name="visa_type" class="form-select" required style="padding-left: 48px;">
-                                    <option value="" selected disabled>Select Profession</option>
-                                    @foreach($professions as $profession)
-                                        @php
-                                            $professionCategory = $categories->firstWhere('id', $profession->category_id);
-                                        @endphp
-                                        <option value="{{ $profession->name }}" data-category-name="{{ $professionCategory->name ?? '' }}" {{ old('visa_type') === $profession->name ? 'selected' : '' }}>{{ $profession->name }}</option>
-                                    @endforeach
-                                </select>
+                        <div class="apply-field-row">
+                            <div class="form-group">
+                                <label>SELECT DESTINATION COUNTRY *</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-globe"></i>
+                                    <select id="destination_country_select" name="destination_country" class="form-select" required style="padding-left: 48px;">
+                                        <option value="" selected disabled>Select Country</option>
+                                        @foreach($countries as $country)
+                                            <option value="{{ $country->name }}" data-id="{{ $country->id }}" {{ old('destination_country') == $country->name ? 'selected' : '' }}>{{ $country->name }}</option>
+                                        @endforeach
+                                        @if(count($countries) == 0)
+                                            <option>United Arab Emirates</option>
+                                            <option>Saudi Arabia</option>
+                                            <option>Qatar</option>
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>PROFESSION *</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-user-tie"></i>
+                                    <select id="visa_type_select" name="visa_type" class="form-select" required style="padding-left: 48px;">
+                                        <option value="" selected disabled>Select Profession</option>
+                                        @foreach($professions as $profession)
+                                            @php
+                                                $professionCategory = $categories->firstWhere('id', $profession->category_id);
+                                            @endphp
+                                            <option value="{{ $profession->name }}" data-category-name="{{ $professionCategory->name ?? '' }}" {{ old('visa_type') === $profession->name ? 'selected' : '' }}>{{ $profession->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
                         </div>
 

@@ -809,7 +809,7 @@ class AdminController extends Controller
             'eyebrow' => 'required|string|max:100',
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:2000',
-            'icon' => 'required|string|max:255|regex:/\A(?:fas|far|fab) fa-[a-z0-9-]+\z/',
+            'icon' => ['required', 'string', 'max:255', 'regex:/\A(?:fas|far|fab) fa-[a-z0-9-]+\z/'],
             'link_label' => 'required|string|max:100',
             'link_url' => ['required', 'string', 'max:500', 'regex:/\A(?:\/(?!\/)|https:\/\/|mailto:|tel:)/i'],
             'sort_order' => 'required|integer|min:0|max:65535',

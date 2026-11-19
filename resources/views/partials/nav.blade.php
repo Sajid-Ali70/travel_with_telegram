@@ -40,3 +40,4 @@
         <a href="{{ route('travel.contact') }}" class="nav-link-item {{ Request::is('contact*') ? 'active' : '' }}">Contact Support</a>
     </nav>
 </header>
+@include('partials.whatsapp-button')

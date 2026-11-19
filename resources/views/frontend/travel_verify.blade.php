@@ -893,7 +893,10 @@
                     <div class="sidebar-widget-card">
                         <h4>Need Assistance?</h4>
                         <p class="text-muted mb-3" style="font-size: 0.85rem; line-height: 1.5;">Our support team is here to help you with any questions.</p>
-                        <a href="tel:{{ $settings->phone ?? '' }}" class="btn-submit py-2" style="background: transparent; border: 1px solid var(--btn-primary); color: var(--primary-color); font-size: 0.9rem;"><i class="fas fa-phone-alt me-2"></i> Call Us</a>
+                        <a href="tel:{{ $settings->phone ?? '' }}" class="assistance-call-button">
+                            <i class="fas fa-phone-alt" aria-hidden="true"></i>
+                            <span>Call Us</span>
+                        </a>
                     </div>
                 </div>
             </div>

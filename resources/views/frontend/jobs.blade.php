@@ -34,8 +34,8 @@
             transition: background-color .2s ease, border-color .2s ease;
         }
         .job-card:hover {
-            background: #161b22;
-            border-color: #30363d;
+            background: #0d4ed8;
+            border-color: #0b3ea6;
         }
         .job-card:hover h2,
         .job-card:hover .job-meta,
@@ -198,5 +198,6 @@
             @endif
         </div>
     </div>
+    <script src="{{ asset('js/app.js') }}"></script>
 </body>
 </html>

@@ -232,6 +232,60 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     color: #ffffff !important;
 }
 
+.whatsapp-float {
+    align-items: center;
+    background: #25d366;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 999px;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 4px 14px rgba(13, 61, 38, .28);
+    color: #fff !important;
+    display: flex;
+    height: 56px;
+    justify-content: center;
+    position: fixed;
+    right: clamp(16px, 4vw, 32px);
+    text-decoration: none !important;
+    transition: background-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    width: 56px;
+    z-index: 2000;
+}
+
+.whatsapp-float i {
+    color: #fff !important;
+    font-size: 1.8rem;
+}
+
+.whatsapp-float span {
+    display: none;
+}
+
+.whatsapp-float:hover,
+.whatsapp-float:focus-visible {
+    background: #1fb95a;
+    box-shadow: 0 6px 18px rgba(13, 61, 38, .34);
+    color: #fff !important;
+    transform: translateY(-2px);
+}
+
+@media (min-width: 768px) {
+    .whatsapp-float {
+        padding: 0;
+        width: 56px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .whatsapp-float {
+        transition: none;
+    }
+
+    .whatsapp-float:hover,
+    .whatsapp-float:focus-visible {
+        transform: none;
+    }
+}
+
 /* Nav links mobile-first approach forced for centered desktop view */
 .nav-links {
     display: none;
@@ -604,6 +658,34 @@ h1, h2, h3, h4, h5, h6, p, span, label, li, a, i {
     margin-bottom: 16px;
     border-left: 3px solid var(--btn-primary);
     padding-left: 10px;
+}
+
+.assistance-call-button {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--btn-primary);
+    border-radius: var(--radius-sm);
+    color: var(--primary-color) !important;
+    display: flex;
+    font-size: .9rem;
+    font-weight: 600;
+    gap: 8px;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 14px;
+    text-decoration: none !important;
+    transition: background-color .18s ease, color .18s ease;
+    width: 100%;
+}
+
+.assistance-call-button i {
+    color: inherit !important;
+}
+
+.assistance-call-button:hover,
+.assistance-call-button:focus-visible {
+    background: var(--primary-color);
+    color: #fff !important;
 }
 
 .help-contact-row {

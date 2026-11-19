@@ -111,7 +111,7 @@
                 </div>
             </div>
 
-            <section class="about-confidence" aria-labelledby="about-confidence-title">
+            {{-- <section class="about-confidence" aria-labelledby="about-confidence-title">
                 <h2 id="about-confidence-title">Book with confidence</h2>
                 <div class="about-confidence-grid">
                     <div class="about-confidence-card">
@@ -139,7 +139,7 @@
                         <span>Explore a wide selection of destinations</span>
                     </div>
                 </div>
-            </section>
+            </section> --}}
         </div>
 
         @include('partials.footer')
