@@ -30,6 +30,13 @@
             </span>
         @endif
     </a>
+    <div class="home-header-careers" aria-label="Global Careers Portal">
+        <i class="fas fa-briefcase" aria-hidden="true"></i>
+        <span class="home-header-careers-copy">
+            <strong>Global Careers Portal</strong>
+            <span>Jobs | Visas | International Opportunities</span>
+        </span>
+    </div>
     <div class="home-header-actions">
         <a class="home-header-action" href="{{ $headerPhoneLink }}" aria-label="Contact">
             <span class="home-header-icon"><i class="fas fa-phone-alt"></i></span>

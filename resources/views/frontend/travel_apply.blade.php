@@ -524,12 +524,7 @@
 </head>
 <body class="job-application-page travel-home-page">
     <div class="mobile-container">
-        @include('partials.home-header', [
-            'activePage' => 'apply',
-            'headerClass' => 'apply-wizard-header',
-            'showWizardBack' => true,
-            'showApplyStepper' => true,
-        ])
+        @include('partials.trust-mark-header')
         <h1 class="apply-page-title">Apply for a Job</h1>
 
         <main class="apply-wizard-page">
@@ -870,13 +865,15 @@
             wizardBack.addEventListener('click', function() {
                 showWizardStep(Math.max(activeWizardStep - 1, 0));
             });
-            wizardHeaderBack.addEventListener('click', function() {
-                if (activeWizardStep > 0) {
-                    showWizardStep(activeWizardStep - 1);
-                    return;
-                }
-                window.location.href = @json(url('/'));
-            });
+            if (wizardHeaderBack) {
+                wizardHeaderBack.addEventListener('click', function() {
+                    if (activeWizardStep > 0) {
+                        showWizardStep(activeWizardStep - 1);
+                        return;
+                    }
+                    window.location.href = @json(url('/'));
+                });
+            }
             applicationForm.addEventListener('submit', function(event) {
                 for (let stepIndex = 0; stepIndex < wizardSteps.length; stepIndex += 1) {
                     const invalidField = wizardSteps[stepIndex].querySelector(':invalid');

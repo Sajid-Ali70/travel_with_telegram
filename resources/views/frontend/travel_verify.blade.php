@@ -598,7 +598,7 @@
 </head>
 <body>
     <div class="mobile-container">
-        @include('partials.nav')
+        @include('partials.trust-mark-header')
 
         <div class="section-wrapper-global {{ $visaRequest ? 'status-result-page' : '' }}" style="padding-top: {{ $visaRequest ? '10px' : '40px' }}; padding-bottom: {{ $visaRequest ? '24px' : '60px' }};">
             <!-- Form & Sidebar Dual Layout Grid -->

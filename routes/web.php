@@ -155,6 +155,9 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/admin/jobs/{id}/edit', [AdminController::class, 'editJob'])->name('admin.jobs.edit');
     Route::put('/admin/jobs/{id}', [AdminController::class, 'updateJob'])->name('admin.jobs.update');
 
+    Route::get('/admin/financial-verifications', [FinancialVerificationController::class, 'adminIndex'])
+        ->name('admin.financial_verifications.index');
+
     // Catalog management pages
     Route::get('/admin/catalog', [AdminController::class, 'catalogIndex'])->name('admin.catalog.index');
     Route::get('/admin/services', [AdminController::class, 'manageServices'])->name('admin.services.index');

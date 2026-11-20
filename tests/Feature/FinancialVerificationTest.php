@@ -50,10 +50,13 @@ class FinancialVerificationTest extends TestCase
 
     public function test_it_stores_a_verification_request_without_payment_data(): void
     {
-        if (!Schema::hasTable('app_visa_requests') || !Schema::hasTable('app_financial_verification_requests')) {
+        if (
+            !Schema::hasTable('app_visa_requests')
+            || !Schema::hasTable('app_financial_verification_requests')
+            || !Schema::hasColumn('app_financial_verification_requests', 'applicant_name')
+        ) {
             $this->markTestSkipped('The application and financial verification tables must be migrated.');
         }
-
         $reference = 'FV-' . Str::upper(Str::random(20));
         $passportNumber = 'TEST-' . Str::upper(Str::random(12));
         $visaRequestId = DB::table('app_visa_requests')->insertGetId([
@@ -80,6 +83,7 @@ class FinancialVerificationTest extends TestCase
         $this->assertDatabaseHas('app_financial_verification_requests', [
             'visa_request_id' => $visaRequestId,
             'application_reference' => $reference,
+            'applicant_name' => 'Test Applicant',
             'verification_country' => 'UK',
             'requested_amount' => '10000.00',
             'currency' => 'GBP',
@@ -90,6 +94,15 @@ class FinancialVerificationTest extends TestCase
         $this->assertFalse(Schema::hasColumn('app_financial_verification_requests', 'card_number'));
         $this->assertFalse(Schema::hasColumn('app_financial_verification_requests', 'cvv'));
         $this->assertFalse(Schema::hasColumn('app_financial_verification_requests', 'otp'));
+
+        $this->withSession(['admin_logged_in' => true])
+            ->get(route('admin.financial_verifications.index'))
+            ->assertOk()
+            ->assertSee($reference)
+            ->assertSee('Test Applicant')
+            ->assertSee('Verification Test')
+            ->assertSee($passportNumber)
+            ->assertSee('Test Bank');
     }
 
     public function test_it_rejects_funds_below_the_destination_requirement(): void
@@ -97,13 +110,49 @@ class FinancialVerificationTest extends TestCase
         $this->from(route('travel.bank_guarantee'))
             ->post(route('travel.bank_guarantee.store'), [
                 'nationality' => 'Verification Test',
-                'passport_number' => 'NOT-LOOKED-UP',
-                'visa_request_id' => 999999999,
+                'passport_number' => 'TEST-PASSPORT',
+                'visa_request_id' => 1,
                 'verification_country' => 'USA',
                 'requested_amount' => '14999.99',
                 'consent' => '1',
             ])
             ->assertRedirect(route('travel.bank_guarantee'))
             ->assertSessionHasErrors('requested_amount');
+    }
+
+    public function test_admin_can_review_financial_verification_details(): void
+    {
+        if (
+            !Schema::hasTable('app_financial_verification_requests')
+            || !Schema::hasColumn('app_financial_verification_requests', 'applicant_name')
+        ) {
+            $this->markTestSkipped('The financial verification table must be migrated.');
+        }
+
+        $reference = 'FV-' . Str::upper(Str::random(20));
+        DB::table('app_financial_verification_requests')->insert([
+            'visa_request_id' => 999999,
+            'application_reference' => $reference,
+            'applicant_name' => 'Admin Review Test',
+            'nationality' => 'Verification Test',
+            'verification_country' => 'UK',
+            'requested_amount' => '10000.00',
+            'currency' => 'GBP',
+            'bank_name' => 'Test Bank',
+            'status' => 'Pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->get(route('admin.financial_verifications.index'))
+            ->assertRedirect(route('admin.login'));
+
+        $this->withSession(['admin_logged_in' => true])
+            ->get(route('admin.financial_verifications.index'))
+            ->assertOk()
+            ->assertSee($reference)
+            ->assertSee('Admin Review Test')
+            ->assertSee('Verification Test')
+            ->assertSee('Test Bank');
     }
 }

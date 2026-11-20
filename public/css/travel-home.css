@@ -19,19 +19,20 @@
     color: #15385c;
     display: flex;
     height: 82px;
-    justify-content: space-between;
+    justify-content: flex-start;
     padding: 6px 12px;
     position: relative;
     z-index: 20;
 }
 
 .home-brand {
-    align-items: flex-start;
+    align-items: center;
     color: #15385c !important;
     display: flex;
-    flex: 1 1 auto;
+    flex: 0 1 32%;
     flex-direction: column;
     gap: 0;
+    max-width: 280px;
     min-width: 0;
     text-decoration: none;
 }
@@ -50,11 +51,12 @@
     background: transparent;
     border-radius: 0;
     flex: 0 1 auto;
-    height: 38px;
+    height: auto;
     max-width: 100%;
+    max-height: 44px;
     object-fit: contain;
     padding: 0;
-    width: 220px;
+    width: 100%;
 }
 
 .home-brand-logo-fallback {
@@ -78,6 +80,45 @@
     line-height: 1.15;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.home-header-careers {
+    align-items: center;
+    border-left: 1px solid #9aa8b8;
+    color: #0c2d50;
+    display: flex;
+    flex: 1 1 auto;
+    gap: 8px;
+    margin-left: 10px;
+    min-width: 0;
+    padding-left: 12px;
+}
+
+.home-header-careers > i {
+    color: #173c60;
+    flex: 0 0 auto;
+    font-size: clamp(1.05rem, 3vw, 1.55rem);
+}
+
+.home-header-careers-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.home-header-careers-copy strong {
+    color: #0c2d50;
+    font-size: clamp(.67rem, 2.8vw, 1.05rem);
+    font-weight: 800;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.home-header-careers-copy > span {
+    color: #263d55;
+    font-size: clamp(.4rem, 1.7vw, .68rem);
+    line-height: 1.2;
     white-space: nowrap;
 }
 
@@ -167,11 +208,22 @@
 }
 
 .home-hero-eyebrow {
-    color: #dbeafe !important;
-    font-size: .64rem;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,.82);
+    border-radius: 999px;
+    color: #fff !important;
+    display: inline-flex;
+    font-size: .78rem;
     font-weight: 800;
-    letter-spacing: .11em;
-    margin: 0 0 7px;
+    gap: 8px;
+    letter-spacing: 0;
+    margin: 0 0 14px;
+    padding: 5px 12px;
+}
+
+.home-hero-eyebrow i {
+    color: #ffd21e;
+    font-size: .95rem;
 }
 
 .home-hero h1 {
@@ -1551,9 +1603,9 @@
 
     .home-brand img.home-brand-logo {
         flex-basis: auto;
-        height: 30px;
+        height: auto;
         max-width: 100%;
-        width: 160px;
+        width: 100%;
     }
 
     .home-brand-copy strong {
@@ -1563,6 +1615,16 @@
     .home-header-actions {
         gap: 6px;
         margin-left: 5px;
+    }
+
+    .home-header-careers {
+        gap: 5px;
+        margin-left: 7px;
+        padding-left: 8px;
+    }
+
+    .home-header-careers-copy > span {
+        font-size: .4rem;
     }
 
     .home-header-icon {
@@ -1622,6 +1684,53 @@
     }
 }
 
+@media (max-width: 420px) {
+    .home-header {
+        height: 70px;
+    }
+
+    .home-brand {
+        flex-basis: 34%;
+    }
+
+    .home-header-actions {
+        gap: 4px;
+        margin-left: 6px;
+    }
+
+    .home-header-action {
+        font-size: .48rem;
+        gap: 2px;
+        min-width: 34px;
+    }
+
+    .home-header-icon {
+        height: 32px;
+        width: 32px;
+    }
+
+    .home-header-icon i {
+        font-size: .9rem;
+    }
+
+    .home-header-careers {
+        gap: 4px;
+        margin-left: 6px;
+        padding-left: 7px;
+    }
+
+    .home-header-careers-copy strong {
+        font-size: clamp(.6rem, 2.7vw, .76rem);
+    }
+
+    .home-header-careers-copy > span {
+        font-size: clamp(.34rem, 1.45vw, .5rem);
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -1655,7 +1764,7 @@
     }
 
     .home-hero-eyebrow {
-        font-size: .78rem;
+        font-size: .82rem;
     }
 
     .home-hero h1 {
@@ -1701,8 +1810,12 @@
         padding: 10px clamp(24px, 4vw, 64px);
     }
 
+    .home-brand {
+        flex-basis: 260px;
+    }
+
     .home-brand img.home-brand-logo {
-        width: 280px;
+        width: 100%;
     }
 
     .home-header-actions {

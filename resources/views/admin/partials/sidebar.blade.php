@@ -24,6 +24,9 @@
         <a href="{{ route('admin.services.index') }}" class="nav-link admin-nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
             <i class="fas fa-concierge-bell"></i> Services
         </a>
+        <a href="{{ route('admin.financial_verifications.index') }}" class="nav-link admin-nav-link {{ request()->routeIs('admin.financial_verifications.*') ? 'active' : '' }}">
+            <i class="fas fa-money-check-alt"></i> Financial Verification
+        </a>
         <a href="{{ route('admin.support.index') }}" class="nav-link admin-nav-link {{ request()->routeIs('admin.support.*') ? 'active' : '' }}">
             <i class="fas fa-headset"></i> Support Content
         </a>

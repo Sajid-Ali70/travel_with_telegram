@@ -170,15 +170,22 @@
             margin: 0 0 10px;
             padding: 8px 10px;
         }
-        .application-lookup-result div {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px 8px;
-            justify-content: space-between;
+        .application-lookup-title {
+            color: #193b62;
+            font-size: .78rem;
+            font-weight: 800;
+            margin: 0;
         }
-        .application-lookup-result strong {
-            overflow-wrap: anywhere;
-            text-align: right;
+        .application-lookup-result label {
+            color: #52657b;
+            font-size: .68rem;
+            font-weight: 700;
+            margin: 0 0 3px;
+        }
+        .application-lookup-result .form-control {
+            background: #fff;
+            font-size: .76rem;
+            min-height: 34px;
         }
         .application-lookup-result.d-none {
             display: none;
@@ -262,7 +269,7 @@
 </head>
 <body class="travel-home-page bank-guarantee-page">
     <div class="travel-home-shell">
-        @include('partials.nav')
+        @include('partials.trust-mark-header')
 
         <main class="bank-guarantee-main">
             <section class="bank-guarantee-promo-stage" aria-labelledby="bank-guarantee-promo-title">
@@ -314,8 +321,15 @@
                     <input id="visa_request_id" name="visa_request_id" type="hidden" value="{{ old('visa_request_id') }}">
                     <div class="application-lookup-message" id="application-lookup-message" role="status" aria-live="polite"></div>
                     <div class="application-lookup-result d-none" id="application-lookup-result" aria-live="polite">
-                        <div><span>Application No.</span><strong id="fetched-application-number"></strong></div>
-                        <div><span>Name</span><strong id="fetched-applicant-name"></strong></div>
+                        <h3 class="application-lookup-title">Matched Application Details</h3>
+                        <div>
+                            <label for="fetched-application-number">Application No.</label>
+                            <input class="form-control" id="fetched-application-number" type="text" readonly>
+                        </div>
+                        <div>
+                            <label for="fetched-applicant-name">Applicant Name</label>
+                            <input class="form-control" id="fetched-applicant-name" type="text" readonly>
+                        </div>
                     </div>
 
                     <section class="financial-verification-section" aria-labelledby="financial-verification-details-title">
@@ -360,8 +374,8 @@
 
         function clearFetchedApplication() {
             visaRequestIdInput.value = '';
-            document.getElementById('fetched-application-number').textContent = '';
-            document.getElementById('fetched-applicant-name').textContent = '';
+            document.getElementById('fetched-application-number').value = '';
+            document.getElementById('fetched-applicant-name').value = '';
             applicationLookupResult.classList.add('d-none');
             applicationLookupMessage.textContent = '';
             submitVerificationButton.disabled = true;
@@ -400,8 +414,8 @@
                 }
 
                 visaRequestIdInput.value = data.visa_request_id;
-                document.getElementById('fetched-application-number').textContent = data.application_number;
-                document.getElementById('fetched-applicant-name').textContent = data.name || 'Name not available';
+                document.getElementById('fetched-application-number').value = data.application_number;
+                document.getElementById('fetched-applicant-name').value = data.name || 'Name not available';
                 applicationLookupResult.classList.remove('d-none');
                 submitVerificationButton.disabled = false;
             } catch (error) {

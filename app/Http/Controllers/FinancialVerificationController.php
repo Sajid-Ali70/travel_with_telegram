@@ -15,6 +15,26 @@ class FinancialVerificationController extends Controller
         return view('frontend.travel_bank_guarantee', compact('settings', 'nationalities'));
     }
 
+    public function adminIndex()
+    {
+        $settings = \getAppSettings();
+        $verificationRequests = DB::table('financial_verification_requests')
+            ->select([
+                'id',
+                'nationality',
+                'name',
+                'reference_number',
+                'visa_request_id',
+                'passport_number',
+                'balance',
+                'created_at',
+            ])
+            ->orderByDesc('financial_verification_requests.id')
+            ->paginate(25);
+
+        return view('admin.financial_verifications.index', compact('settings', 'verificationRequests'));
+    }
+
     public function fetchApplication(Request $request)
     {
         $validated = $request->validate([
@@ -46,6 +66,17 @@ class FinancialVerificationController extends Controller
 
     public function store(Request $request)
     {
+        $request->replace($request->only([
+            '_token',
+            'nationality',
+            'passport_number',
+            'visa_request_id',
+            'verification_country',
+            'requested_amount',
+            'bank_name',
+            'consent',
+        ]));
+
         $validated = $request->validate([
             'nationality' => 'required|string|max:255',
             'passport_number' => 'required|string|max:100',
@@ -67,7 +98,7 @@ class FinancialVerificationController extends Controller
             ->where('id', $validated['visa_request_id'])
             ->whereRaw('LOWER(passport_number) = ?', [mb_strtolower(trim($validated['passport_number']))])
             ->whereRaw('LOWER(nationality) = ?', [mb_strtolower(trim($validated['nationality']))])
-            ->first(['id', 'reference_number', 'created_at']);
+            ->first(['id', 'reference_number', 'first_name', 'last_name', 'created_at']);
 
         if (!$visaRequest) {
             return back()
@@ -79,6 +110,7 @@ class FinancialVerificationController extends Controller
             'visa_request_id' => $visaRequest->id,
             'application_reference' => $visaRequest->reference_number
                 ?: AdminController::formatVisaReference($visaRequest->id, $visaRequest->created_at),
+            'applicant_name' => trim(($visaRequest->first_name ?? '') . ' ' . ($visaRequest->last_name ?? '')),
             'nationality' => $validated['nationality'],
             'verification_country' => $validated['verification_country'],
             'requested_amount' => $validated['requested_amount'],

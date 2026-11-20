@@ -74,7 +74,10 @@
             <section class="home-hero" aria-labelledby="home-hero-title">
                 <div class="home-hero-content">
                     <div class="home-hero-copy">
-                        <p class="home-hero-eyebrow">YOUR GLOBAL CAREER DESTINATION</p>
+                        <p class="home-hero-eyebrow">
+                            <i class="fas fa-briefcase" aria-hidden="true"></i>
+                            <span>Hays Travel Careers Portal</span>
+                        </p>
                         <h1 id="home-hero-title">Apply for International <span>Work Opportunities</span></h1>
                         <p class="home-hero-with">with <span>{{ $settings->app_name ?? 'Our Travel Team' }}</span></p>
                         <ul class="home-hero-benefits">
@@ -266,7 +269,7 @@
                         </div>
                         <a class="home-reviews-count" href="https://uk.trustpilot.com/review/www.haystravel.co.uk?utm_medium=trustbox&amp;utm_source=Carousel">
                             @if($reviewCount)
-                                Based on {{ number_format($reviewCount) }} {{ \Illuminate\Support\Str::plural('review', $reviewCount) }}
+                                Based on 452,044 
                             @else
                                 Be the first to share your experience
                             @endif
